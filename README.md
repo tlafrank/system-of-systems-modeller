@@ -7,3 +7,16 @@ SOSM defines the following terms:
 - Interface. The means by which a platform (system) connects to other platforms (systems).
 - Network. The link established between two or more interfaces.
 - Feature. The technology used by a network as well as the technology that can be implemented by an interface.
+
+## SOSM Dependencies
+SOSM requires a number of external dependencies to function. Client side external dependencies can be found within /www/index.html. Client side external dependencies include:
+- Bootstrap JS ()
+- Bootstrap CSS ()
+- Cytoscape JS ()
+- JQuery ()
+
+Server-side dependencies include
+- MySQL ()
+- NodeJS
+- NPM. With packages:
+-- MySQL2
