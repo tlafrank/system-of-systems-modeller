@@ -21,5 +21,9 @@ mysql_secure_installation
 #Install NodeJS & NPM
 apt-get install -y nodejs npm
 
+#OPTIONAL - SAMBA access
+apt-get install -y samba
+
+
 
 
