@@ -2,7 +2,6 @@
 # Install the software required on the server.
 # Must be run with privileges
 
-
 # Ensure server is up to date
 echo "**  System is being updated"
 apt-get update -y
@@ -19,6 +18,8 @@ if [[ $continue =~ [yY] ]]; then
   git config --global user.email "$email"
   git config pull.rebase true
   git config -l
+fi
+
 read -n 1 -p "Do you wish to configure git globally? (y/Y): " continue
 if [[ $continue =~ [yY] ]]; then
   #git config --global user.name ""
