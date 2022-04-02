@@ -5,56 +5,60 @@
 
 # Ensure server is up to date
 echo "**  System is being updated"
-apt-get -y update
-apt-get -y upgrade
+apt-get update -y
+apt-get upgrade -y
 echo "System updated"
 
 # Configure Git
+read -n 1 -p "Do you wish to configure git globally? (y/Y): " continue
+if [[ $continue =~ [yY] ]]; then
+  #git config --global user.name ""
+  #git config --global user.email ""
+  #git config -l
+  #git config pull.rebase true
+else
+  echo "You may want to configure user.name and user.email for git manually for this package"
+fi
 
-## Configure SSH keypair
-read -p "Github username (email): " email
-ssh-keygen -t ed25519 -C "$email"
-echo "Key created"
-
-echo "Executing SSH agent in the background"
-eval "$(ssh-agent -s)"
-
-
-#git config --global user.name ""
-#git config --global user.email ""
-#git config -l
-#git config pull.rebase true
 
 #Install MySQL
-echo "**  Installing MySQL"
-apt-get install -y mysql-server
+read -n 1 -p "Do you wish to install and configure MySQL? (y/Y): " continue
+if [[ $continue =~ [yY] ]]; then
+  echo "**  Installing MySQL"
+  apt-get install -y mysql-server
 
-#Configure MySQL
-echo "**  Securing MySQL Installation"
-echo "The password chosen here is the root password for the MySQL instance. It is required for configuring the database but won't be used for day-to-day operation of SOSM"
-mysql_secure_installation
+  #Configure MySQL
+  echo "**  Securing MySQL Installation"
+  echo "The password chosen here is the root password for the MySQL instance. It is required for configuring the database but won't be used for day-to-day operation of SOSM"
+  mysql_secure_installation
+fi
 
-#Install NodeJS & NPM
-apt-get install -y nodejs npm
+read -n 1 -p "Do you wish to install NodeJS and npm? (y/Y): " continue
+if [[ $continue =~ [yY] ]]; then
 
-#OPTIONAL - SAMBA access
-apt-get install -y samba
-#Create user
-smbpasswd -a $USER
-smbpasswd -e $USER
+  #Install NodeJS & NPM
+  apt-get install -y nodejs npm
+fi
 
-#Create share
-echo "[www]" >> /etc/samba/smb.conf
-echo "  path = $PWD/../www/" >> /etc/samba/smb.conf
-echo "  browsable = yes" >> /etc/samba/smb.conf
-#echo "  create mask = 0660" >> /etc/samba/smb.conf
-#echo "  directory mask = 0771" >> /etc/samba/smb.conf
-echo "  writable = yes" >> /etc/samba/smb.conf
-#echo "  guest ok = yes" >> /etc/samba/smb.conf
-#echo "#  valid users = " >> /etc/samba/smb.conf
+read -n 1 -p "Do you wish to install and configure SAMBA for the users home drive? (y/Y): " continue
+if [[ $continue =~ [yY] ]]; then
+  apt-get install -y samba
+  #Create user
+  smbpasswd -a $USER
+  smbpasswd -e $USER
 
-#Restart SAMBA
-systemctl restart smbd.service
+  #Create share
+  echo "[www]" >> /etc/samba/smb.conf
+  echo "  path = $PWD/../www/" >> /etc/samba/smb.conf
+  echo "  browsable = yes" >> /etc/samba/smb.conf
+  #echo "  create mask = 0660" >> /etc/samba/smb.conf
+  #echo "  directory mask = 0771" >> /etc/samba/smb.conf
+  echo "  writable = yes" >> /etc/samba/smb.conf
+  #echo "  guest ok = yes" >> /etc/samba/smb.conf
+  #echo "#  valid users = " >> /etc/samba/smb.conf
 
+  #Restart SAMBA
+  systemctl restart smbd.service
+fi
 
 
