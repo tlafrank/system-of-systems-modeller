@@ -10,7 +10,8 @@ apt-get upgrade -y
 echo "System updated"
 
 # Configure Git
-read -n 1 -p "Do you wish to configure git globally? (y/Y): " continue
+read -n 1 -p "Do you wish to configure git globally? (y/Y):" continue
+echo ""
 if [[ $continue =~ [yY] ]]; then
   read -p "Name (First Last): " name
   git config --global user.name "$name"
@@ -25,6 +26,7 @@ fi
 
 #Install MySQL
 read -n 1 -p "Do you wish to install and configure MySQL? (y/Y): " continue
+echo ""
 if [[ $continue =~ [yY] ]]; then
   echo "**  Installing MySQL"
   apt-get install -y mysql-server
@@ -36,6 +38,7 @@ if [[ $continue =~ [yY] ]]; then
 fi
 
 read -n 1 -p "Do you wish to install NodeJS and npm? (y/Y): " continue
+echo ""
 if [[ $continue =~ [yY] ]]; then
 
   #Install NodeJS & NPM
@@ -43,6 +46,7 @@ if [[ $continue =~ [yY] ]]; then
 fi
 
 read -n 1 -p "Do you wish to install and configure SAMBA for the users home drive? (y/Y): " continue
+echo ""
 if [[ $continue =~ [yY] ]]; then
   apt-get install -y samba
   #Create user
