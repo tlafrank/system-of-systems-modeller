@@ -10,7 +10,8 @@ The following activities are normally taken prior to being able to run the scrip
   - `sudo apt-get update`
   - `sudo apt-get upgrade`
 - Clone repo to a folder in the home directory 
-  - `git clone https://github.com/tlafrank/system-of-systems-modeller`
+  - `git clone https://github.com/tlafrank/system-of-systems-modeller` or
+  - `git clone git@github.com:tlafrank/system-of-systems-modeller.git` (Preferred, but requires SSH keys to be configured)
 
 
 ## Deployment scripts
@@ -18,7 +19,7 @@ The following scripts have been tested with the server setup as above. The scrip
 
 Files include:
 - install_server_dependences.sh. Guides the user through installation and configuration of the required services including MySQL, NodeJS and npm.
-- deploy_site.sh. Moves the www folder to /var/www, sets appropriate permissions, configures service to maintain nodeJS running.
+- deploy_site.sh. After the repo is cloned `git clone git@github.com:tlafrank/system-of-systems-modeller.git`, prepares the environment for either development or production.
 - deploy_database_schema.sh. Deploys or redeploys the database schema based on the config files located in ../sql/. Does not backup the database.
 - backup_database_content.sh
 - restore_database_content.sh
