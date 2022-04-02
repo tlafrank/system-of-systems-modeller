@@ -21,6 +21,7 @@ The following activities are normally taken prior to being able to run the scrip
     - `git clone git@github.com:tlafrank/system-of-systems-modeller.git` Preferred, but requires SSH keys to be configured:
   - Alternative option is to clone using HTTPS:
     - `git clone https://github.com/tlafrank/system-of-systems-modeller`
+- Deployment scripts are now available on the local machine to support further configuration.
     
 
 ## Deployment scripts
