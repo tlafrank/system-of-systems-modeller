@@ -5,9 +5,7 @@
  * @description Used to track the settings applied to the graph across sessions
  */
 class GraphSettings{
-
-    constructor(){
-
+	constructor(){
 		this.graphLayouts = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random'];
 		this.settingsArr = [];
 
@@ -22,8 +20,8 @@ class GraphSettings{
 		this.settingsArr.push({keyName: 'showIssues', value: 1})
 
 		this.update(this.settingsArr);
-		
-    }
+
+	}
 
 	/**
 	 * @description 
@@ -92,9 +90,6 @@ class GraphSettings{
 	}
 
 }
-
-
-
 
 
 //Cy styling objects
