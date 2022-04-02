@@ -9,7 +9,17 @@ apt-get -y update
 apt-get -y upgrade
 echo "System updated"
 
-#Configure Git defaults
+# Configure Git
+
+## Configure SSH keypair
+read -p "Github username (email): " email
+ssh-keygen -t ed25519 -C "$email"
+echo "Key created"
+
+echo "Executing SSH agent in the background"
+eval "$(ssh-agent -s)"
+
+
 #git config --global user.name ""
 #git config --global user.email ""
 #git config -l
