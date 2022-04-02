@@ -3,7 +3,7 @@
 # Must be run with privileges
 
 # Ensure server is up to date
-read -n 1 -p "Do you wish to update the server: " continue
+read -n 1 -p "Do you wish to update the server? (y/Y):" continue
 echo ""
 if [[ $continue =~ [yY] ]]; then
   echo "**  System is being updated"
