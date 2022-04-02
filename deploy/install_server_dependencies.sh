@@ -3,10 +3,14 @@
 # Must be run with privileges
 
 # Ensure server is up to date
-echo "**  System is being updated"
-apt-get update -y
-apt-get upgrade -y
-echo "System updated"
+read -n 1 -p "Do you wish to update the server: " continue
+echo ""
+if [[ $continue =~ [yY] ]]; then
+  echo "**  System is being updated"
+  apt-get update -y
+  apt-get upgrade -y
+  echo "System updated"
+fi
 
 # Configure Git
 read -n 1 -p "Do you wish to configure git globally? (y/Y):" continue
