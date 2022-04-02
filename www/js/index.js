@@ -28,15 +28,23 @@ function updateGraphSettings(callback) {
 	$.post('/select.json', postData, (result) => {
 		console.log('Passed to select.json:', postData);
 		
-		if (result.errno == 1045) {
-			console.log(result.sqlMessage);
+		if (result.err) {
+			console.log('Err response:')
+			if (result.err.errno == 1045){
+				console.log(result.err.sqlMessage)
+				console.log('Is the database configured correctly?')	
+			} else {
+				console.log(result.err);
+			}
+			 
 			//Display error to homepage and stop further requests to the server
 			
 		} else {
-			console.log('Response:', result)	    
+			debug('Successful Response, executing graphSettings.update()')
+			graphSettings.update(result);
 		}
 
-		graphSettings.update(result);
+		
 		
 		if (callback) { callback(); }
 	})
@@ -173,7 +181,7 @@ function newCy(){
 	cy = cytoscape({ 
 		container: $("#cy"),
 		style: cyStyle,
-		wheelSensitivity: 0.4, //Required for scroll wheel on laptop to work. Reason unknown.
+		//wheelSensitivity: 0.4, //Required for scroll wheel on laptop to work. Reason unknown.
 	});
 
 	$('#nodeDetailsTable').empty();
