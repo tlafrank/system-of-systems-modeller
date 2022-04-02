@@ -3,7 +3,7 @@ This directory contains bash scripts to assist in deploying and redeploying SOSM
 
 ## Initial requirements
 The following activities are normally taken prior to being able to run the scripts located in this folder:
-- Install OS to VM (tested with VirtualBox 6.1.26 and Ubuntu 21.04 Server).
+- Install OS to VM (tested with VirtualBox 6.1.26 and Ubuntu 20.04 Server).
 - Ensure network is configured, internet access required.
 - Install OpenSSH
 - Update & upgrade
