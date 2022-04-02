@@ -257,18 +257,6 @@ exports.switch = (req,res) => {
         queryString = sql.format(`SELECT * FROM graphSettings`)
     }
 
-
-    //******************************** Test ****************************************
-    /*
-    if (req.body.type == 'test'){
-        //Build the query
-        queryString = sql.format(`SELECT * FROM graphSettings`)
-
-        console.log(subsystemsArr)
-    }
-    */
-
-
     queryString = queryString.trim();
 	let re = /\n\s\s+/gi;
 	queryString = queryString.replace(re,'\n\t')
