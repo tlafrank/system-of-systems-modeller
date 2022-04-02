@@ -52,18 +52,19 @@ echo ""
 if [[ $continue =~ [yY] ]]; then
   apt-get install -y samba
   #Create user
-  smbpasswd -a $USER
-  smbpasswd -e $USER
+  smbpasswd -a $SUDO_USER
+  smbpasswd -e $SUDO_USER
 
   #Create share
-  echo "[www]" >> /etc/samba/smb.conf
-  echo "  path = $PWD/../www/" >> /etc/samba/smb.conf
+  echo "[$SUDO_USER]" >> /etc/samba/smb.conf
+  echo "  path = /home/$SUDO_USER/" >> /etc/samba/smb.conf
   echo "  browsable = yes" >> /etc/samba/smb.conf
   #echo "  create mask = 0660" >> /etc/samba/smb.conf
   #echo "  directory mask = 0771" >> /etc/samba/smb.conf
   echo "  writable = yes" >> /etc/samba/smb.conf
-  #echo "  guest ok = yes" >> /etc/samba/smb.conf
-  #echo "#  valid users = " >> /etc/samba/smb.conf
+  echo "  guest ok = no" >> /etc/samba/smb.conf
+  echo "  valid users = $SUDO_USER" >> /etc/samba/smb.conf
+
 
   #Restart SAMBA
   systemctl restart smbd.service
