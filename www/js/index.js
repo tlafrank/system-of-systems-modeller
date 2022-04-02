@@ -27,7 +27,14 @@ function updateGraphSettings(callback) {
 	const postData = {type: 'graphSettings'};
 	$.post('/select.json', postData, (result) => {
 		console.log('Passed to select.json:', postData);
-		console.log('Response:', result)
+		
+		if (result.errno == 1045) {
+			console.log(result.sqlMessage);
+			//Display error to homepage and stop further requests to the server
+			
+		} else {
+			console.log('Response:', result)	    
+		}
 
 		graphSettings.update(result);
 		
