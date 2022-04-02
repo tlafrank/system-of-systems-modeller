@@ -2,10 +2,18 @@
 
 
 ### Development environment deployment
+read -n 1 -p "Do you wish to deploy a development environment only (y/Y): " devEnv
+if [[ $devEnv =~ [yY] ]]; then
+  #Install required packages
+  npm --prefix $PWD/../www install
+  
+ 
+  #Nodemon install?
+
+fi
 
 
 
-#Nodemon install?
 
 
 ### Production environment deployment (NGINX?)
