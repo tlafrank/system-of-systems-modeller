@@ -7,8 +7,9 @@ The following activities are normally taken prior to being able to run the scrip
 - Ensure network is configured, internet access required.
 - Install OpenSSH
 - Update & upgrade
-- Install git
-- Clone into repo 
+  - `sudo apt-get update`
+  - `sudo apt-get upgrade`
+- Clone repo to a folder in the home directory 
   - `git clone https://github.com/tlafrank/system-of-systems-modeller`
 
 
