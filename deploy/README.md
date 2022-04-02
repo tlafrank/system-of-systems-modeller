@@ -9,7 +9,7 @@ The following activities are normally taken prior to being able to run the scrip
 - Update & upgrade
 - Install git
 - Clone into repo 
- - `git clone https://github.com/tlafrank/system-of-systems-modeller`
+  - `git clone https://github.com/tlafrank/system-of-systems-modeller`
 
 
 ## Deployment scripts
