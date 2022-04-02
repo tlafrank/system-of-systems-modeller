@@ -9,6 +9,12 @@ apt-get -y update
 apt-get -y upgrade
 echo "System updated"
 
+#Configure Git defaults
+#git config --global user.name ""
+#git config --global user.email ""
+#git config -l
+#git config pull.rebase true
+
 #Install MySQL
 echo "**  Installing MySQL"
 apt-get install -y mysql-server
