@@ -12,10 +12,12 @@ echo "System updated"
 # Configure Git
 read -n 1 -p "Do you wish to configure git globally? (y/Y): " continue
 if [[ $continue =~ [yY] ]]; then
-  #git config --global user.name ""
-  #git config --global user.email ""
-  #git config -l
-  #git config pull.rebase true
+  read -p "Name (First Last): " name
+  git config --global user.name "$name"
+  read -p "Email: " email
+  git config --global user.email "$email"
+  git config pull.rebase true
+  git config -l
 else
   echo "You may want to configure user.name and user.email for git manually for this package"
 fi
