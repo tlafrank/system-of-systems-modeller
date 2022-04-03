@@ -24,8 +24,6 @@ The following activities are normally taken prior to being able to run the scrip
   - Provide user execution permissions to the scripts:
     - `chmod +x ./deploy/*.sh`
 - Deployment scripts are now available on the local machine to support further configuration.
-  - For ease of use, run `eval "$(ssh-agent -s)"` and `ssh-add` each time the system loads to prevent having to put the SSH passphrase in for every interaction with github.com.
-    
 
 ## Deployment scripts
 The following scripts have been tested with the server setup as above. The scripts included in this directory assume that this repository has been cloned into the server's directory structure (not in /var/www).
@@ -39,3 +37,5 @@ Files include:
 
 For a new installation, the above files would generally be run in order as far as necessary.
 
+## Useful Tips
+For ease of use, run `eval "$(ssh-agent -s)"` and `ssh-add` each time the system loads to prevent having to put the SSH passphrase in for every interaction with github.com.
