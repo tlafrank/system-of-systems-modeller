@@ -1,1 +1,0 @@
-# subsystem table definition
