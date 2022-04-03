@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`issues` (
   `type` VARCHAR(45) NULL COMMENT 'SubsystemInterface,Interface,Feature,Network',
   `name` VARCHAR(45) NULL COMMENT 'A summary title of the issue',
   `severity` VARCHAR(45) NULL,
-  `id_party` VARCHAR(45) NULL COMMENT 'The PK of the party responsible for the issue',
+  `id_party` INT NULL COMMENT 'The PK of the party responsible for the issue',
   `issue` LONGTEXT NULL COMMENT 'THe description of the issue',
   `resolution` LONGTEXT NULL,
   `references` LONGTEXT NULL,
