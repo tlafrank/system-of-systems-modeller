@@ -25,7 +25,10 @@ if [[ $continue =~ [yY] ]]; then
 		## Creates users with appropriate privileges based on ./sql/users.sql
 		mysql < ../sql/users.sql
 		echo "Note that you may need to add a `bind-address` entry to `/etc/mysql/mysql.conf.d/mysqld.cnf` and create an appropriate MySQL user if you intend to remotely administer this database."
-		
+
+
+		#Install npm dependencies
+		npm --prefix ../www/ install
 	fi
 fi
 
