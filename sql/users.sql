@@ -1,5 +1,5 @@
-CREATE USER 'sosmUser'@'localhost' IDENTIFIED WITH BY 'dnek384!djrbdod836wj';
-GRANT PRIVILEGE ON sosm.* TO 'sosmUser'@'localhost';
+#CREATE USER 'sosmUser'@'localhost' IDENTIFIED BY 'dnek384!djrbdod836wj';
+GRANT ALL PRIVILEGES ON db_sosm.* TO 'sosmUser'@'localhost';
 
 
 FLUSH PRIVILEGES;
