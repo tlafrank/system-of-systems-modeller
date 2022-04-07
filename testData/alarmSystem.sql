@@ -43,5 +43,7 @@ INSERT INTO networks (name, image, id_feature) VALUES ('LAN', '', (SELECT id_fea
 
 
 #Quantities
-
+INSERT INTO quantities (id_subsystem, year, quantity) VALUES ((SELECT id_subsystem FROM subsystems WHERE name = 'Camera'), 2000, 5);
+INSERT INTO quantities (id_subsystem, year, quantity) VALUES ((SELECT id_subsystem FROM subsystems WHERE name = 'Controller'), 2010, 1);
+INSERT INTO quantities (id_subsystem, year, quantity) VALUES ((SELECT id_subsystem FROM subsystems WHERE name = 'Reed Switch'), 2020, 3);
 

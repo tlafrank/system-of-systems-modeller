@@ -12,5 +12,5 @@ mysql < ../testData/alarmSystem.sql
 
 #Copy images
 echo "Copying images"
-cp -R ../testData/images/ ../www/images/
+cp -R ../testData/images/ ../www/
 
