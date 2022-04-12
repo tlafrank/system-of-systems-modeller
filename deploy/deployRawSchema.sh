@@ -1,3 +1,5 @@
+#!/bin/bash
+
 read -n 1 -p "Do you wish to deploy the database schema and create users (y/Y): " continue
 echo ""
 if [[ $continue =~ [yY] ]]; then

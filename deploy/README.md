@@ -38,3 +38,6 @@ For a new installation, the above files would generally be run in order as far a
 
 ## Useful Tips
 For ease of use, run `eval "$(ssh-agent -s)"` and `ssh-add` each time the system loads to prevent having to put the SSH passphrase in for every interaction with github.com.
+
+
+## Annoying Problems
