@@ -5,7 +5,7 @@ const mysql = require('mysql2');
 var connection = mysql.createConnection({
 	host: 'localhost',
 	user: 'sosmUser',
-	password: 'dnek384!djrbdod836wj',
+	password: 'dnRk384!djrLdo}836w:',
 	database: 'db_sosm',
 	multipleStatements: true
 })

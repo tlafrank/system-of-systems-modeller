@@ -150,7 +150,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `db_sosm`.`issues` (
   `id_issue` INT NOT NULL,
-  `id_type` INT NULL COMMENT 'Could refer to the primary keys of SIMap, interfaces, IFMap',
+  `id_type` INT NULL COMMENT 'Could refer to the primary keys of SIMap, interfaces or network',
   `type` VARCHAR(45) NULL COMMENT 'SubsystemInterface,Interface,Feature,Network',
   `name` VARCHAR(45) NULL COMMENT 'A summary title of the issue',
   `severity` VARCHAR(45) NULL,

@@ -1,3 +1,4 @@
 www/node_modules
 www/images
 package-lock.json
+private/
