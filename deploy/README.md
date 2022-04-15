@@ -29,13 +29,15 @@ The following activities are normally taken prior to being able to run the scrip
 The following scripts have been tested with the server setup as above. The scripts included in this directory assume that this repository has been cloned into the server's directory structure (not in /var/www).
 
 Files include:
-- install_server_dependences.sh. Guides the user through installation and configuration of the required services including MySQL, NodeJS and npm.
-- deploy_site.sh. After the repo is cloned `git clone git@github.com:tlafrank/system-of-systems-modeller.git`, prepares the environment for either development or production.
-- deploy_database_schema.sh. Deploys or redeploys the database schema based on the config files located in ../sql/. Does not backup the database.
-- backup_database_content.sh
-- restore_database_content.sh
+- installServerDependences.sh. Guides the user through installation and configuration of the required services including MySQL, NodeJS and npm.
+- deploySite.sh. After the repo is cloned `git clone git@github.com:tlafrank/system-of-systems-modeller.git`, prepares the environment for either development or production.
+- deployRawSchema.sh. Deploys or redeploys the database schema based on the config files located in ../sql/. Does not backup the database nor make any entries.
+- deployTestData.sh. Deploys the test data to the database.
 
 For a new installation, the above files would generally be run in order as far as necessary.
 
 ## Useful Tips
 For ease of use, run `eval "$(ssh-agent -s)"` and `ssh-add` each time the system loads to prevent having to put the SSH passphrase in for every interaction with github.com.
+
+
+## Annoying Problems

@@ -2,6 +2,7 @@ const mysql = require('mysql2');
 
 
 //Database connection details
+
 var connection = mysql.createConnection({
 	host: 'localhost',
 	user: 'sosmUser',
@@ -12,14 +13,15 @@ var connection = mysql.createConnection({
 
 module.exports = connection;
 
-/*
-Database test
 
-var mysql      = require('mysql2');
+// Database test
+
+
+/*
 var connection = mysql.createConnection({
   host     : 'localhost',
   user     : 'sosmUser',
-  password : 'dnek384!djrbdod836wj',
+  password : 'dnRk384!djrLdo}836w:',
   database : 'db_sosm'
 });
  
