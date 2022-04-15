@@ -5,6 +5,8 @@ const Subsystem = require('./Subsystem');
 let debugOn = false;
 debugOn = true;
 
+
+//Debug function local to the methods in this file
 function debug(msg){
 	if (debugOn){
 		console.log(msg);
@@ -23,22 +25,10 @@ exports.switch = (req,res) => {
 
 
     //******************************** Graph ****************************************
-    //Get the nodes for the graph
-/*
-	//Get all interfaces allocated to subsystems
-	queryString[1] = sql.format(`SELECT SIMap.id_SIMap AS node_pi, SIMap.id_subsystem AS node_p, interfaces.id_interface AS id_interface, interfaces.name, interfaces.image
-		FROM SIMap 
-		LEFT JOIN interfaces ON interfaces.id_interface = SIMap.id_interface;`);
-
-	queryString[2] = sql.format(`SELECT SINMap.id_SIMap AS node_pi, SINMap.id_network AS node_n, networks.name, networks.image
-		FROM SINMap
-		LEFT JOIN networks
-		ON SINMap.id_network = networks.id_network;`)
-*/
+    //Gets the nodes for the graph
 
 
-
-	//Get all subsystems
+	//Get all the subsystems requested by the user
 	queryString[0] = sql.format(`SELECT id_subsystem, name, image, tags FROM subsystems`);
 	if(req.body.includedFilterTag){
 		queryString[0] += sql.format(` WHERE tags LIKE ?`,['%' + req.body.includedFilterTag + '%'])
@@ -51,10 +41,11 @@ exports.switch = (req,res) => {
 		}
 	}
 	queryString[0] += ';'
-	
+
+
+	//Produce the query to get the quantitiy of subsystems
 	queryString[1] = sql.format(`SELECT * FROM quantities ORDER BY id_subsystem;`);
 
-    //const subsystemsArr = [];
 	var subsystemsArr = [];
 	var subsystemsIdArr = [];
 	var quantities = [];
@@ -71,10 +62,8 @@ exports.switch = (req,res) => {
 			//Create a new subsystem object for each row of the subsystems table, remove those subsystem objects
 			//which are not available the current year and get the list of subsystem interfaces from the database
 
-			//debug(result[1]);
 			//Loop through the subsystems table, creating a new Subsystem object for each row
 			result[0].forEach(element => {
-				//debug(element);
 
 				//Loop through and build the quantity/years object for each subsystem
 				quantities = [];
@@ -95,7 +84,6 @@ exports.switch = (req,res) => {
 			});
 
 			//debug(subsystemsArr[1].qtyYears);
-
 
 			//Prune the subsystemsArr for any subsystems which do not exist in the given year
 			for (var i = 0; i < subsystemsArr.length; i++){
@@ -119,7 +107,7 @@ exports.switch = (req,res) => {
 			if (subsystemsIdArr.length == 0){
 				debug('subsystemsIdArr is 0')
 				return new Promise((resolve,reject) => {
-					reject({msg: 'No subsystems'})
+					reject({msg: 'There are no subsystems available for the given year, given filter terms.'})
 				})
 			} else {
 				//Get only the subsystem interfaces which belong to subsystems which are available in the current year
@@ -129,7 +117,7 @@ exports.switch = (req,res) => {
 					FROM SIMap 
 					LEFT JOIN interfaces ON interfaces.id_interface = SIMap.id_interface
 					WHERE SIMap.id_subsystem IN (?)
-					ORDER BY SIMap.id_subsystem;`, [subsystemsIdArr]))				
+					ORDER BY SIMap.id_subsystem;`, [subsystemsIdArr]))
 			}
 
 		})
@@ -331,7 +319,8 @@ exports.switch = (req,res) => {
 				})
 			})
 
-			//Get the cy objects
+			
+			//Produce the subsystem nodes and edges (links)
 			subsystemsArr.forEach((element) => {
 				responseArr = responseArr.concat(element.getCyObject());
 			})
@@ -339,6 +328,8 @@ exports.switch = (req,res) => {
 			//Build an array of stats to assist with other info
 			statsObj.interfaceCounts = interfacesArr;
 
+			debug("responsing to client");
+			
 
 			//Respond to the client
 			res.send([responseArr,statsObj])

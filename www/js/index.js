@@ -26,15 +26,15 @@ function updateGraphSettings(callback) {
 
 	const postData = {type: 'graphSettings'};
 	$.post('/select.json', postData, (result) => {
-		console.log('Passed to select.json:', postData);
+		debug('Passed to select.json:', postData);
 		
 		if (result.err) {
-			console.log('Err response:')
+			debug('Err response:')
 			if (result.err.errno == 1045){
-				console.log(result.err.sqlMessage)
-				console.log('Is the database configured correctly?')	
+				debug(result.err.sqlMessage)
+				debug('Is the database configured correctly?')	
 			} else {
-				console.log(result.err);
+				debug(result.err);
 			}
 			 
 			//Display error to homepage and stop further requests to the server
@@ -43,9 +43,6 @@ function updateGraphSettings(callback) {
 			debug('Successful Response, executing graphSettings.update()')
 			graphSettings.update(result);
 		}
-
-		
-		
 		if (callback) { callback(); }
 	})
 }
@@ -63,19 +60,19 @@ function mainPage(){
 			newCy()
 		break;
 		case 'summary':
-			var pageContent = ``
+			//var pageContent = ``
 
 			$('#mainPaneContainer').empty();
-			$('#mainPaneContainer').append(pageContent);
+			//$('#mainPaneContainer').append(pageContent);
 
 			listSummary();
 			
 		break;
 		case 'issues':
-			var pageContent = ``
+			//var pageContent = ``
 
 			$('#mainPaneContainer').empty();
-			$('#mainPaneContainer').append(pageContent);
+			//$('#mainPaneContainer').append(pageContent);
 			
 			listIssues();
 		break;
@@ -119,8 +116,8 @@ async function listIssues(){
 	}
 
 	$.post('select.json', postData, (result) => {
-		console.log('Passed to select.json: ', postData);
-		console.log('Result: ', result)
+		debug('Passed to select.json: ', postData);
+		debug('Result: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -174,7 +171,10 @@ async function listIssues(){
 
 
 
-//Reset the graph
+/**
+ * @description Builds a new CY graph
+ * 
+ */
 function newCy(){
 	debug('In newCy()')
 
@@ -216,9 +216,7 @@ function resetCy(){
  */
 async function getGraphData(cy){
 	debug('in getGraphData()');
-
-	console.log('graphsettings', graphSettings)
-	debug(graphSettings.activeYear)
+	debug(graphSettings);
 
 	//Year of graph
 	const postData = {
@@ -239,8 +237,8 @@ async function getGraphData(cy){
 
 	//New post which will return an object suitable for direct insertion into cy
 	await $.post('/graph.json', postData, (result) => {
-		console.log('Passed to graph.json:', postData);
-		console.log('Response:', result)
+		debug('Passed to graph.json:', postData);
+		debug('Response:', result)
 
 		
 
@@ -249,6 +247,8 @@ async function getGraphData(cy){
 
 		if (cy) { 
 			cy.add(result[0]);
+			
+
 			cy.layout(graphSettings.getLayout()).run();
 			
 			

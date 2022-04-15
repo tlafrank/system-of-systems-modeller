@@ -43,8 +43,8 @@
 		type: 'Interface'
 	}
 	$.post('select.json', postData, (result) => {
-		console.log('Passed to select.json2: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to select.json2: ', postData);
+		debug('Response: ', result)
 	
 		result.forEach((element) => {
 			$('#mainModalInterfaceSelect').append(`<option data-id_interface="${element.id_interface}">${element.name}</option>`)
@@ -64,8 +64,8 @@
 	}
 	
 	$.post('/select.json', postData2, (result2) => {
-		console.log('Passed to select.json2: ', postData2);
-		console.log('Response2: ', result2)
+		debug('Passed to select.json2: ', postData2);
+		debug('Response2: ', result2)
 
 		if (result2.msg){
 			//Errors
@@ -153,8 +153,8 @@
 		postData.features = interface.features;
 		
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -190,9 +190,9 @@
 				type: 'Interface',
 				id_interface: interface.id_interface
 			}
-			console.log('Passing to select.json: ', postData3);
+			debug('Passing to select.json: ', postData3);
 			$.post('select.json', postData3, (result) => {
-				console.log('Response3: ', result)
+				debug('Response3: ', result)
 
 				//Populate the form controls
 				form.interface.forEach((element) => {
@@ -254,9 +254,9 @@
 	const postData2 = {
 		type: 'Features'
 	}
-	console.log('Passing to select.json: ', postData2);
+	debug('Passing to select.json: ', postData2);
 	$.post('select.json', postData2, (result) => {
-		console.log('Response: ', result)
+		debug('Response: ', result)
 
 		result.forEach((element) => {
 			$('#mainModalFeatureSelect').append(`<option data-id_feature="${element.id_feature}">${element.name}</option>`)
@@ -267,9 +267,9 @@
 	const postData = {
 		type: 'Network'
 	}
-	console.log('Passing to select.json: ', postData);
+	debug('Passing to select.json: ', postData);
 	$.post('select.json', postData, (result) => {
-		console.log('Response: ', result)
+		debug('Response: ', result)
 
 		result.forEach((element) => {
 			$('#mainModalNetworkSelect').append(`<option data-id_network="${element.id_network}">${element.name}</option>`)
@@ -308,8 +308,8 @@
 		}
 
 		$.post('select.json', postData3, (result) => {
-			console.log('Passed to select.json: ', postData3);
-			console.log('Response: ', result)
+			debug('Passed to select.json: ', postData3);
+			debug('Response: ', result)
 
 			form.network.forEach((element) => {
 				//Set the relevant form control values
@@ -367,8 +367,8 @@
 		})
 	
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -420,8 +420,8 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 		id_SIMap: subsystemInterface.id_SIMap
 	}
 	$.post("select.json", postData, (result) => {
-		console.log('Passed to select.json: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData);
+		debug('Response: ', result)
 
 		//Place images
 		installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].subsystemName, image: result[0].subsystemImage}, true)
@@ -439,16 +439,16 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 	}
 	
 	$.post("select.json", postData3, (result) => {
-		console.log('Passed to select.json: ', postData3);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData3);
+		debug('Response: ', result)
 
 		const postData2 = {
 			type: 'CompatibleNetworks',
 			features: result[0].features.split(',')
 		}
 		$.post("select.json", postData2, (result) => {
-			console.log('Passed to select.json: ', postData2);
-			console.log('Response: ', result)
+			debug('Passed to select.json: ', postData2);
+			debug('Response: ', result)
 
 			//Load the list of interfaces into the select box
 			result.forEach((element) => {
@@ -465,8 +465,8 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 	}
 
 	$.post('select.json', postData4, (result) => {
-		console.log('Passed to select.json: ', postData4);
-		console.log('Result: ', result)
+		debug('Passed to select.json: ', postData4);
+		debug('Result: ', result)
 
 		
 		result.forEach((element) => {
@@ -523,8 +523,8 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 		}
 	
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Result: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Result: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -546,8 +546,8 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 		}
 	
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Result: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Result: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -618,8 +618,8 @@ function updateIssuesModal(issue,message){
 					}
 
 					$.post('select.json', postData3, (result) => {
-						console.log('Passed to select.json: ', postData3);
-						console.log('Response: ', result);
+						debug('Passed to select.json: ', postData3);
+						debug('Response: ', result);
 
 						if (result.msg){
 							//An error was passed
@@ -656,8 +656,8 @@ function updateIssuesModal(issue,message){
 					}
 
 					$.post('select.json', postData, (result) => {
-						console.log('Passed to select.json: ', postData);
-						console.log('Response: ', result)
+						debug('Passed to select.json: ', postData);
+						debug('Response: ', result)
 
 						if (result.msg){
 							//An error was passed
@@ -731,8 +731,8 @@ function updateIssuesModal(issue,message){
 					})
 						
 					$.post('update.json', postData, (result) => {
-						console.log('Passed to update.json: ', postData);
-						console.log('Response: ', result)
+						debug('Passed to update.json: ', postData);
+						debug('Response: ', result)
 				
 						//Check the result																												//Working here, having trouble adding a new subsystem
 						if (result.msg){
@@ -810,8 +810,8 @@ function updateIssuesModal(issue,message){
 
 		//Update the form controls
 		$.post('select.json', postData2, (result) => {
-			console.log('Passed to select.json: ', postData2);
-			console.log('Response: ', result)
+			debug('Passed to select.json: ', postData2);
+			debug('Response: ', result)
 
 			//Place images
 			installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].subsystemName, image: result[0].subsystemImage}, true)
@@ -858,8 +858,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 
 	//Get subsystem details
 	$.post("select.json", {type: 'Subsystem', id_subsystem: subsystem.id_subsystem}, (result) => {
-		console.log('Passed to select.json: ', {type: 'Subsystem', id_subsystem: subsystem.id_subsystem});
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', {type: 'Subsystem', id_subsystem: subsystem.id_subsystem});
+		debug('Response: ', result)
 
 		//Update image
 		$('#mainModalSubsystemImage').attr('src', imagePath + result[0].image);
@@ -870,8 +870,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 
 	//Get all interfaces for the select
 	$.post("select.json", {type: 'Interface'}, (result) => {
-		console.log('Passed to select.json: ', {type: 'Interface'});
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', {type: 'Interface'});
+		debug('Response: ', result)
 
 		//Load the list of interfaces into the select box
 		result.forEach((element) => {
@@ -885,8 +885,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 		id_subsystem: subsystem.id_subsystem,
 	}
 	$.post(`select.json`, postData, (result) => {
-		console.log('Passed to select.json: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData);
+		debug('Response: ', result)
 
 		//Place an icon of each installed interface
 		result.forEach((element) => {
@@ -944,8 +944,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 		}
 	
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Result: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Result: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -971,8 +971,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 		}
 
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Result: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Result: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -1001,8 +1001,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 		})
 
 		$.post("update.json", postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -1070,8 +1070,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 
 		//Get all subsystems for the select
 		$.post("select.json", postData, (result) => {
-			console.log('Passed to select.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to select.json: ', postData);
+			debug('Response: ', result)
 
 			//Load the list of interfaces into the select box
 			form.subsystemInterface.forEach((element) => {
@@ -1127,8 +1127,8 @@ function updateFeaturesModal(message){
 	//Populate the dropbox
 	const postData = {type: 'Features'}
 	$.post('select.json', postData, (result) => {
-		console.log('Passed to select.json: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData);
+		debug('Response: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -1162,8 +1162,8 @@ function updateFeaturesModal(message){
 		}
 
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
 
 			//Check the result
 			if (result.msg){
@@ -1186,8 +1186,8 @@ function updateFeaturesModal(message){
 		}
 
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
 
 			//Check the result
 			if (result.msg){
@@ -1219,8 +1219,8 @@ function updateFeaturesModal(message){
 		}
 
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
 
 			//Check the result
 			if (result.msg){
@@ -1272,8 +1272,8 @@ function updateFeaturesModal(message){
 	//Populate the network dropbox
 	const postData = {type: 'Networks'}
 	$.post('select.json', postData, (result) => {
-		console.log('Passed to select.json: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData);
+		debug('Response: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -1294,8 +1294,8 @@ function updateFeaturesModal(message){
 	//Populate the dropbox
 	const postData2 = {type: 'Features'}
 	$.post('select.json', postData2, (result) => {
-		console.log('Passed to select.json: ', postData2);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData2);
+		debug('Response: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -1335,8 +1335,8 @@ function updateFeaturesModal(message){
 		//Get node details from the server
 		const postData3 = {type: 'Network', id_network: $(`#mainModalNetworkSelect option:selected`).attr('data-id_network')}
 		$.post('./select.json', postData3, (result) => {
-			console.log('Passed to select.json:', postData3);
-			console.log('Response:', result)
+			debug('Passed to select.json:', postData3);
+			debug('Response:', result)
 
 			//Check the result
 			if (result.msg){
@@ -1371,8 +1371,8 @@ function updateFeaturesModal(message){
 		}
 
 		$.post('update.json', postData4, (result) => {
-			console.log('Passed to update.json: ', postData4);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData4);
+			debug('Response: ', result)
 
 			//Check the result
 			if (result.msg){
@@ -1500,8 +1500,8 @@ function updateSubsystemModal(subsystem, message){
 		//Populate the dropbox
 		const postData = {type: 'Subsystem'}
 		$.post('select.json', postData, (result) => {
-			console.log('Passed to select.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to select.json: ', postData);
+			debug('Response: ', result)
 
 			//Check the result
 			if (result.msg){
@@ -1629,8 +1629,8 @@ function updateSubsystemModal(subsystem, message){
 		})
 
 		$.post('update.json', postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -1661,8 +1661,8 @@ function updateSubsystemModal(subsystem, message){
 
 		//Update the form controls
 		$.post('select.json', postData2, (result) => {
-			console.log('Passed to select.json: ', postData2);
-			console.log('Response: ', result)
+			debug('Passed to select.json: ', postData2);
+			debug('Response: ', result)
 
 			//Update heading
 			$('#mainModalSubsystemName').text(result[0].name);
@@ -1721,10 +1721,10 @@ function updateSubsystemQuantities(id_subsystem, message){
 		id_subsystem: id_subsystem
 	}
 
-	console.log('Passing to select.json: ', postData);
+	debug('Passing to select.json: ', postData);
 	$.post('select.json', postData, (result) => {
 		
-		console.log('Result: ', result)
+		debug('Result: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -1743,9 +1743,9 @@ function updateSubsystemQuantities(id_subsystem, message){
 		id_subsystem: id_subsystem
 	}
 
-	console.log('Passing to select.json: ', postData2);
+	debug('Passing to select.json: ', postData2);
 	$.post('select.json', postData2, (result) => {
-		console.log('Result: ', result)
+		debug('Result: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -1827,9 +1827,9 @@ function updateSubsystemQuantities(id_subsystem, message){
 			years: recordArr
 		}
 
-		console.log('Passing to update.json: ', postData);
+		debug('Passing to update.json: ', postData);
 		$.post('update.json', postData, (result) => {
-			console.log('Result: ', result)
+			debug('Result: ', result)
 	
 			//Check the result
 			if (result.msg){
@@ -1922,7 +1922,7 @@ function selectIconModal(callingModal, initialIcon, callback){
  */
 function mappingModal(modalSetup){
 	debug('In mappingModal()')
-	//console.log('selectedNode:', selectedNode)
+	//debug('selectedNode:', selectedNode)
 
 	//Cleanup the modal
 	$("#mappingModalContainer").empty();
@@ -1983,8 +1983,8 @@ function mappingModal_interface(){
 		features: selectedNode.features,
 	};
 	$.post('/select.json', postData, (result) => {
-		console.log('Passed to select.json: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData);
+		debug('Response: ', result)
 		//debug(selectedNode)
 
 		//Load the list of interfaces into the select box
@@ -1999,8 +1999,8 @@ function mappingModal_interface(){
 		id_SIMap: selectedNode.id_SIMap,
 	};
 	$.post('/select.json', postData2, (result) => {
-		console.log('Passed to select.json: ', postData2);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData2);
+		debug('Response: ', result)
 		//debug(selectedNode)
 
 		//Place an icon of each installed interface
@@ -2243,8 +2243,8 @@ function uploadSettings(){
 	}
 
 	$.post('update.json', postData, (result) => {
-		console.log('Passed to update.json: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to update.json: ', postData);
+		debug('Response: ', result)
 
 		//Check the result
 		if (result.msg){

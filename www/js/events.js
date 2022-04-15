@@ -71,8 +71,8 @@ function settings(){
 	const postData = graphSettings.export()
 
 	$.post('/update.json', postData, (result) => {
-		console.log('Passed to select.json:', postData);
-		console.log('Response:', result)
+		debug('Passed to select.json:', postData);
+		debug('Response:', result)
 
 	})
 	*/
@@ -143,8 +143,8 @@ function save_png(){
 		
 		//Get node details from the server
 		$.post('./select.json', postData, (result) => {
-			console.log('Passed to select.json:', postData);
-			console.log('Response:', result)
+			debug('Passed to select.json:', postData);
+			debug('Response:', result)
 
 			//Check the result
 			if (result.msg){
@@ -156,7 +156,7 @@ function save_png(){
 				result[0].type = postData.type;
 				selectedNode.update(result[0]);
 
-				console.log('selectedNode:', selectedNode)
+				debug('selectedNode:', selectedNode)
 			}
 			//Populate the table
 			//$('#nodeDetailsTable').replaceWith(nodeDetailsTable());
@@ -174,7 +174,7 @@ function save_png(){
  */
 function editNodeButton(){
 	debug('In editNode()');
-	//console.log('selectedNode', selectedNode)
+	//debug('selectedNode', selectedNode)
 	switch (selectedNode.type){
 		case 'Subsystem':
 			updateSubsystemModal({id_subsystem: selectedNode.id_subsystem})
@@ -244,8 +244,8 @@ function mappingModal_addButton(){
 
 
 		$.post(`update.json`, postData, (result) => {
-			console.log('Passed to update.json: ', postData);
-			console.log('Response: ', result)
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
 
 			//Reload the modal
 			editConnectionsButton();
@@ -278,8 +278,8 @@ function mappingModal_deleteButton(idToDelete){
 
 
 	$.post('/update.json', postData, (result) => {
-		console.log('Passed to update.json: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to update.json: ', postData);
+		debug('Response: ', result)
 
 		//Check the result
 		if (result.err){ $("#mappingModalWarning").removeClass('d-none').text(result.err);}

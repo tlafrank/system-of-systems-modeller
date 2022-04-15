@@ -74,9 +74,11 @@ function nodeTable($selector, node){
  * 
  * handle multiple paramaters, perhaps debug levels too
  */
-function debug(msg){
+function debug(...msg){
 	if (debugOn) {
-		console.log(msg);
+		for (var i = 0; i < msg.length; i++){
+			console.log(msg[i]);
+		}
 	}
 }
 
@@ -519,8 +521,8 @@ async function populateSelect(selector, postData, dataAttributeName, callback){
 
 	
 	await $.post('select.json', postData, async (result) => {
-		console.log('Passed to select.json: ', postData);
-		console.log('Response: ', result)
+		debug('Passed to select.json: ', postData);
+		debug('Response: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -535,7 +537,7 @@ async function populateSelect(selector, postData, dataAttributeName, callback){
 					addFormElement(selector, {type: 'option', label: element.name})
 				}
 			})
-			//setTimeout(function(){ console.log("timeout completed"); }, 3000);
+			//setTimeout(function(){ debug("timeout completed"); }, 3000);
 
 
 			if (callback) { callback() };
