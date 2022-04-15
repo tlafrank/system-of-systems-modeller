@@ -149,7 +149,6 @@ class Subsystem {
 					group: 'edges',
 					data: {
 						id: 'edge_s_si_' + element.id_SIMap,
-						
 						source: 'node_s_' + this.id_subsystem,
 						target: 'node_si_' + element.id_SIMap,
 					},
@@ -166,6 +165,7 @@ class Subsystem {
 							id_network: element2.id_network,
 							source: 'node_si_' + element.id_SIMap,
 							target: 'node_n_' + element2.id_network,
+							name: 'IF001',
 						},
 						classes: 'blue'
 					})

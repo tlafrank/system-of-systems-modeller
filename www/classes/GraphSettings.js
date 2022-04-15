@@ -146,7 +146,22 @@ var cyStyle = [ // the stylesheet for the graph
 		style: {
 			'width': 3,
 			'line-color': '#000',
-			'curve-style': 'bezier'
+			'curve-style': 'bezier',
+		}
+	},
+	{
+		selector: 'edge[name]',
+		style: {
+			'label': 'data(name)',
+			'color': 'black',
+			'text-border-color': 'green',
+			'text-border-opacity': 1,
+			'text-border-width': 2,
+			'line-color': 'orange',
+			
+			'text-background-padding': 1,
+			'text-background-color': 'white',
+			'text-background-opacity': 1,
 		}
 	},
 	//Need to add styling for various subsystem classes
