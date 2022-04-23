@@ -100,6 +100,52 @@ function save_png(){
 }
 
 
+/**
+ * @description User clicks on a node in the graph
+ * 
+ */
+function hideSelectedNodeButton(){
+	hideNode(selectedNode.id, selectedNode.idNo, selectedNode.type);
+}
+
+/**
+ * @description User clicks on a node in the graph
+ * 
+ */
+function hideNode(id, idNo, type){
+	debug(`Hiding ${id} of type ${type} with ID: ${idNo}`);
+
+	//Remove clicked node from the graph
+	cy.remove(`[id = '${id}']`)
+
+	//Remove relevant associated nodes
+	if (type == `Subsystem`){
+		//A subsystem was clicked, remove its interfaces
+		const postData = {};
+		postData.type = `SubsystemInterfaces`;
+		postData.id_subsystem = idNo;
+
+		//Get associated interfaces from the server
+		$.post('./select.json', postData, (result) => {
+			debug('Passed to select.json:', postData);
+			debug('Response:', result)
+
+			//Check the result
+			if (result.msg){
+				//An error was passed																			//Add error handling
+			} else {
+				result.forEach((element) => {
+					cy.remove(`[id = 'node_si_${element.id_SIMap}']`)
+				})	
+			}
+		})
+	}
+	
+	//Remove all orphaned nodes (i.e. networks)
+
+}
+
+
 //************************************************************ Graph Nodes ******************************************************/
 /**
  * @description User clicks on a node in the graph
@@ -108,14 +154,8 @@ function save_png(){
  function nodeSelected(eventTarget){
 
 	if (hideNodes){
-		debug(eventTarget)
-		cy.remove(`[id = '${eventTarget.data('id')}']`)
-
-		//Also need to remove all its nodes
-
-
-		//Remove all orphaned nodes (i.e. networks)
-		
+		debug('Hiding Node: ', eventTarget);
+		hideNode(eventTarget.data('id'), eventTarget.data('idNo'), eventTarget.data('nodeType'));
 	} else {
 
 		const postData = {};
@@ -124,17 +164,13 @@ function save_png(){
 
 		switch (eventTarget.data('nodeType')){
 			case 'Subsystem':
-				postData.id_subsystem = eventTarget.data('id_subsystem');
-				document.querySelector('#makeSubject').disabled = false;				
+				postData.id_subsystem = eventTarget.data('id_subsystem');		
 				break;
 			case 'SubsystemInterface':
-				debug('in si map')
 				postData.id_SIMap = eventTarget.data('id_SIMap');
-				document.querySelector('#makeSubject').disabled = true;
 				break;
 			case 'Network':
-				postData.id_network = eventTarget.data('id_network');
-				document.querySelector('#makeSubject').disabled = true;				
+				postData.id_network = eventTarget.data('id_network');			
 				break;
 			default:
 				debug('Error in nodeSelected with unexpected nodeType: ' + eventTarget.data('nodeType'))
@@ -154,7 +190,7 @@ function save_png(){
 				//Set the selected node object
 
 				result[0].type = postData.type;
-				selectedNode.update(result[0]);
+				selectedNode.update(result[0], eventTarget.data('id'));
 
 				debug('selectedNode:', selectedNode)
 			}
@@ -287,15 +323,6 @@ function mappingModal_deleteButton(idToDelete){
 		//Reload the modal
 		editConnectionsButton();
 	})
-}
-
-
-/**
- * @description Handles change to focus node
- * 
- */
-function makeSubjectButton(){
-	newCy({id_subsystem: selectedNode.id_subsystem})
 }
 
 

@@ -95,9 +95,6 @@
 					<a id="masterReset" class="nav-link" href="#" onclick="settings()">Settings</a>
 				</li>
 				<li class="nav-item"></li>
-					<a id="masterReset" class="nav-link" href="#" onclick="test()">Test</a>
-				</li>
-				<li class="nav-item"></li>
 					<a id="masterReset" class="nav-link" href="#" onclick="save_png()">Save PNG</a>
 				</li>	
 				
@@ -109,30 +106,34 @@
 			<a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">Dashboard</a>
 			-->
 			<div class="border-end bg-white" id="sidebar-wrapper">
+				<div class="sidebar-heading border-bottom bg-dark text-white px-2"><h5 class="my-0">Graph Manipulation</h5></div>
+				<div id="sidebarGraph" class="">
+					<div class="row">
+						<div class="col">
+							<button type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="decrementYearButton()">Decrement Year</button>
+						</div>
+						<div class="col">
+							<button type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="incrementYearButton()">Increment Year</button>
+						</div>
+					</div>	
+					<button id="hideNodeToggleButton" type="button" class="btn btn-secondary btn-sm btn-block my-1" onclick="hideNodesButton()">Hide Node Toggle</button>
+					
 
-			<div class="sidebar-heading border-bottom bg-dark text-white px-2"><h5 class="my-0">Selected Node Details</h5></div>
-			<div id="sidebarInterface" class="">
-				<table id="nodeDetailsTable" class="table table-sm mx-1">
-				<tbody>
-
-				</tbody>
-				</table>
-
-				<button id="editNodeButton" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="editNodeButton()">Edit Node</button>
-				<button id="hideNode" type="button" class="btn btn-primary btn-sm btn-block my-1">Hide Node</button>
-				<button id="makeSubject" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="makeSubjectButton()">Make Subject</button>
-				
-				
-				<button id="hideNodeToggleButton" type="button" class="btn btn-secondary btn-sm btn-block my-1" onclick="hideNodesButton()">Hide Node Toggle</button>
-				<div class="row">
-					<div class="col">
-						<button id="hideNodeToggleButton" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="decrementYearButton()">Decrement Year</button>
-					</div>
-					<div class="col">
-						<button id="hideNodeToggleButton" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="incrementYearButton()">Increment Year</button>
-					</div>
 				</div>
-			</div>
+				<div class="sidebar-heading border-bottom bg-dark text-white px-2"><h5 class="my-0">Selected Node Details</h5></div>
+				<div id="sidebarInterface" class="">
+					<table id="nodeDetailsTable" class="table table-sm mx-1">
+					<tbody>
+
+					</tbody>
+					</table>
+
+					<button id="editNodeButton" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="editNodeButton()">Edit Node</button>
+					<button id="hideNode" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="hideSelectedNodeButton()">Hide Selected Node</button>
+					
+					
+
+				</div>
 			</div>
 
 			<!-- Page Content -->

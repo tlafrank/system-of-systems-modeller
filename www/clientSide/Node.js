@@ -55,8 +55,10 @@ class Node {
 	 * 
 	 * @param  {} node
 	 */
-	update(node){
+	update(node,graphNodeId){
 		this.type = node.type;
+
+		this.id = graphNodeId;
 
 		var standardSet = () => {
 			this.name = node.name;
@@ -68,12 +70,14 @@ class Node {
 			standardSet();
 			
 			this.id_subsystem = node.id_subsystem;
-			this.isJoint = node.isJoint;
+			this.idNo = node.id_subsystem;
 		}
 
 		if (node.type == 'Interface'){
 			standardSet();
+
 			this.id_interface = node.id_interface;
+			this.idNo = node.id_interface;
 
 			if (node.features) {
 				this.features = node.features.split(',');
@@ -91,6 +95,7 @@ class Node {
 			this.image = node.interfaceImage;
 			this.description = node.description;
 			this.id_SIMap = node.id_SIMap;
+			this.idNo = node.id_SIMap;
 			this.subsystemName = node.subsystemName;
 			this.subsystemImage = node.subsystemImage;
 			this.id_interface = node.id_interface;
@@ -112,6 +117,7 @@ class Node {
 		if (node.type == 'Network'){
 			standardSet();
 			this.id_network = node.id_network;
+			this.idNo = node.id_network;
 			this.id_feature = node.id_feature;
 			this.featureName = node.featureName;
 		}
@@ -136,7 +142,6 @@ class Node {
 			if (this.id_subsystem) { data.id_subsystem = this.id_subsystem } //Indicates this should be considered an update, not an insert
 			data.quantity = this.quantity;
 			data.image = this.image;
-			data.isJoint = this.isJoint;
 			data.qtyInYears = this.qtyInYears;
 		}
 

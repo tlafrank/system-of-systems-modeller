@@ -304,7 +304,7 @@ exports.switch = (req,res) => {
 	//*************************************** Response to client *******************************************************/
 			var responseArr = []
 
-			//Produce the network nodes
+			//Produce the network nodes																		//Need to look more closely how thi works
 			networksArr.forEach((element) => {
 				responseArr.push({
 					group: 'nodes',

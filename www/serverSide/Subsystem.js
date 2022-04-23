@@ -118,6 +118,7 @@ class Subsystem {
 			group: 'nodes',
 			data: {
 				id: 'node_s_' + this.id_subsystem,
+				idNo: this.id_subsystem,
 				id_subsystem: this.id_subsystem,
 				nodeType: 'Subsystem',
 				name: this.name,
@@ -135,6 +136,7 @@ class Subsystem {
 					group: 'nodes',
 					data: {
 						id: 'node_si_' + element.id_SIMap,
+						idNo: this.id_SIMap,
 						id_subsystem: this.id_subsystem,
 						id_SIMap: element.id_SIMap,
 						nodeType: 'SubsystemInterface',
@@ -149,6 +151,7 @@ class Subsystem {
 					group: 'edges',
 					data: {
 						id: 'edge_s_si_' + element.id_SIMap,
+						idNo: element.id_SIMap,
 						source: 'node_s_' + this.id_subsystem,
 						target: 'node_si_' + element.id_SIMap,
 					},
@@ -162,6 +165,7 @@ class Subsystem {
 						group: 'edges',
 						data: {
 							id: 'edge_si_' + element.id_SIMap + '_n_' + element2.id_network,
+							idNo: element2.id_network,
 							id_network: element2.id_network,
 							source: 'node_si_' + element.id_SIMap,
 							target: 'node_n_' + element2.id_network,
@@ -185,6 +189,7 @@ class Subsystem {
 						group: 'edges',
 						data: {
 							id: 'edge_s_' + this.id_subsystem + '_n_' + element2.id_network,
+							idNo: element2.id_network,
 							id_network: element2.id_network,
 							source: 'node_s_' + this.id_subsystem,
 							target: 'node_n_' + element2.id_network,
