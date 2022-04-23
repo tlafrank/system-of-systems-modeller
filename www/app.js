@@ -3,14 +3,14 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
 
-const select = require('./helpers/select');
-const graph = require('./helpers/graph');
-const update = require('./helpers/update');
-const backup = require('./helpers/backup');
+const select = require('./serverSide/select');
+const graph = require('./serverSide/graph');
+const update = require('./serverSide/update');
+const backup = require('./serverSide/backup');
 
 
 
-const images = require('./helpers/images');
+const images = require('./serverSide/images');
 const fs = require('fs');
 
 
@@ -25,8 +25,8 @@ app.use('/images', express.static('images'));
 app.use('/assets', express.static('assets'));
 
 app.use('/css', express.static('css'));
-app.use('/js', express.static('js'));
-app.use('/classes', express.static('classes'));
+app.use('/clientSide', express.static('clientSide'));
+//app.use('/classes', express.static('classes'));
 
 
 app.use(bodyParser.urlencoded({ extended: true }));
