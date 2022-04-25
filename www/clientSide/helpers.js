@@ -147,9 +147,9 @@ function getFormElement($selector, properties){
 
 		case 'checkbox':
 			if ($($selector).prop("checked")){
-				return 1
+				return 1;
 			} else {
-				return 0
+				return 0;
 			}
 		break;
 		case 'img':
@@ -265,7 +265,9 @@ function addFormElement(selector, properties){
 
 			if (properties.options) {
 				properties.options.forEach((element) => {
+					debug(properties.value +  ' ' + element)
 					if (properties.value == element){
+						debug('Match')
 						formElement += `<option selected>${element}</option>`;
 					} else {
 						formElement += `<option>${element}</option>`;

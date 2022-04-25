@@ -2,6 +2,7 @@
 
 /**
  * @description Update the subsystems by choosing a subsystem from a list
+ * 
  */
 function update_subsystem(){
 	updateSubsystemModal({ id_subsystem: 1 });
@@ -34,50 +35,38 @@ function update_features(){
 
 /**
  * @description Update the networks by choosing the network from a list
+ * 
  */
  function update_network(){
 	updateNetworkModal({id_network: 1});
 }
 
-
+/**
+ * @description 
+ * 
+ */
 function view_graph(){
-	graphSettings.mainPage = 'graph';
+	localStorage.setItem('mainPage', 'graph');
 	uploadSettings();
 	mainPage();
 }
 
 function view_summary(){
-	graphSettings.mainPage = 'summary';
+	localStorage.setItem('mainPage', 'summary');
 	uploadSettings();
 	mainPage();
 }
 
 function view_issues(){
-	graphSettings.mainPage = 'issues';
+	localStorage.setItem('mainPage', 'issues');
 	uploadSettings();
 	mainPage();
 }
 
-
 /**
- * @description Save the contents of the GraphSettings object
+ * @description 
  * 
  */
-function settings(){
-	settingsModal();
-
-	/*
-
-	const postData = graphSettings.export()
-
-	$.post('/update.json', postData, (result) => {
-		debug('Passed to select.json:', postData);
-		debug('Response:', result)
-
-	})
-	*/
-}
-
 function reorgGraph(){
 	debug ('In reorgGraph()')
 
@@ -87,7 +76,11 @@ function reorgGraph(){
 	// layout.run();
 }
 
-function save_png(){
+/**
+ * @description 
+ * 
+ */
+function savePng(){
 	var image = cy.png();
 
 	var hiddenElement = document.createElement('a');
@@ -226,15 +219,20 @@ function editNodeButton(){
 }
 
 
-
+/**
+ * @description 
+ * 
+ */
 function decrementYearButton(){
-	graphSettings.activeYear--;
+	var newYear = parseInt(localStorage.getItem('activeYear'));
+	newYear--;
+	localStorage.setItem('activeYear', newYear)
 	newCy();
 }
-
-
 function incrementYearButton(){
-	graphSettings.activeYear++;
+	var newYear = parseInt(localStorage.getItem('activeYear'));
+	newYear++;
+	localStorage.setItem('activeYear', newYear)
 	newCy();
 }
 
@@ -328,6 +326,7 @@ function mappingModal_deleteButton(idToDelete){
 
 /**
  * @description Toggle whether clicking on a node in the graph should hide the node
+ * 
  */
  function hideNodesButton(){
 	debug ('In hideNodesButton()');

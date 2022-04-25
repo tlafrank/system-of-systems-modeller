@@ -12,45 +12,14 @@ var hideNodes = false; //Tracks whether a click on a node should remove it from 
 
 $(document).ready(function(){
 	graphSettings = new GraphSettings();
-	updateGraphSettings(mainPage);
+	mainPage();
   	selectedNode = new Node();
 })
-
-/**
- * @description Get the graphSettings from the server and populate the GraphSettings object
- * 
- * @param  {} callback
- */
-function updateGraphSettings(callback) {
-	debug('In updateGraphSettings()')
-
-	const postData = {type: 'graphSettings'};
-	$.post('/select.json', postData, (result) => {
-		debug('Passed to select.json:', postData);
-		
-		if (result.err) {
-			debug('Err response:')
-			if (result.err.errno == 1045){
-				debug(result.err.sqlMessage)
-				debug('Is the database configured correctly?')	
-			} else {
-				debug(result.err);
-			}
-			 
-			//Display error to homepage and stop further requests to the server
-			
-		} else {
-			debug('Successful Response, executing graphSettings.update()')
-			graphSettings.update(result);
-		}
-		if (callback) { callback(); }
-	})
-}
 
 //Load the appropriate main pane data
 function mainPage(){
 	debug('In mainPage()')
-	switch (graphSettings.mainPage){
+	switch (localStorage.getItem('defaultLandingPage')){
 		case 'graph':
 			var pageContent = `<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`
 
@@ -188,7 +157,7 @@ function newCy(){
 
 	getGraphData(cy);
 
-	$('#pageTitle').text(`SOS Model ${graphSettings.activeYear}`)
+	$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
 
 	selectedNode = new Node();
 
@@ -202,7 +171,7 @@ function resetCy(){
 	cy = cytoscape({
 		container: $("#cy"),
 		style: cyStyle,
-		layout: graphSettings.getLayout(),
+		layout: JSON.parse(localStorage.getItem('graphLayout')),
 		wheelSensitivity: 0.4, //Required for scroll wheel on laptop to work. Reason unknown.
 	});
 }
@@ -216,22 +185,21 @@ function resetCy(){
  */
 async function getGraphData(cy){
 	debug('in getGraphData()');
-	debug(graphSettings);
 
 	//Year of graph
 	const postData = {
 		type: 'GraphNodes',
-		year: graphSettings.activeYear,
-		showInterfaces: graphSettings.showInterfaces,
-		showIssues: graphSettings.showIssues
+		year: parseInt(localStorage.getItem('activeYear')),
+		showInterfaces: localStorage.getItem('showInterfaces'),
+		showIssues: localStorage.getItem('showIssues')
 	}
 
 	//Filters
-	if (graphSettings.includedFilterTag.length > 0){
-		postData.includedFilterTag = graphSettings.includedFilterTag
+	if (localStorage.getItem('includedFilterTag').length > 0){
+		postData.includedFilterTag = localStorage.getItem('includedFilterTag')
 	}
-	if (graphSettings.excludedFilterTag.length > 0){
-		postData.excludedFilterTag = graphSettings.excludedFilterTag
+	if (localStorage.getItem('excludedFilterTag').length > 0){
+		postData.excludedFilterTag = localStorage.getItem('excludedFilterTag')
 	}
 
 
@@ -240,8 +208,6 @@ async function getGraphData(cy){
 		debug('Passed to graph.json:', postData);
 		debug('Response:', result)
 
-		
-
 		//Handle the stats data as well
 		sosm = result[1];
 
@@ -249,7 +215,7 @@ async function getGraphData(cy){
 			cy.add(result[0]);
 			
 
-			cy.layout(graphSettings.getLayout()).run();
+			cy.layout(graphSettings.getGraphLayout()).run();
 			
 			
 			//cy.stop(true, true); 

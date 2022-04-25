@@ -1,8 +1,113 @@
-
-
-
 //******************************** Main Modals ****************************************
+/**
+ * @description Modify the global settings
+ * 
+ * Should be updated in time to be user specific settings. Cookies or database?
+ * 
+ */
+ function settingsModal(message){
+	//Prepare the modal
+	$('#mainModal .modal-body').empty();
+	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
 
+	//Notifications
+	if (message){ addBadge('#mainModal .warning-holder', message) }
+
+	//Buttons
+	addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Update'});
+	addButton('#mainModal .modal-footer', {type: 'close'});
+
+	$('#mainModalTitle').text('Settings');
+	$('#mainModal').modal('show');
+
+	//Add the form element
+	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
+
+	//Add the form controls
+	debug('about to add controls');
+	graphSettings.getFormControls().forEach((element) => {
+		debug('adding elements');
+		addFormElement('#mainModal form', element);
+	})
+
+	//Event: Update button clicked
+	$('#mainModalSubmit').unbind();
+	$('#mainModalSubmit').click((event) => {
+
+		//Gather and validate form data. Uses the same method of GraphSettings to check all 
+
+		const settingsArr = [];
+
+		graphSettings.getFormControls().forEach((element) => {
+			//debug(element);
+			localStorage.setItem(element.id, getFormElement('#' + element.id, element))
+			//debug(localStorage.getItem(element.id));
+		})
+
+		debug(localStorage);
+		newCy();
+		$('#mainModal').modal('hide');
+	});
+}
+
+
+
+/*
+ function settingsModal(message){
+	//Prepare the modal
+	$('#mainModal .modal-body').empty();
+	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
+
+	//Notifications
+	if (message){ addBadge('#mainModal .warning-holder', message) }
+
+	//Buttons
+	addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Update'});
+	addButton('#mainModal .modal-footer', {type: 'close'});
+
+	$('#mainModalTitle').text('Settings');
+	$('#mainModal').modal('show');
+
+	//Add the form element
+	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
+
+	//Add the form controls
+	graphSettings.getFormControls().forEach((element) => {
+		addFormElement('#mainModal form', element);
+	})
+
+	//Event: Update button clicked
+	$('#mainModalSubmit').unbind();
+	$('#mainModalSubmit').click((event) => {
+
+		//Gather and validate form data. Uses the same method of GraphSettings to check all 
+
+		const settingsArr = [];
+		const errorFlag = false;
+
+		graphSettings.getFormControls().forEach((element) => {
+			debug(element);
+
+			graphSettings[element.id] = getFormElement('#' + element.id, element);
+
+		})
+
+		debug(graphSettings)
+
+		if (errorFlag == false){
+			//Validation was successful, submit to the server
+			graphSettings.update(settingsArr);
+
+			uploadSettings();
+	
+		} else {
+			//An error in validation occurred
+
+		}
+		$('#mainModal').modal('hide');
+	});
+}
+*/
 
 /**
  * @description Pick the interface to update from a select.
@@ -1386,66 +1491,7 @@ function updateFeaturesModal(message){
 }
 
 
-/**
- * @description Modify the global settings
- * 
- * Should be updated in time to be user specific settings. Cookies or database?
- * 
- */
- function settingsModal(message){
-	//Prepare the modal
-	$('#mainModal .modal-body').empty();
-	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
 
-	//Notifications
-	if (message){ addBadge('#mainModal .warning-holder', message) }
-
-	//Buttons
-	addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Update'});
-	addButton('#mainModal .modal-footer', {type: 'close'});
-
-	$('#mainModalTitle').text('Settings');
-	$('#mainModal').modal('show');
-
-	//Add the form element
-	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
-
-	//Add the form controls
-	graphSettings.getFormControls().forEach((element) => {
-		addFormElement('#mainModal form', element);
-	})
-
-	//Event: Update button clicked
-	$('#mainModalSubmit').unbind();
-	$('#mainModalSubmit').click((event) => {
-
-		//Gather and validate form data. Uses the same method of GraphSettings to check all 
-
-		const settingsArr = [];
-		const errorFlag = false;
-
-		graphSettings.getFormControls().forEach((element) => {
-			debug(element);
-
-			graphSettings[element.id] = getFormElement('#' + element.id, element);
-
-		})
-
-		debug(graphSettings)
-
-		if (errorFlag == false){
-			//Validation was successful, submit to the server
-			graphSettings.update(settingsArr);
-
-			uploadSettings();
-	
-		} else {
-			//An error in validation occurred
-
-		}
-		$('#mainModal').modal('hide');
-	});
-}
 
 
 /**

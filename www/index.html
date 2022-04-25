@@ -80,24 +80,9 @@
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Maintenance</a>
 					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
 						<a class="dropdown-item" href="#">Unattached Interfaces</a>
-						<a id="updateInterfaces" class="dropdown-item" href="#" onclick="maintenance_saveGraphSettings()">Save Graph Settings</a> <!-- Remove, save after setting -->
 						<a class="dropdown-item" href="/backup.txt" target="_blank">Backup</a>
 					</div>
 				</li>
-
-				<li class="nav-item">
-					<a id="reorgGraph" class="nav-link" href="#" onclick="reorgGraph()">Reorganise Graph</a>
-				</li>
-				<li class="nav-item"></li>
-					<a id="masterReset" class="nav-link" href="#" onclick="newCy()">Redraw Graph</a>
-				</li>
-				<li class="nav-item"></li>
-					<a id="masterReset" class="nav-link" href="#" onclick="settings()">Settings</a>
-				</li>
-				<li class="nav-item"></li>
-					<a id="masterReset" class="nav-link" href="#" onclick="save_png()">Save PNG</a>
-				</li>	
-				
 			</div>
 		</nav>
 		<h2 id="pageTitle" class="text-center">System Design</h2>
@@ -117,6 +102,21 @@
 						</div>
 					</div>	
 					<button id="hideNodeToggleButton" type="button" class="btn btn-secondary btn-sm btn-block my-1" onclick="hideNodesButton()">Hide Node Toggle</button>
+					<button id="graphSettings" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="settingsModal()">Graph Settings</button>
+					
+					<button id="savePng" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="savePng()">Save PNG</button>
+					
+					
+					
+					<div class="row">
+						<div class="col">
+							<button id="reorgGraph" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="reorgGraph()">Reorganise Graph</button>
+						</div>
+						<div class="col">
+							<button id="redrawGraph" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="newCy()">Redraw Graph</button>
+						</div>
+					</div>	
+					
 					
 
 				</div>
