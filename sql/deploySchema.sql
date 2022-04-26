@@ -125,20 +125,10 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`graphSettings`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`graphSettings` (
-  `keyName` VARCHAR(45) NOT NULL,
-  `value` VARCHAR(45) NULL,
-  UNIQUE INDEX `key_UNIQUE` (`keyName` ASC))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `db_sosm`.`parties`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `db_sosm`.`parties` (
-  `id_party` INT NOT NULL,
+  `id_party` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NULL,
   `description` LONGTEXT NULL,
   PRIMARY KEY (`id_party`))
@@ -149,7 +139,7 @@ ENGINE = InnoDB;
 -- Table `db_sosm`.`issues`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `db_sosm`.`issues` (
-  `id_issue` INT NOT NULL,
+  `id_issue` INT NOT NULL AUTO_INCREMENT,
   `id_type` INT NULL COMMENT 'Could refer to the primary keys of SIMap, interfaces or network',
   `type` VARCHAR(45) NULL COMMENT 'SubsystemInterface,Interface,Feature,Network',
   `name` VARCHAR(45) NULL COMMENT 'A summary title of the issue',
