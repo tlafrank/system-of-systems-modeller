@@ -1,11 +1,139 @@
 //******************************** Main Modals ****************************************
 /**
- * @description Modify the global settings
+ * @description A modal to allow the user to select the tags to include or exclude from the graph
  * 
- * Should be updated in time to be user specific settings. Cookies or database?
  * 
  */
- function settingsModal(message){
+ function manageTagsModal(){
+	
+	/*
+	var formControls = [
+		{ type: 'note', id: 'manageTagsDesc', text: 'Description of how these tags work.' },
+		{ type: 'select', id: 'availableTags', label: 'Available Tags' },
+		{ type: 'text', id: 'includedTags', label: 'Included Tags' },
+				
+	];
+	*/
+
+	var availableTags;
+
+	var testTagData = ['controller','sensor','imported','domestic', 'chicken', 'potato', 'more words', 'space test', 'want to', 'know how', 'this looks', 'when these', 'badges wrap'];
+	//localStorage.setItem("includedFilterTag", "L555-6");
+	//localStorage.setItem("excludedFilterTag", "Armour,EW");
+
+	
+	
+	//Prepare the modal
+	$('#mainModal .modal-body').empty();
+	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
+
+	//Modal elements
+	document.querySelector('#mainModal .modal-body').innerHTML = `
+	<p>Tags allow the graph contents to be filtered for the view. Tags are added to the system's definition page. When using tages, included tags are applied first, followed by excluded tags.</p>
+	<h5 class="my-2">Availaible Tags</h5>
+	<div id="availableTags" class="card bg-light border-secondary"><div class="card-body" ondrop="dragDrop(event)" ondragover="dragOver(event)"></div></div>
+	<h5 class="my-2">Included Tags</h5>
+	<div id="includedTags" class="card bg-light border-secondary"><div class="card-body" ondrop="dragDrop(event)" ondragover="dragOver(event)"></div></div>
+	<h5 class="my-2">Excluded Tags</h5>
+	<div id="excludedTags" class="card bg-light border-secondary"><div class="card-body" ondrop="dragDrop(event)" ondragover="dragOver(event)"></div></div>`
+	
+	//Get tags from the server
+	const postData = {
+		type: 'TagList'
+	}
+	$.post('select.json', postData, (result) => {
+		debug('Passed to select.json2: ', postData);
+		debug('Response: ', result)
+
+		var tagData = [];
+		var tagList = [];
+		//Iterate over each tag list
+		result.forEach((element) => {
+			//Split the tags into an array and check if the tag has already been entered into tagData
+			tagList = element.tags.split(',');
+			for (var i = 0; i<tagList.length; i++){
+				if (!tagData.includes(tagList[i])){
+					tagData.push(tagList[i]);
+				}
+			}
+		})
+
+		tagData = tagData.sort();
+
+		//Put all the tags which exist into the availableTags div
+		for (var i = 0; i < tagData.length; i++){
+			addDragableBadge('#availableTags .card-body', tagData[i], i )
+		}
+
+		//Iterate through localStorage includedTags and move tags from availableTags to the includedTags div
+		//Convert to array
+		var includedTags = localStorage.getItem("includedFilterTag").split(",");
+		availableTags = document.querySelectorAll("#availableTags span");
+		includedTags.forEach((element) => {
+			//Iterate through availableTags until found
+			availableTags.forEach((element2) => {
+				if (element2.textContent == element) {
+					$('#includedTags .card-body').append(element2);
+				}
+			})
+		})
+
+		//Iterate through localStorage excludedTags and move tags from availableTags to the excludedTags div
+		//Convert to array
+		var excludedTags = localStorage.getItem("excludedFilterTag").split(",");
+		availableTags = document.querySelectorAll("#availableTags span");
+		excludedTags.forEach((element) => {
+			//Iterate through availableTags until found
+			availableTags.forEach((element2) => {
+				if (element2.textContent == element) {
+					$('#excludedTags .card-body').append(element2);
+				}
+			})
+		})
+	})
+
+	//Buttons
+	addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Update'});
+	addButton('#mainModal .modal-footer', {type: 'close'});
+
+	$('#mainModalTitle').text('Show / Hide by Tag');
+	$('#mainModal').modal('show');
+
+	//Event: Update button clicked
+	$('#mainModalSubmit').unbind();
+	$('#mainModalSubmit').click((event) => {
+		//Update localStorage with includedTags
+		var includedTags = document.querySelectorAll("#includedTags span");
+		var includedTagsString = '';
+		includedTags.forEach((element) => {
+			includedTagsString += element.textContent + ','
+		})
+		//Trim
+		if (includedTagsString.length > 0){ includedTagsString = includedTagsString.substring(0,includedTagsString.length - 1);	}
+		localStorage.setItem('includedFilterTag', includedTagsString);
+
+		//Update localStorage with excludedTags
+		var excludedTags = document.querySelectorAll("#excludedTags span");
+		var excludedTagsString = '';
+		excludedTags.forEach((element) => {
+			excludedTagsString += element.textContent + ','
+		})
+		//Trim
+		if (excludedTagsString.length > 0){ excludedTagsString = excludedTagsString.substring(0,excludedTagsString.length - 1);	}
+		localStorage.setItem('excludedFilterTag', excludedTagsString);
+
+		newCy();
+		$('#mainModal').modal('hide');
+	});
+
+ }
+
+/**
+ * @description Modify the graph settings for the local user
+ * 
+ * 
+ */
+function settingsModal(message){
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
 	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
@@ -24,9 +152,7 @@
 	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
 
 	//Add the form controls
-	debug('about to add controls');
 	graphSettings.getFormControls().forEach((element) => {
-		debug('adding elements');
 		addFormElement('#mainModal form', element);
 	})
 

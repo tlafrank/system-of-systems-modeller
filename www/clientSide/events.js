@@ -1,5 +1,10 @@
 //************************************************************ Navigation Menu ******************************************************/
 
+function manageTags(){
+	manageTagsModal();
+}
+
+
 /**
  * @description Update the subsystems by choosing a subsystem from a list
  * 

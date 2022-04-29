@@ -194,13 +194,19 @@ async function getGraphData(cy){
 		showIssues: localStorage.getItem('showIssues')
 	}
 
+	//debug('TEST:', 2*false + false);
+
 	//Filters
+	
 	if (localStorage.getItem('includedFilterTag').length > 0){
+		//debug(localStorage.getItem('includedFilterTag').split(','))
 		postData.includedFilterTag = localStorage.getItem('includedFilterTag')
 	}
+	
 	if (localStorage.getItem('excludedFilterTag').length > 0){
 		postData.excludedFilterTag = localStorage.getItem('excludedFilterTag')
 	}
+	
 
 
 	//New post which will return an object suitable for direct insertion into cy

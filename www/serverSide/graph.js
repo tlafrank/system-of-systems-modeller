@@ -30,19 +30,49 @@ exports.switch = (req,res) => {
 
 	//Get all the subsystems requested by the user
 	queryString[0] = sql.format(`SELECT id_subsystem, name, image, tags FROM subsystems`);
-	if(req.body.includedFilterTag){
-		queryString[0] += sql.format(` WHERE tags LIKE ?`,['%' + req.body.includedFilterTag + '%'])
-	}
-	if(req.body.excludedFilterTag){
-		if(req.body.includedFilterTag){
-			queryString[0] += sql.format(` AND WHERE tags NOT LIKE ?`,['%' + req.body.excludedFilterTag + '%'])
-		} else {
-			queryString[0] += sql.format(` WHERE tags NOT LIKE ?`,['%' + req.body.excludedFilterTag + '%'])
-		}
-	}
-	queryString[0] += ';'
+	var includedTags = [];
+	var excludedTags = [];
 
+	debug(2 * Boolean(req.body.includedFilterTag) + Boolean(req.body.excludedFilterTag))
 
+	switch (2 * Boolean(req.body.includedFilterTag) + Boolean(req.body.excludedFilterTag)){
+		case 3:
+			//Both included and excluded tags have been provided
+			includedTags = req.body.includedFilterTag.split(',');
+			excludedTags = req.body.excludedFilterTag.split(',');
+			queryString[0] += sql.format(` WHERE (`);
+			includedTags.forEach((element) => {
+				queryString[0] += sql.format(`tags LIKE ? OR `, ['%' + element + '%']);
+			})
+			queryString[0] = queryString[0].substring(0, queryString[0].length - 4);
+			queryString[0] += ') AND NOT (';
+			excludedTags.forEach((element) => {
+				queryString[0] += sql.format(`tags LIKE ? OR `, ['%' + element + '%']);
+			})
+			queryString[0] = queryString[0].substring(0, queryString[0].length - 4);
+			queryString[0] += ');';
+			break;
+		case 2:
+			//Only included tags have been provided
+			includedTags = req.body.includedFilterTag.split(',');
+			queryString[0] += sql.format(` WHERE`);
+			includedTags.forEach((element) => {
+				queryString[0] += sql.format(` tags LIKE ? OR`, ['%' + element + '%']);
+			})
+			queryString[0] = queryString[0].substring(0, queryString[0].length - 3);
+			break;
+		case 1:
+			//Only excluded tags have been provided
+			excludedTags = req.body.excludedFilterTag.split(',');
+			
+			break;
+		case 0:
+			//No tags have been provided
+			queryString[0] += ';'
+		default:
+	}
+
+	
 	//Produce the query to get the quantitiy of subsystems
 	queryString[1] = sql.format(`SELECT * FROM quantities ORDER BY id_subsystem;`);
 

@@ -513,6 +513,18 @@ function swapSelectOptions(buttonSelector, sourceSelector, destinationSelector){
 	}
 }
 
+/**
+ * @description Add dragable badges to the DOM at $selector
+ * 
+ * @param  {} $selector
+ * @param  msg
+ */
+ function addDragableBadge($selector, msg, index){
+
+
+	$($selector).append(`<span id="drag_${index}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${msg}</span>`);
+}
+
 
 
 /**
@@ -580,4 +592,25 @@ function getReferenceURL(reference){
 		{ label: 'Network Name', type: 'text', columnName: 'name' },
 		{ label: 'Description', type: 'text', columnName: 'description' },	
 	],
+}
+
+/**
+ * @description Drag/Drop Handlers
+ * 
+ */
+
+function dragStart(ev){
+	 // Add the target element's id to the data transfer object
+	 ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function dragOver(ev) {
+	ev.preventDefault();
+}
+
+function dragDrop(ev) {
+	ev.preventDefault();
+	// Get the id of the target and add the moved element to the target's DOM
+	const data = ev.dataTransfer.getData("text");
+	ev.target.appendChild(document.getElementById(data));
 }

@@ -15,6 +15,13 @@ exports.switch = (req,res) => {
 
     var queryString;
 
+    //Get all tags
+    //For: TBA
+    if (req.body.type == 'TagList'){
+        //Build the query
+        queryString = sql.format(`SELECT DISTINCT tags FROM subsystems;`)
+    }	
+
     //******************************** Subsystem ****************************************
 
     //Get all subsystems, or a specific one
