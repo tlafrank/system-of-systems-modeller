@@ -255,6 +255,12 @@ function addFormElement(selector, properties){
 	var formElement = '';
 
 	switch (properties.type){
+		case 'droppable':
+			formElement += `<h5 class="my-2">${properties.label}</h5>
+			<div id="${properties.id}" class="card bg-light border-secondary">
+				<div class="card-body" ondrop="dragDrop(event)" ondragover="dragOver(event)"></div>
+			</div>`
+		break;
 		case 'select':
 			formElement += `<div class="form-group"><label for="${properties.id}">${properties.label}</label>`;
 			if (properties.multiple){
@@ -520,7 +526,6 @@ function swapSelectOptions(buttonSelector, sourceSelector, destinationSelector){
  * @param  msg
  */
  function addDragableBadge($selector, msg, index){
-
 
 	$($selector).append(`<span id="drag_${index}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${msg}</span>`);
 }

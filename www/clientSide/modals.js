@@ -16,33 +16,31 @@
 	*/
 
 	var availableTags;
+	const pageLayout = [
 
-	var testTagData = ['controller','sensor','imported','domestic', 'chicken', 'potato', 'more words', 'space test', 'want to', 'know how', 'this looks', 'when these', 'badges wrap'];
-	//localStorage.setItem("includedFilterTag", "L555-6");
-	//localStorage.setItem("excludedFilterTag", "Armour,EW");
-
-	
+		{ type: 'droppable', id: 'availableTags', label: 'Availaible Tags' },
+		{ type: 'droppable', id: 'includedTags', label: 'Included Tags' },
+		{ type: 'droppable', id: 'excludedTags', label: 'Excluded Tags' },
+	];
 	
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
 	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
 
 	//Modal elements
-	document.querySelector('#mainModal .modal-body').innerHTML = `
-	<p>Tags allow the graph contents to be filtered for the view. Tags are added to the system's definition page. When using tages, included tags are applied first, followed by excluded tags.</p>
-	<h5 class="my-2">Availaible Tags</h5>
-	<div id="availableTags" class="card bg-light border-secondary"><div class="card-body" ondrop="dragDrop(event)" ondragover="dragOver(event)"></div></div>
-	<h5 class="my-2">Included Tags</h5>
-	<div id="includedTags" class="card bg-light border-secondary"><div class="card-body" ondrop="dragDrop(event)" ondragover="dragOver(event)"></div></div>
-	<h5 class="my-2">Excluded Tags</h5>
-	<div id="excludedTags" class="card bg-light border-secondary"><div class="card-body" ondrop="dragDrop(event)" ondragover="dragOver(event)"></div></div>`
+	document.querySelector('#mainModal .modal-body').innerHTML = `<p>Tags allow the graph contents to be filtered for the view. Tags are added to the system's definition page. When using tages, included tags are applied first, followed by excluded tags.</p>`
 	
+	pageLayout.forEach((element) => {
+		addFormElement('#mainModal .modal-body', element);
+	})
+
 	//Get tags from the server
 	const postData = {
 		type: 'TagList'
 	}
+
 	$.post('select.json', postData, (result) => {
-		debug('Passed to select.json2: ', postData);
+		debug('Passed to select.json: ', postData);
 		debug('Response: ', result)
 
 		var tagData = [];
