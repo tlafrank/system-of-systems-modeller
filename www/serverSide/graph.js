@@ -66,7 +66,7 @@ exports.switch = (req,res) => {
 			excludedTags = req.body.excludedFilterTag.split(',');
 			queryString[0] += sql.format(` WHERE`);
 			excludedTags.forEach((element) => {
-				queryString[0] += sql.format(` tags NOT LIKE ? OR`, ['%' + element + '%']);
+				queryString[0] += sql.format(` tags NOT LIKE ? AND`, ['%' + element + '%']);
 			})
 			queryString[0] = queryString[0].substring(0, queryString[0].length - 3);
 			break;
