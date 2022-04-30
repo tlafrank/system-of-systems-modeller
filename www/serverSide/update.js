@@ -1,38 +1,38 @@
 const { format } = require('./db');
 const sql = require('./db');
 
-let debugOn = false;
-debugOn = true;
+let debugLevel = 2;
 
-//Subsystem controller
-function debug(msg){
-	if (debugOn){
-		console.log(msg);
-	}
+//System controller
+function debug(level, msg){
+	if (debugLevel >= level){
+        console.log(msg);
+    }
 }
 
 exports.switch = (req,res) => {
-    debug(req.body);
+    debug(1, `update.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
+    debug(7,req.body);
 
     var queryString;
 
 
-	//******************************** Subsystem ****************************************
-	if (req.body.type == 'Subsystem'){
-		if (req.body.id_subsystem > 0) {
+	//******************************** System ****************************************
+	if (req.body.type == 'System'){
+		if (req.body.id_system > 0) {
 			//Update existing feature
-			queryString = sql.format(`UPDATE subsystems SET name = ?, image = ?, description = ?, tags = ?, reference = ? WHERE id_subsystem = ?;`, [req.body.name, req.body.image, req.body.description,
-				req.body.tags, req.body.reference, req.body.id_subsystem]);
+			queryString = sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, tags = ?, reference = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description,
+				req.body.tags, req.body.reference, req.body.id_system]);
 		} else {
 			//Add new feature
-			queryString = sql.format(`INSERT INTO subsystems (name, image, description, tags, reference) VALUES (?,?,?,?,?);`, [req.body.name, req.body.image, req.body.description, req.body.tags, req.body.reference]);
+			queryString = sql.format(`INSERT INTO systems (name, image, description, tags, reference) VALUES (?,?,?,?,?);`, [req.body.name, req.body.image, req.body.description, req.body.tags, req.body.reference]);
 		}
 	}
 
     //******************************** Interface ****************************************
     if (req.body.type == 'Interface'){
         if (req.body.id_interface > 0) {
-            debug('Req body: ' + req.body.features)
+            debug(2,'Req body: ' + req.body.features)
             //Update existing feature
             if (req.body.features){
                 queryString = queryString = sql.format(`UPDATE interfaces SET name = ?, image = ?, description = ?, features = ? WHERE id_interface = ?;`, [req.body.name, req.body.image, req.body.description, req.body.features.toString(), req.body.id_interface])
@@ -51,14 +51,14 @@ exports.switch = (req,res) => {
 		queryString = sql.format(`DELETE FROM interfaces WHERE id_interface = ?`,[req.body.id_interface]);
 	}
 
-    //******************************** Subsystem Interface ****************************************
-    //Assigns an interface to a subsystem
-    if (req.body.type == 'InterfaceToSubsystem'){
-        queryString = sql.format(`INSERT INTO SIMap (id_interface, id_subsystem) VALUES (?,?);`,[req.body.id_interface, req.body.id_subsystem]);        
+    //******************************** System Interface ****************************************
+    //Assigns an interface to a system
+    if (req.body.type == 'InterfaceToSystem'){
+        queryString = sql.format(`INSERT INTO SIMap (id_interface, id_system) VALUES (?,?);`,[req.body.id_interface, req.body.id_system]);        
     } 
 
-	//Delete an interface from a subsystem
-	if (req.body.type == 'DeleteInterfaceFromSubsystem'){
+	//Delete an interface from a system
+	if (req.body.type == 'DeleteInterfaceFromSystem'){
 		queryString = sql.format(`DELETE FROM SIMap WHERE id_SIMap = ?`,[req.body.id_SIMap]);
 	}
 
@@ -87,13 +87,13 @@ exports.switch = (req,res) => {
         queryString = queryString = sql.format(`UPDATE networks SET id_feature = ? WHERE id_network = ?;`, [req.body.id_feature, req.body.id_network])
     }
 
-	//Assigns a network to a Subsystem Interface
+	//Assigns a network to a System Interface
 	//For mappingModal_addButton()
-	if (req.body.type == 'NetworkToSubsystemInterface'){
+	if (req.body.type == 'NetworkToSystemInterface'){
 		queryString = sql.format(`INSERT INTO SINMap (id_SIMap, id_network) VALUES (?,?);`,[req.body.id_SIMap, req.body.id_network]);        
 	}
 
-	//Delete a network from a subsystem interface
+	//Delete a network from a system interface
 	if (req.body.type == 'DeleteNetworkFromInterface'){
 		queryString = sql.format(`DELETE FROM SINMap WHERE id_SINMap = ?`,[req.body.id_SINMap]);
 	}	
@@ -117,10 +117,12 @@ exports.switch = (req,res) => {
 
     //******************************** Quantities ****************************************
 	if (req.body.type == 'QtyYears'){
-        queryString = sql.format('DELETE FROM quantities WHERE id_subsystem = ?;', [req.body.id_subsystem]);
+        queryString = sql.format('DELETE FROM quantities WHERE id_system = ?;', [req.body.id_system]);
+        queryString += sql.format(`INSERT INTO quantities (id_system, year, quantity) VALUES `);
         req.body.years.forEach((element) => {
-			queryString += sql.format(`INSERT INTO quantities (id_subsystem, year, quantity) VALUES (?,?,?);`, [req.body.id_subsystem, element.year, element.quantity]);
+			queryString += sql.format(`(?,?,?),`, [req.body.id_system, element.year, element.quantity]);
 		})
+        queryString = queryString.substring(0,queryString.length-1) + ';';
 	}
 
 
@@ -137,14 +139,14 @@ exports.switch = (req,res) => {
     //******************************** Issues ****************************************
 	if (req.body.type == 'Issue'){
         switch (req.body.subtype){
-            case 'SubsystemInterface':
+            case 'SystemInterface':
                 if (req.body.id_issue > 0){
                     //Is an update
-                    queryString = sql.format(`UPDATE issues SET type = 'SubsystemInterface', id_type = ?, name = ?, severity = ?, issue = ?, resolution = ?  WHERE id_issue = ?;`, [req.body.id_SIMap, req.body.name, req.body.severity, req.body.issue, 
+                    queryString = sql.format(`UPDATE issues SET type = 'SystemInterface', id_type = ?, name = ?, severity = ?, issue = ?, resolution = ?  WHERE id_issue = ?;`, [req.body.id_SIMap, req.body.name, req.body.severity, req.body.issue, 
                         req.body.resolution, req.body.id_issue]);
                 } else {
                     //Is a new record
-                    queryString = sql.format(`INSERT INTO issues (type, id_type, name, severity, issue, resolution) VALUES ('SubsystemInterface', ?,?,?,?,?);`, [req.body.id_SIMap, req.body.name, req.body.severity, req.body.issue, 
+                    queryString = sql.format(`INSERT INTO issues (type, id_type, name, severity, issue, resolution) VALUES ('SystemInterface', ?,?,?,?,?);`, [req.body.id_SIMap, req.body.name, req.body.severity, req.body.issue, 
                         req.body.resolution]);
                 }
             break;
@@ -152,11 +154,11 @@ exports.switch = (req,res) => {
 
             break;
             default:
-                    debug('req.body.type of ' + req.body.subtype + ' was unknown in update.json for expected type of Issue')
+                    debug(2,'req.body.type of ' + req.body.subtype + ' was unknown in update.json for expected type of Issue')
         }
     }
 
-    debug(queryString);
+    debug(2,queryString);
     execute;
 
     var execute = executeQuery(queryString)
@@ -164,8 +166,8 @@ exports.switch = (req,res) => {
             res.json(result) 
         })
         .catch((err) => {
-            console.log(err)
-            if (debugOn){
+            debug(1,err);
+            if (debugLevel == 7){
                 res.json({msg: 'There was an error executing the query (update.json)', err: err})
             } else {
                 res.json({msg: 'There was an error executing the query (update.json)'})

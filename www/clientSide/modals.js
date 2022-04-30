@@ -328,7 +328,7 @@ function settingsModal(message){
 	swapSelectOptions('#mainModalFeaturesAddButton', '#mainModalFeaturesAvailable','#mainModalFeaturesAttached')
 	swapSelectOptions('#mainModalFeaturesRemoveButton', '#mainModalFeaturesAttached','#mainModalFeaturesAvailable')
 
-	//Event: Add a new blank subsystem 
+	//Event: Add a new blank system 
 	$('#mainModalAddNew').unbind();
 	$('#mainModalAddNew').click(() => {
 		$('#mainModal').modal('hide');
@@ -402,8 +402,8 @@ function settingsModal(message){
 	});
 
 	//Event: Changes to any controls
-	$('#mainModalName, #nodeDescription, #subsystemTags').unbind();
-	$('#interfaceIssues, #nodeDescription, #nodeDescription, #subsystemTags').on('input', () => {
+	$('#mainModalName, #nodeDescription, #systemTags').unbind();
+	$('#interfaceIssues, #nodeDescription, #nodeDescription, #systemTags').on('input', () => {
 		//Disable some controls to prevent navigating away from the modal before saving
 		$('#mainModalInterfaceSelect, #interfaceIssues, #mainModalAddNew').prop('disabled', true);
 	});
@@ -618,14 +618,14 @@ function settingsModal(message){
 }
 
 
-function mapNetworksToSubsystemInterface(subsystemInterface, message){
-	debug('In mapNetworksToSubsystemInterface()')
-	debug(subsystemInterface)
+function mapNetworksToSystemInterface(systemInterface, message){
+	debug('In mapNetworksToSystemInterface()')
+	debug(systemInterface)
 
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
 	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
-	$('#mainModalTitle').text('Map Networks to Subsystem Interfaces');	
+	$('#mainModalTitle').text('Map Networks to System Interfaces');	
 	$('#mainModal').modal('show');
 
 	//Notifications
@@ -641,19 +641,19 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 	form.mapNetwork.forEach((element) => { addFormElement('#mainModal form', element) })
 
 	//Breadcrumbs
-	breadcrumbs('#mainModal form', { type: 'Network', id_subsystem: subsystemInterface.id_subsystem, id_SIMap: subsystemInterface.id_SIMap });
+	breadcrumbs('#mainModal form', { type: 'Network', id_system: systemInterface.id_system, id_SIMap: systemInterface.id_SIMap });
 
-	//Get subsystem image details
+	//Get system image details
 	const postData = {
 		type: 'SIImages',
-		id_SIMap: subsystemInterface.id_SIMap
+		id_SIMap: systemInterface.id_SIMap
 	}
 	$.post("select.json", postData, (result) => {
 		debug('Passed to select.json: ', postData);
 		debug('Response: ', result)
 
 		//Place images
-		installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].subsystemName, image: result[0].subsystemImage}, true)
+		installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].systemName, image: result[0].systemImage}, true)
 
 		
 	});
@@ -664,7 +664,7 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 	
 	const postData3 = {
 		type: 'CompatibleFeatures',
-		id_SIMap: subsystemInterface.id_SIMap
+		id_SIMap: systemInterface.id_SIMap
 	}
 	
 	$.post("select.json", postData3, (result) => {
@@ -686,11 +686,11 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 		});
 	});
 
-	//Get all networks currently assigned to the subsystem interface
+	//Get all networks currently assigned to the system interface
 	
 	const postData4 = {
 		type: 'AssignedNetworks',
-		id_SIMap: subsystemInterface.id_SIMap
+		id_SIMap: systemInterface.id_SIMap
 	}
 
 	$.post('select.json', postData4, (result) => {
@@ -700,7 +700,7 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 		
 		result.forEach((element) => {
 
-			//Create the button element for each interface installed into the subsystem
+			//Create the button element for each interface installed into the system
 			addIconButton(`#mainModalNetworkContainer`, element.image, element.name, {name: 'id_SINMap', value: element.id_SINMap});
 
 			//Event: An interface button was selected
@@ -710,8 +710,8 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 				$("#mainModalNetworkContainer button").removeClass("btn-primary").addClass("btn-secondary");
 				$(event.currentTarget).removeClass('btn-secondary').addClass('btn-primary');
 
-				//Update the subsystem object with the in-focus id_SINMap
-				subsystemInterface.id_SINMap = parseInt($(event.currentTarget).attr('data-id_SINMap'));
+				//Update the system object with the in-focus id_SINMap
+				systemInterface.id_SINMap = parseInt($(event.currentTarget).attr('data-id_SINMap'));
 
 				//Enable the remove network button
 				$('#mainModalDelete').prop('disabled', false);
@@ -723,16 +723,16 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 
 
 		})
-		//Select the interface button if a subsystem.id_SIMap was supplied
+		//Select the interface button if a system.id_SIMap was supplied
 		
-		if (subsystemInterface.id_SINMap){
-			//Focus on the supplied Subsystem Interface
-			$(`#mainModalNetworkContainer button[data-id_SINMap='${subsystemInterface.id_SINMap}'`).removeClass('btn-secondary').addClass('btn-primary');
+		if (systemInterface.id_SINMap){
+			//Focus on the supplied System Interface
+			$(`#mainModalNetworkContainer button[data-id_SINMap='${systemInterface.id_SINMap}'`).removeClass('btn-secondary').addClass('btn-primary');
 			
 			//Load additional SI details
 			//populateAdditionalDetails();
 		} else {
-			//Disable those controls which require a subsystem interface to be identified
+			//Disable those controls which require a system interface to be identified
 			//$('#SIIssues').prop('disabled', true);
 			//$('#assignNetworksButton').prop('disabled', true);
 		}
@@ -741,13 +741,13 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 	})
 
 
-	//Event: Attach network to subsystem interface
+	//Event: Attach network to system interface
 	$(`#mainModalNetworkAttachButton`).unbind();
 	$(`#mainModalNetworkAttachButton`).on('click', () => {
 	
 		const postData = {
-			type: 'NetworkToSubsystemInterface',
-			id_SIMap: subsystemInterface.id_SIMap,
+			type: 'NetworkToSystemInterface',
+			id_SIMap: systemInterface.id_SIMap,
 			id_network: $('#mainModalNetworkSelect option:selected').attr(`data-id_network`),
 		}
 	
@@ -760,7 +760,7 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 				//An error was passed
 			} else {
 				//Reload the modal
-				mapNetworksToSubsystemInterface(subsystemInterface, {info: 'success', msg: `The network was successfully attached.`})
+				mapNetworksToSystemInterface(systemInterface, {info: 'success', msg: `The network was successfully attached.`})
 			}
 		})
 	
@@ -771,7 +771,7 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 	$(`#mainModalDelete`).on('click', () => {
 		const postData = {
 			type: 'DeleteNetworkFromInterface',
-			id_SINMap: subsystemInterface.id_SINMap,
+			id_SINMap: systemInterface.id_SINMap,
 		}
 	
 		$.post('update.json', postData, (result) => {
@@ -783,7 +783,7 @@ function mapNetworksToSubsystemInterface(subsystemInterface, message){
 				//An error was passed
 			} else {
 				//Reload the modal
-				mapNetworksToSubsystemInterface(subsystemInterface, {info: 'success', msg: `The network was successfully detached.`})
+				mapNetworksToSystemInterface(systemInterface, {info: 'success', msg: `The network was successfully detached.`})
 			}
 	
 		})
@@ -814,11 +814,11 @@ function updateIssuesModal(issue,message){
 
 	if (issue.type){
 		switch (issue.type){
-			case 'SubsystemInterface':
-				debug('in updateIssuesModal() subsystemInterface')
+			case 'SystemInterface':
+				debug('in updateIssuesModal() systemInterface')
 
 				//Breadcrumbs
-				breadcrumbs('#mainModal form', { type: 'IssuesSubsystemInterface', id_subsystem: issue.id_subsystem, id_SIMap: issue.id_SIMap });
+				breadcrumbs('#mainModal form', { type: 'IssuesSystemInterface', id_system: issue.id_system, id_SIMap: issue.id_SIMap });
 
 				if (!issue.id_issue){ issue.id_issue = 0 }
 
@@ -831,10 +831,10 @@ function updateIssuesModal(issue,message){
 					addButton('#mainModal .modal-footer', {type: 'close'});
 
 					//Add input fields
-					form.issue.subsystemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
+					form.issue.systemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
 
 					//Breadcrumbs
-					//breadcrumbs('#mainModal form', { type: 'SubsystemInterfaceIssue', id_subsystem: issue.id_subsystem, id_SIMap: issue.id_SIMap });
+					//breadcrumbs('#mainModal form', { type: 'SystemInterfaceIssue', id_system: issue.id_system, id_SIMap: issue.id_SIMap });
 
 					//Disable select
 					$('#issueSelect').prop('disabled', true);
@@ -842,7 +842,7 @@ function updateIssuesModal(issue,message){
 					//Place images
 					const postData3 = {
 						type: 'IssueImages',
-						subtype: 'SubsystemInterface',
+						subtype: 'SystemInterface',
 						id_SIMap: issue.id_SIMap,
 					}
 
@@ -855,8 +855,8 @@ function updateIssuesModal(issue,message){
 							updateIssuesModal({}, {info: 'failure', msg: `There was an error. Check the console.`});
 						} else {
 							//Populate the form
-							installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].subsystemName, image: result[0].subsystemImage}, true)
-							issue.id_subsystem = result[0].id_subsystem;
+							installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].systemName, image: result[0].systemImage}, true)
+							issue.id_system = result[0].id_system;
 						}
 					})
 
@@ -869,18 +869,18 @@ function updateIssuesModal(issue,message){
 
 					//Add buttons
 					addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: 'Add New Issue'});
-					//addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalSubsystemInterface', label: 'Return to Subsystem interface'});
+					//addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalSystemInterface', label: 'Return to System interface'});
 					//addButton('#mainModal .modal-footer', {type: 'delete', id: 'mainModalDelete', label: 'Delete Issue'});
 					addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Save Issue'});
 					addButton('#mainModal .modal-footer', {type: 'close'});
 
 					//Add input fields
-					form.issue.subsystemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
+					form.issue.systemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
 
-					//Load known issues	for this subsystem interface
+					//Load known issues	for this system interface
 					const postData = {
 						type: 'BasicIssues', 
-						subtype: 'SubsystemInterface',
+						subtype: 'SystemInterface',
 						id_SIMap: issue.id_SIMap
 					}
 
@@ -903,7 +903,7 @@ function updateIssuesModal(issue,message){
 								//Load the select
 								result.forEach((element) => {
 									$('#issueSelect').append(`<option data-id_issue="${element.id_issue}">${element.name}</option>`)
-									//If a subsystem ID was supplied to the method, set this subsystem as selected
+									//If a system ID was supplied to the method, set this system as selected
 									if (issue.id_issue == element.id_issue){
 										$(`#issueSelect option[data-id_issue="${issue.id_issue}"]`).prop('selected', true); 
 									}	
@@ -916,18 +916,18 @@ function updateIssuesModal(issue,message){
 						}
 					})
 
-					//Event: Return to subsystem interface clicked
-					$('#mainModalSubsystemInterface').unbind();
-					$('#mainModalSubsystemInterface').click(() => {
+					//Event: Return to system interface clicked
+					$('#mainModalSystemInterface').unbind();
+					$('#mainModalSystemInterface').click(() => {
 						$('#mainModal').modal('hide');
-						updateSubsystemInterfacesModal({ id_SIMap: issue.id_SIMap, id_subsystem: issue.id_subsystem} )
+						updateSystemInterfacesModal({ id_SIMap: issue.id_SIMap, id_system: issue.id_system} )
 					});
 
 					//Event: Add new issue selected
 					$('#mainModalAddNew').unbind();
 					$('#mainModalAddNew').click(() => {
 						$('#mainModal').modal('hide');
-						updateIssuesModal({ type: 'SubsystemInterface', id_SIMap: issue.id_SIMap, id_issue: 0} )
+						updateIssuesModal({ type: 'SystemInterface', id_SIMap: issue.id_SIMap, id_issue: 0} )
 					});
 
 					//Event: Delete issue
@@ -936,7 +936,7 @@ function updateIssuesModal(issue,message){
 					$('#issueSelect').unbind();
 					$('#issueSelect').change(() => {
 						$('#mainModal').modal('hide');
-						updateIssuesModal({ type: 'SubsystemInterface', id_SIMap: issue.id_SIMap, id_issue: $('#issueSelect option:selected').attr(`data-id_issue`)} )
+						updateIssuesModal({ type: 'SystemInterface', id_SIMap: issue.id_SIMap, id_issue: $('#issueSelect option:selected').attr(`data-id_issue`)} )
 					})
 
 
@@ -947,15 +947,15 @@ function updateIssuesModal(issue,message){
 				$('#mainModalSubmit').click(() => {
 					const postData = {
 						type: 'Issue',
-						subtype: 'SubsystemInterface',
+						subtype: 'SystemInterface',
 						id_SIMap: issue.id_SIMap,
 					}
 
 					//Provide id_issue if this is an existing issue
 					if (issue.id_issue > 0){ postData.id_issue = parseInt($('#issueSelect option:selected').attr(`data-id_issue`)) }
 			
-					//Subsystem details
-					form.issue.subsystemInterface.forEach((element) => {
+					//System details
+					form.issue.systemInterface.forEach((element) => {
 						if (element.columnName){ postData[element.columnName] = getFormElement('#' + element.id, element) }
 					})
 						
@@ -963,7 +963,7 @@ function updateIssuesModal(issue,message){
 						debug('Passed to update.json: ', postData);
 						debug('Response: ', result)
 				
-						//Check the result																												//Working here, having trouble adding a new subsystem
+						//Check the result																												//Working here, having trouble adding a new system
 						if (result.msg){
 							//An error was passed
 							updateIssuesModal({},{info: 'failure', msg: `There was an error. Check the console.`});
@@ -1021,10 +1021,10 @@ function updateIssuesModal(issue,message){
 	});
 
 
-	//Event: Return to subsystem interfaces button
-	$('#mainModalSubsystemInterface').unbind();
-	$('#mainModalSubsystemInterface').click(() => {
-		updateSubsystemInterfacesModal({ id_subsystem: issue.id_subsystem, id_SIMap: issue.id_SIMap })
+	//Event: Return to system interfaces button
+	$('#mainModalSystemInterface').unbind();
+	$('#mainModalSystemInterface').click(() => {
+		updateSystemInterfacesModal({ id_system: issue.id_system, id_SIMap: issue.id_SIMap })
 
 	});
 
@@ -1033,7 +1033,7 @@ function updateIssuesModal(issue,message){
 
 		postData2 = {
 			type: 'Issue',
-			subtype: 'SubsystemInterface',
+			subtype: 'SystemInterface',
 			id_issue: parseInt($('#issueSelect option:selected').attr(`data-id_issue`))
 		}
 
@@ -1043,10 +1043,10 @@ function updateIssuesModal(issue,message){
 			debug('Response: ', result)
 
 			//Place images
-			installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].subsystemName, image: result[0].subsystemImage}, true)
+			installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].systemName, image: result[0].systemImage}, true)
 
 			//Populate the form controls
-			form.issue.subsystemInterface.forEach((element) => {
+			form.issue.systemInterface.forEach((element) => {
 				//Set the relevant form control values
 				if(element.columnName){ setFormElement('#' + element.id, element, result[0][element.columnName]) }										//Handle traffic lights
 			})
@@ -1056,17 +1056,17 @@ function updateIssuesModal(issue,message){
 
 
 /**
- * @param  {id_subsystem, id_SIMap} subsystem
+ * @param  {id_system, id_SIMap} system
  * @param  {} message
  */
-function updateSubsystemInterfacesModal(subsystem, message){
-	debug('In updateSubsystemInterfacesModal()')
-	debug(subsystem)
+function updateSystemInterfacesModal(system, message){
+	debug('In updateSystemInterfacesModal()')
+	debug(system)
 
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
 	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
-	$('#mainModalTitle').text('Update Subsystem Interfaces');	
+	$('#mainModalTitle').text('Update System Interfaces');	
 	$('#mainModal').modal('show');
 
 	//Notifications
@@ -1080,21 +1080,21 @@ function updateSubsystemInterfacesModal(subsystem, message){
 	
 	//Add the input fields
 	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
-	form.subsystemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
+	form.systemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
 
 	//Breadcrumbs
-	breadcrumbs('#mainModal form', { type: 'SubsystemInterface', id_subsystem: subsystem.id_subsystem });
+	breadcrumbs('#mainModal form', { type: 'SystemInterface', id_system: system.id_system });
 
-	//Get subsystem details
-	$.post("select.json", {type: 'Subsystem', id_subsystem: subsystem.id_subsystem}, (result) => {
-		debug('Passed to select.json: ', {type: 'Subsystem', id_subsystem: subsystem.id_subsystem});
+	//Get system details
+	$.post("select.json", {type: 'System', id_system: system.id_system}, (result) => {
+		debug('Passed to select.json: ', {type: 'System', id_system: system.id_system});
 		debug('Response: ', result)
 
 		//Update image
-		$('#mainModalSubsystemImage').attr('src', imagePath + result[0].image);
+		$('#mainModalSystemImage').attr('src', imagePath + result[0].image);
 
 		//Update heading
-		$('#mainModalSubsystemName').text(result[0].name);
+		$('#mainModalSystemName').text(result[0].name);
 	});
 
 	//Get all interfaces for the select
@@ -1108,10 +1108,10 @@ function updateSubsystemInterfacesModal(subsystem, message){
 		})
 	});
 
-	//Get all interfaces already attached to the subsystem, for the interface icon buttons
+	//Get all interfaces already attached to the system, for the interface icon buttons
 	const postData = {
-		type: 'SubsystemInterfaces',
-		id_subsystem: subsystem.id_subsystem,
+		type: 'SystemInterfaces',
+		id_system: system.id_system,
 	}
 	$.post(`select.json`, postData, (result) => {
 		debug('Passed to select.json: ', postData);
@@ -1120,7 +1120,7 @@ function updateSubsystemInterfacesModal(subsystem, message){
 		//Place an icon of each installed interface
 		result.forEach((element) => {
 
-			//Create the button element for each interface installed into the subsystem
+			//Create the button element for each interface installed into the system
 			addIconButton(`#mainModalInstalledInterfaceContainer`, element.image, element.name, {name: 'id_SIMap', value: element.id_SIMap});
 
 
@@ -1131,8 +1131,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 				$("#mainModalInstalledInterfaceContainer button").removeClass("btn-primary").addClass("btn-secondary");
 				$(event.currentTarget).removeClass('btn-secondary').addClass('btn-primary');
 
-				//Update the subsystem object with the in-focus id_SIMap
-				subsystem.id_SIMap = parseInt($(event.currentTarget).attr('data-id_SIMap'));
+				//Update the system object with the in-focus id_SIMap
+				system.id_SIMap = parseInt($(event.currentTarget).attr('data-id_SIMap'));
 
 				//Populate the additional details
 				populateAdditionalDetails();
@@ -1141,15 +1141,15 @@ function updateSubsystemInterfacesModal(subsystem, message){
 
 
 		})
-		//Select the interface button if a subsystem.id_SIMap was supplied
-		if (subsystem.id_SIMap){
-			//Focus on the supplied Subsystem Interface
-			$(`#mainModalInstalledInterfaceContainer button[data-id_SIMap='${subsystem.id_SIMap}'`).removeClass('btn-secondary').addClass('btn-primary');
+		//Select the interface button if a system.id_SIMap was supplied
+		if (system.id_SIMap){
+			//Focus on the supplied System Interface
+			$(`#mainModalInstalledInterfaceContainer button[data-id_SIMap='${system.id_SIMap}'`).removeClass('btn-secondary').addClass('btn-primary');
 			
 			//Load additional SI details
 			populateAdditionalDetails();
 		} else {
-			//Disable those controls which require a subsystem interface to be identified
+			//Disable those controls which require a system interface to be identified
 			$('#SIIssues').prop('disabled', true);
 			$('#assignNetworksButton').prop('disabled', true);
 		}
@@ -1159,7 +1159,7 @@ function updateSubsystemInterfacesModal(subsystem, message){
 	//Event: Assign networks button selected
 	$('#assignNetworksButton').unbind();
 	$('#assignNetworksButton').click(() => {
-		mapNetworksToSubsystemInterface({ id_subsystem: subsystem.id_subsystem, id_SIMap: subsystem.id_SIMap })
+		mapNetworksToSystemInterface({ id_system: system.id_system, id_SIMap: system.id_SIMap })
 
 	});
 
@@ -1168,8 +1168,8 @@ function updateSubsystemInterfacesModal(subsystem, message){
 	$('#mainModalDelete').unbind();
 	$('#mainModalDelete').click(() => {
 		const postData = {
-			type: 'DeleteInterfaceFromSubsystem',
-			id_SIMap: subsystem.id_SIMap,
+			type: 'DeleteInterfaceFromSystem',
+			id_SIMap: system.id_SIMap,
 		}
 	
 		$.post('update.json', postData, (result) => {
@@ -1179,10 +1179,10 @@ function updateSubsystemInterfacesModal(subsystem, message){
 			//Check the result
 			if (result.msg){
 				//An error was passed
-				updateSubsystemInterfacesModal(subsystem, {info: 'failure', msg: `There was an error. Likely due to this interface having an associated network.`});
+				updateSystemInterfacesModal(system, {info: 'failure', msg: `There was an error. Likely due to this interface having an associated network.`});
 			} else {
 				//Update was successful
-				updateSubsystemInterfacesModal(subsystem, {info: 'success', msg: `The interface was successfully removed.`});
+				updateSystemInterfacesModal(system, {info: 'success', msg: `The interface was successfully removed.`});
 			}
 	
 		})
@@ -1194,9 +1194,9 @@ function updateSubsystemInterfacesModal(subsystem, message){
 	$('#mainModalInstallInterfaceButton').unbind();
 	$('#mainModalInstallInterfaceButton').click(() => {
 		const postData = {
-			type: 'InterfaceToSubsystem',
+			type: 'InterfaceToSystem',
 			id_interface: $('#mainModalInterfaceSelect option:selected').attr(`data-id_interface`),
-			id_subsystem: subsystem.id_subsystem,
+			id_system: system.id_system,
 		}
 
 		$.post('update.json', postData, (result) => {
@@ -1206,24 +1206,24 @@ function updateSubsystemInterfacesModal(subsystem, message){
 			//Check the result
 			if (result.msg){
 				//An error was passed
-				updateSubsystemInterfacesModal(subsystem, {info: 'failure', msg: `There was an error. Check the console.`});
+				updateSystemInterfacesModal(system, {info: 'failure', msg: `There was an error. Check the console.`});
 			} else {
 				//Update was successful
-				subsystem.id_SIMap = result.insertId;
-				updateSubsystemInterfacesModal(subsystem, {info: 'success', msg: `The interface was successfully added.`});
+				system.id_SIMap = result.insertId;
+				updateSystemInterfacesModal(system, {info: 'success', msg: `The interface was successfully added.`});
 			}
 		})
 	});
 	
-	//Event: Update details button selected (Works)
+	//Event: Update details button selected
 	$('#mainModalSubmit').unbind();
 	$('#mainModalSubmit').click(() => {
 		const postData = {
 			type: 'UpdateSIMap',
-			id_SIMap: subsystem.id_SIMap,
+			id_SIMap: system.id_SIMap,
 		}
 
-		form.subsystemInterface.forEach((element) => {
+		form.systemInterface.forEach((element) => {
 			if (element.additional) {
 				postData[element.columnName] = getFormElement('#' + element.id, element)
 			}
@@ -1236,30 +1236,30 @@ function updateSubsystemInterfacesModal(subsystem, message){
 			//Check the result
 			if (result.msg){
 				//An error was passed
-				updateSubsystemInterfacesModal(subsystem, {info: 'failure', msg: `There was an error. Check the console.`});
+				updateSystemInterfacesModal(system, {info: 'failure', msg: `There was an error. Check the console.`});
 			} else {
 				//Update was successful
-				updateSubsystemInterfacesModal(subsystem, {info: 'success', msg: `The record was successfully updated.`});
+				updateSystemInterfacesModal(system, {info: 'success', msg: `The record was successfully updated.`});
 			}
 		});
 	});
 
-	//Event: Assign issues button selected (Works)
+	//Event: Assign issues button selected
 	$('#SIIssues').unbind();
 	$('#SIIssues').click(() => {
 		$('#mainModal').modal('hide');
-		updateIssuesModal({ type: 'SubsystemInterface', id_subsystem: subsystem.id_subsystem, id_SIMap: subsystem.id_SIMap, id_issue: 1 });
+		updateIssuesModal({ type: 'SystemInterface', id_system: system.id_system, id_SIMap: system.id_SIMap, id_issue: 1 });
 	});
 
 
-	//Event: Switch to the update subsystem modal (Works)
-	$('#subsystemButton').unbind();
-	$('#subsystemButton').click(() => {
+	//Event: Switch to the update system modal
+	$('#systemButton').unbind();
+	$('#systemButton').click(() => {
 		$('#mainModal').modal('hide');
-		updateSubsystemModal(subsystem.id_subsystem);
+		updateSystemModal(system.id_system);
 	});
 
-	//Event: Changes to additional details controls	(Works)
+	//Event: Changes to additional details controls
 	$('#SIDescription').unbind();
 	$('#SIDescription').on('input', () => {
 		currentlyEditingAdditionalDetails();
@@ -1274,7 +1274,7 @@ function updateSubsystemInterfacesModal(subsystem, message){
 		$('#mainModalSubmit').prop('disabled', false);
 
 		//Disable controls
-		$('#subsystemButton').prop('disabled', true);
+		$('#systemButton').prop('disabled', true);
 		$('#assignNetworksButton').prop('disabled', true);
 		$('#SIIssues').prop('disabled', true);
 		$('#mainModalDelete').prop('disabled', true);
@@ -1286,24 +1286,24 @@ function updateSubsystemInterfacesModal(subsystem, message){
 	var populateAdditionalDetails = () => {
 		//Enable/Disable particular buttons
 		$('#mainModalDelete').prop('disabled', false);
-		$('#subsystemButton').prop('disabled', false);
+		$('#systemButton').prop('disabled', false);
 		$('#assignNetworksButton').prop('disabled', false);
 		$('#SIIssues').prop('disabled', false);
 		$('#mainModalDelete').prop('disabled', false);
 
 
 		const postData = {
-			type: 'SubsystemInterface',
-			id_SIMap: subsystem.id_SIMap,
+			type: 'SystemInterface',
+			id_SIMap: system.id_SIMap,
 		}
 
-		//Get all subsystems for the select
+		//Get all systems for the select
 		$.post("select.json", postData, (result) => {
 			debug('Passed to select.json: ', postData);
 			debug('Response: ', result)
 
 			//Load the list of interfaces into the select box
-			form.subsystemInterface.forEach((element) => {
+			form.systemInterface.forEach((element) => {
 				if(element.additional){
 					setFormElement('#' + element.id, element, result[0][element.columnName])
 				}
@@ -1619,18 +1619,18 @@ function updateFeaturesModal(message){
 
 
 /**
- * @description Pick the subsystem to update from a select. Helps find subsystems which
+ * @description Pick the system to update from a select. Helps find systems which
  * may be lost in years.
  * 
  */
-function updateSubsystemModal(subsystem, message){
-	debug('In updateSubsystemModal()')
-	debug(subsystem)
+function updateSystemModal(system, message){
+	debug('In updateSystemModal()')
+	debug(system)
 
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
 	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
-	$('#mainModalTitle').text('Update Subsystems');	
+	$('#mainModalTitle').text('Update Systems');	
 	$('#mainModal').modal('show');
 
 	//Notifications
@@ -1638,37 +1638,37 @@ function updateSubsystemModal(subsystem, message){
 
 	//Add the input fields
 	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
-	form.subsystem.forEach((element) => { addFormElement('#mainModal form', element)	})
+	form.system.forEach((element) => { addFormElement('#mainModal form', element)	})
 
 	//Breadcrumbs
-	breadcrumbs('#mainModal form', { type: 'Subsystem', id_subsystem: subsystem.id_subsystem});
+	breadcrumbs('#mainModal form', { type: 'System', id_system: system.id_system});
 
-	if (subsystem.id_subsystem == 0){
-		//Creating a new subsystem
+	if (system.id_system == 0){
+		//Creating a new system
 
 		//Buttons
 		addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Add Interface'});
 		addButton('#mainModal .modal-footer', {type: 'close'});
 
 		//Disable some controls
-		$('#mainModalSubsystemSelect').append(`<option data-id_subsystem="0"></option>`)
-		$(`#mainModalSubsystemSelect option[data-id_subsystem="0"]`).prop('selected', true); 
-		$('#mainModalSubsystemSelect').prop('disabled', true);
-		$('#mainModalSubsystemSelect').prop('disabled', true);
+		$('#mainModalSystemSelect').append(`<option data-id_system="0"></option>`)
+		$(`#mainModalSystemSelect option[data-id_system="0"]`).prop('selected', true); 
+		$('#mainModalSystemSelect').prop('disabled', true);
+		$('#mainModalSystemSelect').prop('disabled', true);
 
-		$('#updateSubsystemInterfacesButton').prop('disabled', true);
-		$('#subsystemQuantitiesButton').prop('disabled', true);	
+		$('#updateSystemInterfacesButton').prop('disabled', true);
+		$('#systemQuantitiesButton').prop('disabled', true);	
 
 	} else {
-		//Modifying an existing subsystem
+		//Modifying an existing system
 
 		//Buttons
-		addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: 'Add New Subsystem'});
+		addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: 'Add New System'});
 		addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Update Interface'});
 		addButton('#mainModal .modal-footer', {type: 'close'});
 
 		//Populate the dropbox
-		const postData = {type: 'Subsystem'}
+		const postData = {type: 'System'}
 		$.post('select.json', postData, (result) => {
 			debug('Passed to select.json: ', postData);
 			debug('Response: ', result)
@@ -1680,12 +1680,12 @@ function updateSubsystemModal(subsystem, message){
 			} else {
 				
 				result.forEach((element) => {
-					$('#mainModalSubsystemSelect').append(`<option data-id_subsystem="${element.id_subsystem}">${element.name}</option>`)
+					$('#mainModalSystemSelect').append(`<option data-id_system="${element.id_system}">${element.name}</option>`)
 				})
 
-				//If a subsystem ID was supplied to the method, set this subsystem as selected
-				if (subsystem.id_subsystem > 0){
-					$(`#mainModalSubsystemSelect option[data-id_subsystem="${subsystem.id_subsystem}"]`).prop('selected', true); 
+				//If a system ID was supplied to the method, set this system as selected
+				if (system.id_system > 0){
+					$(`#mainModalSystemSelect option[data-id_system="${system.id_system}"]`).prop('selected', true); 
 				}
 				
 				updateFormElements();
@@ -1694,7 +1694,7 @@ function updateSubsystemModal(subsystem, message){
 	}
 
 	//Event: Drag/drop a reference
-	$('#subsystemReferenceDropZone')
+	$('#systemReferenceDropZone')
 	//.on('dragover', false)
 	//.on('dragenter', false)
 	.on('dragover', (event) => {
@@ -1715,7 +1715,7 @@ function updateSubsystemModal(subsystem, message){
 			debug(file)
 			file.text().then((result) => {
 				debug(result)
-				$('#subsystemReference').val(result)
+				$('#systemReference').val(result)
 			})
 		}
 
@@ -1723,34 +1723,34 @@ function updateSubsystemModal(subsystem, message){
 	})
 
 	//Event: Changes to any controls
-	$('#mainModalName, #nodeDescription, #subsystemTags').unbind();
-	$('#mainModalName, #nodeDescription, #subsystemTags').on('input', () => {
+	$('#mainModalName, #nodeDescription, #systemTags').unbind();
+	$('#mainModalName, #nodeDescription, #systemTags').on('input', () => {
 		//Disable some controls to prevent navigating away from the modal before saving
-		$('#subsystemQuantitiesButton, #updateSubsystemInterfacesButton, #mainModalAddNew, #mainModalSubsystemSelect').prop('disabled', true);
+		$('#systemQuantitiesButton, #updateSystemInterfacesButton, #mainModalAddNew, #mainModalSystemSelect').prop('disabled', true);
 	});
 
 
 	//Event: User clicks button to assign quantites to years
-	$(`#subsystemQuantitiesButton`).unbind();
-	$(`#subsystemQuantitiesButton`).on('click', () => {
+	$(`#systemQuantitiesButton`).unbind();
+	$(`#systemQuantitiesButton`).on('click', () => {
 		$('#mainModal').modal('hide');
-		updateSubsystemQuantities(subsystem.id_subsystem);
+		updateSystemQuantities(system.id_system);
 	})
 
 
-	//Event: Change to the modal which allows the user to assign interfaces to the subsystem
-	$('#updateSubsystemInterfacesButton').unbind();
-	$('#updateSubsystemInterfacesButton').click(() => {
+	//Event: Change to the modal which allows the user to assign interfaces to the system
+	$('#updateSystemInterfacesButton').unbind();
+	$('#updateSystemInterfacesButton').click(() => {
 		$('#mainModal').modal('hide');
-		updateSubsystemInterfacesModal({ id_subsystem: subsystem.id_subsystem });
+		updateSystemInterfacesModal({ id_system: system.id_system });
 	});
 
 
-	//Event: Add a new blank subsystem 
+	//Event: Add a new blank system 
 	$('#mainModalAddNew').unbind();
 	$('#mainModalAddNew').click(() => {
 		$('#mainModal').modal('hide');
-		updateSubsystemModal({ id_subsystem: 0 });
+		updateSystemModal({ id_system: 0 });
 	});
 
 	
@@ -1765,10 +1765,10 @@ function updateSubsystemModal(subsystem, message){
 	*/
 
 	//Event: Select changes
-	$('#mainModalSubsystemSelect').unbind();
-	$('#mainModalSubsystemSelect').change(() => {
-		//subsystem.id_subsystem = $('#mainModalSubsystemSelect option:selected').attr(`data-id_subsystem`)
-		updateSubsystemModal({ id_subsystem: $('#mainModalSubsystemSelect option:selected').attr(`data-id_subsystem`) });
+	$('#mainModalSystemSelect').unbind();
+	$('#mainModalSystemSelect').change(() => {
+		//system.id_system = $('#mainModalSystemSelect option:selected').attr(`data-id_system`)
+		updateSystemModal({ id_system: $('#mainModalSystemSelect option:selected').attr(`data-id_system`) });
 	})
 
 
@@ -1787,12 +1787,12 @@ function updateSubsystemModal(subsystem, message){
 	$('#mainModalSubmit').click(() => {
 
 		const postData = {
-			type: 'Subsystem',
-			id_subsystem: $('#mainModalSubsystemSelect option:selected').attr(`data-id_subsystem`),
+			type: 'System',
+			id_system: $('#mainModalSystemSelect option:selected').attr(`data-id_system`),
 		}
 
-		//Subsystem details
-		form.subsystem.forEach((element) => {
+		//System details
+		form.system.forEach((element) => {
 			if (element.columnName){
 				postData[element.columnName] = getFormElement('#' + element.id, element);
 			}
@@ -1805,15 +1805,15 @@ function updateSubsystemModal(subsystem, message){
 			//Check the result
 			if (result.msg){
 				//An error was passed
-				updateSubsystemModal({info: 'failure', msg: `There was an error. Check the console.`});
+				updateSystemModal({info: 'failure', msg: `There was an error. Check the console.`});
 			} else {
 				//Check if entry was a new entry
 				if (result.insertId == 0){
 					//Submission was an update
-					updateSubsystemModal({id_subsystem: postData.id_subsystem}, {info: 'success', msg: `The ${postData.name} record was successfully updated.`});
+					updateSystemModal({id_system: postData.id_system}, {info: 'success', msg: `The ${postData.name} record was successfully updated.`});
 				} else {
 					//Submission was a new interface
-					updateSubsystemModal({ id_subsystem: result.insertId}, {info: 'success', msg: `The ${postData.name} record was successfully added.`});
+					updateSystemModal({ id_system: result.insertId}, {info: 'success', msg: `The ${postData.name} record was successfully added.`});
 				}
 				
 			}
@@ -1825,8 +1825,8 @@ function updateSubsystemModal(subsystem, message){
 	var updateFormElements = () => {
 
 		const postData2 = {
-			type: 'Subsystem',
-			id_subsystem: subsystem.id_subsystem 
+			type: 'System',
+			id_system: system.id_system 
 		}
 
 		//Update the form controls
@@ -1835,9 +1835,9 @@ function updateSubsystemModal(subsystem, message){
 			debug('Response: ', result)
 
 			//Update heading
-			$('#mainModalSubsystemName').text(result[0].name);
+			$('#mainModalSystemName').text(result[0].name);
 
-			form.subsystem.forEach((element) => {
+			form.system.forEach((element) => {
 				//Set the relevant form control values
 				if(element.columnName){
 					setFormElement('#' + element.id, element, result[0][element.columnName]);
@@ -1854,17 +1854,17 @@ function updateSubsystemModal(subsystem, message){
 
 
 /**
- * @description A modal which maps the quantity of subsystems available each year
+ * @description A modal which maps the quantity of systems available each year
  * 
- * @param  {} id_subsystem The id of the subsystem to which this modal applies
+ * @param  {} id_system The id of the system to which this modal applies
  * @param  {} returnModal
  */
-function updateSubsystemQuantities(id_subsystem, message){
-	debug('In updateSubsystemQuantities()');
+function updateSystemQuantities(id_system, message){
+	debug('In updateSystemQuantities()');
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
 	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
-	$('#mainModalTitle').text('Map Subsystem Quantities to Years');	
+	$('#mainModalTitle').text('Map System Quantities to Years');	
 	$('#mainModal').modal('show');
 
 	//Notifications
@@ -1876,19 +1876,19 @@ function updateSubsystemQuantities(id_subsystem, message){
 
 	//Add the form
 	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
-	form.subsystemQuantities.forEach((element) => { addFormElement('#mainModal form', element) })
+	form.systemQuantities.forEach((element) => { addFormElement('#mainModal form', element) })
 
 	//var inputCounter = 0;
 
 	//Breadcrumbs
-	breadcrumbs('#mainModal form', { type: 'Quantities', id_subsystem: id_subsystem });
+	breadcrumbs('#mainModal form', { type: 'Quantities', id_system: id_system });
 
 	var inputCounter = 1;
 
 	//Get the data for the image and name
 	const postData = {
-		type: 'Subsystem',
-		id_subsystem: id_subsystem
+		type: 'System',
+		id_system: id_system
 	}
 
 	debug('Passing to select.json: ', postData);
@@ -1902,15 +1902,15 @@ function updateSubsystemQuantities(id_subsystem, message){
 		} else {
 			//Update the image and title
 			setFormElement('#mainModalImage', {type: 'img'}, result[0].image );
-			setFormElement('#mainModalSubsystemName', {type: 'heading'}, result[0].name);
+			setFormElement('#mainModalSystemName', {type: 'heading'}, result[0].name);
 		}
 	})
 
 
-	//Get the quantities per year for this subsystem from the server
+	//Get the quantities per year for this system from the server
 	const postData2 = {
 		type: 'QtyYears',
-		id_subsystem: id_subsystem
+		id_system: id_system
 	}
 
 	debug('Passing to select.json: ', postData2);
@@ -1969,11 +1969,11 @@ function updateSubsystemQuantities(id_subsystem, message){
 		debug('at end of remove button inputCounter = ' + inputCounter)
 	})
 
-	//Event: Return to subsystem
-	$('#returnToSubsystem').unbind();
-	$('#returnToSubsystem').click(() => {
+	//Event: Return to system
+	$('#returnToSystem').unbind();
+	$('#returnToSystem').click(() => {
 		$('#mainModal').modal('hide');
-		updateSubsystemModal(id_subsystem);
+		updateSystemModal(id_system);
 	});
 
 
@@ -1993,7 +1993,7 @@ function updateSubsystemQuantities(id_subsystem, message){
 		//Upload to database
 		const postData = {
 			type: 'QtyYears',
-			id_subsystem: id_subsystem,
+			id_system: id_system,
 			years: recordArr
 		}
 
@@ -2100,8 +2100,8 @@ function mappingModal(modalSetup){
     $("#mappingModalSelect").empty();
     $("#mappingModalDeleteButton").unbind();
     $("#mappingModalDeleteButton").prop('disabled', true);
-	$("#interfacesToSubsystemModalNetworksContainer").empty();
-	$("#interfacesToSubsystemModalContainer").empty();
+	$("#interfacesToSystemModalNetworksContainer").empty();
+	$("#interfacesToSystemModalContainer").empty();
 	$('#mappingModalImageContainer').empty();
 	
 	//Prepare the modal
@@ -2110,16 +2110,16 @@ function mappingModal(modalSetup){
 	$("#mappingModalTitle3").text(modalSetup.title3);
 	$("#mappingModalAddButton").html(modalSetup.addButtonText);
 
-	//Assign interfaces to subsystems
-	if (selectedNode.type == "Subsystem"){
-		mappingModal_subsystem();
+	//Assign interfaces to systems
+	if (selectedNode.type == "System"){
+		mappingModal_system();
 
 		//Handle the add button
 		mappingModal_addButton();
 	}
 
-	//Assign networks to subsystem interfaces
-	if (selectedNode.type == "SubsystemInterface"){
+	//Assign networks to system interfaces
+	if (selectedNode.type == "SystemInterface"){
 		mappingModal_interface()
 
 		//Handle the add button
@@ -2136,7 +2136,7 @@ function mappingModal(modalSetup){
 /**
  *CFD
  
- Handle the 'Assign Networks to Subsystem Interfaces' modal
+ Handle the 'Assign Networks to System Interfaces' modal
  * 
  * 
  */
@@ -2144,7 +2144,7 @@ function mappingModal_interface(){
 	debug('In mappingModal_interface()')
 
 	//Set images & labels
-	installedInModalInsert('#mappingModalImageContainer', {name: selectedNode.name, image: selectedNode.image}, {name: selectedNode.subsystemName, image: selectedNode.subsystemImage})
+	installedInModalInsert('#mappingModalImageContainer', {name: selectedNode.name, image: selectedNode.image}, {name: selectedNode.systemName, image: selectedNode.systemImage})
 
 	//**********************    Get the list of compatible networks for this interface
 	const postData = {
@@ -2163,7 +2163,7 @@ function mappingModal_interface(){
 		})
 	})
 
-	//**********************    Get the networks already assigned to the subsystem
+	//**********************    Get the networks already assigned to the system
 	const postData2 = {
 		type: 'AssignedNetworks', 
 		id_SIMap: selectedNode.id_SIMap,
@@ -2204,11 +2204,11 @@ function mappingModal_interface(){
 }
 
 /**
- * @description Provides a common layout when showing a graphical depection of interfaces installed in a subsystem
+ * @description Provides a common layout when showing a graphical depection of interfaces installed in a system
  * 
  * @param  {string} $selector The insert location of the element
  * @param  {name, image} left The left item, generally an interface
- * @param  {name, image} right The right itme, generally a subsystem
+ * @param  {name, image} right The right itme, generally a system
  * @param  {boolean} prepend True if result should prepend to $selector. False appends.
  */
 function installedInModalInsert($selector,left,right,prepend){
@@ -2245,46 +2245,46 @@ function breadcrumbs($selector, details){
 	//Start by pushing the detail of each breadcrumb into the array
 
 	switch (details.type){
-		case 'Subsystem':
-			breadcrumbArr.push({ name: 'Subsystem', active: true, data: [{ key: 'id_subsystem', value: details.id_subsystem }]})
+		case 'System':
+			breadcrumbArr.push({ name: 'System', active: true, data: [{ key: 'id_system', value: details.id_system }]})
 		break;
 		case 'UpdateInterface':
 			breadcrumbArr.push({ name: 'Interface', active: true, data: []})
 		break;
-		case 'SubsystemInterface':
-			breadcrumbArr.push({ name: 'Subsystem', active: false, module: 'updateSubsystemModal', data: [{ key: 'id_subsystem', value: details.id_subsystem }]})
-			//breadcrumbArr.push({ name: 'Subsystem Interface', active: true, data: [{ key: 'id_SIMap', value: details.id_SIMap }, {key: 'id_subsystem', value: details.id_subsystem}]})
-			breadcrumbArr.push({ name: 'Subsystem Interface', active: true, data: [] })
+		case 'SystemInterface':
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
+			//breadcrumbArr.push({ name: 'System Interface', active: true, data: [{ key: 'id_SIMap', value: details.id_SIMap }, {key: 'id_system', value: details.id_system}]})
+			breadcrumbArr.push({ name: 'System Interface', active: true, data: [] })
 		break;
 		case 'Network':
-			breadcrumbArr.push({ name: 'Subsystem', active: false, module: 'updateSubsystemModal', data: [{ key: 'id_subsystem', value: details.id_subsystem }]})
-			breadcrumbArr.push({ name: 'Subsystem Interface', active: false, module: 'updateSubsystemInterfacesModal', data: [{ key: 'id_subsystem', value: details.id_subsystem },{ key: 'id_SIMap', value: details.id_SIMap }]})
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
+			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_SIMap', value: details.id_SIMap }]})
 			breadcrumbArr.push({ name: 'Map Network', active: true, data: []})
 		break;
 		case 'UpdateNetwork':
 			breadcrumbArr.push({ name: 'Network', active: true, data: []})
 		break;
-		case 'IssuesSubsystemInterface':
-			breadcrumbArr.push({ name: 'Subsystem', active: false, module: 'updateSubsystemModal', data: [{ key: 'id_subsystem', value: details.id_subsystem }]})
-			breadcrumbArr.push({ name: 'Subsystem Interface', active: false, module: 'updateSubsystemInterfacesModal', data: [{ key: 'id_subsystem', value: details.id_subsystem },{ key: 'id_SIMap', value: details.id_SIMap }]})
+		case 'IssuesSystemInterface':
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
+			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_SIMap', value: details.id_SIMap }]})
 			breadcrumbArr.push({ name: 'Issue', active: true, data: []})
 		break;
 		case 'Quantities':
-			breadcrumbArr.push({ name: 'Subsystem', active: false, module: 'updateSubsystemModal', data: [{ key: 'id_subsystem', value: details.id_subsystem }]})
-			//breadcrumbArr.push({ name: 'Subsystem Interface', active: true, data: [{ key: 'id_SIMap', value: details.id_SIMap }, {key: 'id_subsystem', value: details.id_subsystem}]})
-			breadcrumbArr.push({ name: 'Subsystem Quantities', active: true, data: [] })
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
+			//breadcrumbArr.push({ name: 'System Interface', active: true, data: [{ key: 'id_SIMap', value: details.id_SIMap }, {key: 'id_system', value: details.id_system}]})
+			breadcrumbArr.push({ name: 'System Quantities', active: true, data: [] })
 		break;
 		default:
 			debug(`Breadcrumb switch default. Shouldn't make it here`)
 	}
 
 	/*
-		case 'Subsystem':
-			updateSubsystemModal(selectedNode.id_subsystem)
+		case 'System':
+			updateSystemModal(selectedNode.id_system)
 			break;
-		case 'SubsystemInterface':
+		case 'SystemInterface':
 			debug(selectedNode)
-			updateSubsystemInterfacesModal({ id_subsystem: selectedNode.id_subsystem, id_SIMap: selectedNode.id_SIMap })
+			updateSystemInterfacesModal({ id_system: selectedNode.id_system, id_SIMap: selectedNode.id_SIMap })
 			break;
 		case 'Network':
 			updateNetworkModal(selectedNode.id_network);
@@ -2385,7 +2385,7 @@ function breadcrumbs($selector, details){
     //Show the icon modal
     $('#iconModal').modal('show');
 
-    //Event: Set the icon chooser modal buttons to return to the subsystem modal
+    //Event: Set the icon chooser modal buttons to return to the system modal
     $('#iconModalSave').unbind();
     $('#iconModalSave').on("click", () => {
         //Save the state
@@ -2431,7 +2431,7 @@ function uploadSettings(){
 const form = {
 
 	issue: {
-		subsystemInterface: [
+		systemInterface: [
 			{ type: 'select', id: 'issueSelect', label: 'Existing Issues'},
 			{ type: 'text', id: 'issueTitle', label: 'Issue Title', columnName: 'name'},
 			{ type: 'note', text: 'Issue severity'},
@@ -2440,7 +2440,7 @@ const form = {
 			{ type: 'textarea', id: 'issueDescription', label: 'Issue', columnName: 'issue'},
 			{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},
 			{ type: 'buttons', buttons: [
-				//{ id: 'mainModalSubsystemInterface', label: 'Return to Subsystem Interfaces'},
+				//{ id: 'mainModalSystemInterface', label: 'Return to System Interfaces'},
 			]}
 			
 		],
@@ -2473,21 +2473,21 @@ const form = {
 			{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},
 		],
 	},
-	subsystem: [
-		{ type: 'select', id: 'mainModalSubsystemSelect', label: 'Existing Subsystems' },
+	system: [
+		{ type: 'select', id: 'mainModalSystemSelect', label: 'Existing Systems' },
 		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
-		{ type: 'heading', id: 'mainModalSubsystemName', align: 'center' },
+		{ type: 'heading', id: 'mainModalSystemName', align: 'center' },
 		{ type: 'text', id: 'mainModalName', label: 'Name', columnName: 'name'},
-		//Add a subsystem class selector here
+		//Add a system class selector here
 		{ type: 'textarea', id: 'nodeDescription', label: 'Description', columnName: 'description'},
-		{ type: 'text', id: 'subsystemReference', label: 'Subsystem Block Diagram Reference', columnName: 'reference', append: {
-			id: 'subsystemReferenceDropZone', label: '&#8595'
+		{ type: 'text', id: 'systemReference', label: 'System Block Diagram Reference', columnName: 'reference', append: {
+			id: 'systemReferenceDropZone', label: '&#8595'
 		} },
-		{ type: 'text', id: 'subsystemTags', label: 'Tag List (Comma separated)', columnName: 'tags'},
+		{ type: 'text', id: 'systemTags', label: 'Tag List (Comma separated)', columnName: 'tags'},
 		{ type: 'buttons', buttons: [
 			{ id: 'iconChooserButton', label: 'Choose Icon'},
-			{ id: 'subsystemQuantitiesButton', label: 'Map Subsystems to Years'},
-			{ id: 'updateSubsystemInterfacesButton', label: 'Update Subsystem Interfaces'},
+			{ id: 'systemQuantitiesButton', label: 'Map Systems to Years'},
+			{ id: 'updateSystemInterfacesButton', label: 'Update System Interfaces'},
 			
 		]}
 	],
@@ -2507,10 +2507,10 @@ const form = {
 		]}
 
 	],
-	subsystemInterface: [
+	systemInterface: [
 		
-		{ type: 'img', id: 'mainModalSubsystemImage', columnName: 'image' },
-		{ type: 'heading', id: 'mainModalSubsystemName', align: 'center' },
+		{ type: 'img', id: 'mainModalSystemImage', columnName: 'image' },
+		{ type: 'heading', id: 'mainModalSystemName', align: 'center' },
 		{ type: 'select', id: 'mainModalInterfaceSelect', label: 'Available Interfaces' },
 		{ type: 'button', id: 'mainModalInstallInterfaceButton', label: '&#8595 Install Interface &#8595', align: 'centre'},
 		{ type: 'container', id: 'mainModalInstalledInterfaceContainer' },
@@ -2522,11 +2522,11 @@ const form = {
 			{ id: 'assignNetworksButton', label: 'Map Networks'},
 		]}
 	],
-	subsystemQuantities: [
+	systemQuantities: [
 		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
-		{ type: 'heading', id: 'mainModalSubsystemName', align: 'center' },
-		{ type: 'note', text: `This form is used to track the introduction of new subsystems into the system. 
-		For subsystems being removed, include a 0 in the final year to indicate removal.`},
+		{ type: 'heading', id: 'mainModalSystemName', align: 'center' },
+		{ type: 'note', text: `This form is used to track the introduction of new systems into the system. 
+		For systems being removed, include a 0 in the final year to indicate removal.`},
 		{ type: 'container', id: 'mainModalInstalledInterfaceContainer' },
 		{ type: 'buttons', buttons: [
 			{ id: 'addNewFieldsButton', label: 'Add New Field'},

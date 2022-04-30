@@ -1,17 +1,18 @@
 const { format } = require('./db');
 const sql = require('./db');
 
-let debugOn = false;
-debugOn = true;
 
-function debug(msg){
-	if (debugOn){
-		console.log(msg);
-	}
+let debugLevel = 2;
+
+//System controller
+function debug(level, msg){
+	if (debugLevel >= level){
+        console.log(msg);
+    }
 }
 
 exports.switch = (req,res) => {
-    debug('Type is: ' + req.body.type);
+	debug(1, `select.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 
     var queryString;
 
@@ -19,18 +20,18 @@ exports.switch = (req,res) => {
     //For: TBA
     if (req.body.type == 'TagList'){
         //Build the query
-        queryString = sql.format(`SELECT DISTINCT tags FROM subsystems;`)
+        queryString = sql.format(`SELECT DISTINCT tags FROM systems;`)
     }	
 
-    //******************************** Subsystem ****************************************
+    //******************************** System ****************************************
 
-    //Get all subsystems, or a specific one
+    //Get all systems, or a specific one
     //For: nodeSelected()
-    if (req.body.type == 'Subsystem'){
+    if (req.body.type == 'System'){
         //Build the query
-        queryString = sql.format(`SELECT * FROM subsystems`)
-        if (req.body.id_subsystem) { 
-            queryString += sql.format(' WHERE id_subsystem = ?',[req.body.id_subsystem])
+        queryString = sql.format(`SELECT * FROM systems`)
+        if (req.body.id_system) { 
+            queryString += sql.format(' WHERE id_system = ?',[req.body.id_system])
         }
         queryString += ' ORDER BY name;';
     }
@@ -65,28 +66,28 @@ exports.switch = (req,res) => {
 
     //
     //For: nodeSelected(),
-    if (req.body.type == 'SubsystemInterface'){ 
+    if (req.body.type == 'SystemInterface'){ 
         //Build the query
 
 		queryString = sql.format(`
-            SELECT subsystems.id_subsystem, subsystems.name AS subsystemName, subsystems.image AS subsystemImage, SIMap.id_SIMap, SIMap.isProposed, SIMap.description,
+            SELECT systems.id_system, systems.name AS systemName, systems.image AS systemImage, SIMap.id_SIMap, SIMap.isProposed, SIMap.description,
 				interfaces.id_interface, interfaces.name AS interfaceName, interfaces.image AS interfaceImage, interfaces.features
-			FROM subsystems
-            INNER JOIN SIMap ON subsystems.id_subsystem = SIMap.id_subsystem
+			FROM systems
+            INNER JOIN SIMap ON systems.id_system = SIMap.id_system
             INNER JOIN interfaces ON SIMap.id_interface = interfaces.id_interface
             WHERE SIMap.id_SIMap = ?;`,[req.body.id_SIMap])
 
     }
 
-	//Get the list of all interfaces attached to the subsystem
-	if (req.body.type == 'SubsystemInterfaces'){ 
+	//Get the list of all interfaces attached to the system
+	if (req.body.type == 'SystemInterfaces'){ 
         //Build the query
         queryString = sql.format(`
 			SELECT SIMap.id_SIMap AS id_SIMap, SIMap.id_interface, interfaces.name, interfaces.image
 			FROM SIMap
 			LEFT JOIN interfaces
 			ON SIMap.id_interface = interfaces.id_interface
-			WHERE SIMap.id_subsystem = ?;`,[req.body.id_subsystem])  //id_SIMap was node_si
+			WHERE SIMap.id_system = ?;`,[req.body.id_system])  //id_SIMap was node_si
     }
 
     //******************************** Network ****************************************
@@ -106,7 +107,7 @@ exports.switch = (req,res) => {
         queryString = sql.format(`SELECT * FROM networks WHERE networks.id_feature IN (?);`, [req.body.features])
     }
 
-    //Returns networks which are already assigned to the Subsystem Interface
+    //Returns networks which are already assigned to the System Interface
     //From: mappingModal_interface()
     if (req.body.type == 'AssignedNetworks'){
         //Build the query
@@ -127,8 +128,8 @@ exports.switch = (req,res) => {
     if (req.body.type == 'BasicIssues'){
         //Build the query
         switch (req.body.subtype){
-			case 'SubsystemInterface':
-				queryString = sql.format(`SELECT * FROM issues WHERE type = 'SubsystemInterface' AND id_type = ?;`, [req.body.id_SIMap])
+			case 'SystemInterface':
+				queryString = sql.format(`SELECT * FROM issues WHERE type = 'SystemInterface' AND id_type = ?;`, [req.body.id_SIMap])
 			break;
 			case 'Interface':
 				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Interface' AND id_type = ?;`, [req.body.id_interface])
@@ -152,15 +153,15 @@ exports.switch = (req,res) => {
 
 
 		switch (req.body.subtype){
-			case 'SubsystemInterface':
-				queryString = sql.format(`SELECT issues.*, interfaces.image AS interfaceImage, interfaces.name AS interfaceName, subsystems.name AS subsystemName, subsystems.image AS subsystemImage, subsystems.id_subsystem
+			case 'SystemInterface':
+				queryString = sql.format(`SELECT issues.*, interfaces.image AS interfaceImage, interfaces.name AS interfaceName, systems.name AS systemName, systems.image AS systemImage, systems.id_system
 				FROM issues
 				LEFT JOIN SIMap
 				ON issues.id_type = SIMap.id_SIMap
 				LEFT JOIN interfaces
 				ON SIMap.id_interface = interfaces.id_interface
-				LEFT JOIN subsystems
-				ON SIMap.id_subsystem = subsystems.id_subsystem
+				LEFT JOIN systems
+				ON SIMap.id_system = systems.id_system
 				WHERE id_issue = ?;`, [req.body.id_issue])
 			break;
 			case 'Interface':
@@ -180,11 +181,11 @@ exports.switch = (req,res) => {
 	if (req.body.type == 'IssueImages'){
         //Build the query
 		switch (req.body.subtype){
-			case 'SubsystemInterface':
-				queryString = sql.format(`SELECT interfaces.image AS interfaceImage, interfaces.name AS interfaceName, subsystems.name AS subsystemName, subsystems.image AS subsystemImage, subsystems.id_subsystem
+			case 'SystemInterface':
+				queryString = sql.format(`SELECT interfaces.image AS interfaceImage, interfaces.name AS interfaceName, systems.name AS systemName, systems.image AS systemImage, systems.id_system
 				FROM SIMap
-				LEFT JOIN subsystems
-				ON SIMap.id_subsystem = subsystems.id_subsystem
+				LEFT JOIN systems
+				ON SIMap.id_system = systems.id_system
 				LEFT JOIN interfaces
 				ON SIMap.id_interface = interfaces.id_interface
 				WHERE id_SIMap = ?;`, [req.body.id_SIMap])
@@ -204,17 +205,17 @@ exports.switch = (req,res) => {
 	if (req.body.type == 'Issues'){
         //Build the query
 		switch (req.body.subtype){
-			case 'SubsystemInterface':
-				queryString = sql.format(`SELECT subsystems.name AS subsystemName, issues.severity, interfaces.name AS interfaceName, issues.name AS issueName, issues.issue, issues.resolution, interfaces.description, issues.id_issue, subsystems.id_subsystem, SIMap.id_SIMap
+			case 'SystemInterface':
+				queryString = sql.format(`SELECT systems.name AS systemName, issues.severity, interfaces.name AS interfaceName, issues.name AS issueName, issues.issue, issues.resolution, interfaces.description, issues.id_issue, systems.id_system, SIMap.id_SIMap
 				FROM issues
 				LEFT JOIN SIMap
 				ON issues.id_type = SIMap.id_SIMap
 				LEFT JOIN interfaces
 				ON SIMap.id_interface = interfaces.id_interface
-				LEFT JOIN subsystems
-				ON SIMap.id_subsystem = subsystems.id_subsystem
-				WHERE issues.type = 'SubsystemInterface' AND id_issue IN (?)
-				ORDER BY subsystems.name;`, [req.body.id_issueArr])
+				LEFT JOIN systems
+				ON SIMap.id_system = systems.id_system
+				WHERE issues.type = 'SystemInterface' AND id_issue IN (?)
+				ORDER BY systems.name;`, [req.body.id_issueArr])
 			break;
 			case 'Interface':
 				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Interface' AND id_type = ?;`, [req.body.id_interface])
@@ -239,10 +240,10 @@ exports.switch = (req,res) => {
 
 	if (req.body.type == 'SIImages'){
 		//Build the query
-		queryString = sql.format(`SELECT interfaces.image AS interfaceImage, interfaces.name AS interfaceName, subsystems.name AS subsystemName, subsystems.image AS subsystemImage, subsystems.id_subsystem
+		queryString = sql.format(`SELECT interfaces.image AS interfaceImage, interfaces.name AS interfaceName, systems.name AS systemName, systems.image AS systemImage, systems.id_system
 		FROM SIMap
-		LEFT JOIN subsystems
-		ON SIMap.id_subsystem = subsystems.id_subsystem
+		LEFT JOIN systems
+		ON SIMap.id_system = systems.id_system
 		LEFT JOIN interfaces
 		ON SIMap.id_interface = interfaces.id_interface
 		WHERE id_SIMap = ?;`, [req.body.id_SIMap])
@@ -253,8 +254,8 @@ exports.switch = (req,res) => {
         //Build the query
         queryString = sql.format(`SELECT *
 		FROM quantities
-		WHERE quantities.id_subsystem = ?
-		ORDER BY quantities.year;`, [req.body.id_subsystem])
+		WHERE quantities.id_system = ?
+		ORDER BY quantities.year;`, [req.body.id_system])
     }
 
 
@@ -268,7 +269,7 @@ exports.switch = (req,res) => {
 	let re = /\n\s\s+/gi;
 	queryString = queryString.replace(re,'\n\t')
 
-    debug('Query:  ' + queryString);
+    debug(2,'Query:  ' + queryString);
     execute;
 
     var execute = executeQuery(queryString)
@@ -277,9 +278,9 @@ exports.switch = (req,res) => {
             res.json(result) 
         })
         .catch((err) => {
-            if (debugOn){
+			debug(3,err);
+            if (debugLevel == 7){
                 res.json({msg: 'There was an error executing the query (select.json)', err: err})
-                debug(err);
             } else {
                 res.json({msg: 'There was an error executing the query (select.json)'})
             }

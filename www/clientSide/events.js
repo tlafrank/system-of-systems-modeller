@@ -6,11 +6,11 @@ function manageTags(){
 
 
 /**
- * @description Update the subsystems by choosing a subsystem from a list
+ * @description Update the systems by choosing a system from a list
  * 
  */
-function update_subsystem(){
-	updateSubsystemModal({ id_subsystem: 1 });
+function update_system(){
+	updateSystemModal({ id_system: 1 });
 }
 
 /**
@@ -117,11 +117,11 @@ function hideNode(id, idNo, type){
 	cy.remove(`[id = '${id}']`)
 
 	//Remove relevant associated nodes
-	if (type == `Subsystem`){
-		//A subsystem was clicked, remove its interfaces
+	if (type == `System`){
+		//A system was clicked, remove its interfaces
 		const postData = {};
-		postData.type = `SubsystemInterfaces`;
-		postData.id_subsystem = idNo;
+		postData.type = `SystemInterfaces`;
+		postData.id_system = idNo;
 
 		//Get associated interfaces from the server
 		$.post('./select.json', postData, (result) => {
@@ -161,10 +161,10 @@ function hideNode(id, idNo, type){
 		postData.type = eventTarget.data('nodeType');
 
 		switch (eventTarget.data('nodeType')){
-			case 'Subsystem':
-				postData.id_subsystem = eventTarget.data('id_subsystem');		
+			case 'System':
+				postData.id_system = eventTarget.data('id_system');		
 				break;
-			case 'SubsystemInterface':
+			case 'SystemInterface':
 				postData.id_SIMap = eventTarget.data('id_SIMap');
 				break;
 			case 'Network':
@@ -203,19 +203,19 @@ function hideNode(id, idNo, type){
 //************************************************************ Page Buttons ******************************************************/
 
 /**
- * @description Opens the modal to allow a user to add/edit the subsystems, interfaces, features or networks
+ * @description Opens the modal to allow a user to add/edit the systems, interfaces, features or networks
  * 
  */
 function editNodeButton(){
 	debug('In editNode()');
 	//debug('selectedNode', selectedNode)
 	switch (selectedNode.type){
-		case 'Subsystem':
-			updateSubsystemModal({id_subsystem: selectedNode.id_subsystem})
+		case 'System':
+			updateSystemModal({id_system: selectedNode.id_system})
 			break;
-		case 'SubsystemInterface':
+		case 'SystemInterface':
 			debug(selectedNode)
-			updateSubsystemInterfacesModal({ id_subsystem: selectedNode.id_subsystem, id_SIMap: selectedNode.id_SIMap })
+			updateSystemInterfacesModal({ id_system: selectedNode.id_system, id_SIMap: selectedNode.id_SIMap })
 			break;
 		case 'Network':
 			updateNetworkModal({ id_network: selectedNode.id_network });
@@ -258,7 +258,7 @@ function incrementYearButton(){
 
 /**
  * @description Handler for the button on the mapModal which either assigns an interface to a
- * subsystem, or assigns a network to a subsystem's interface
+ * system, or assigns a network to a system's interface
  * 
  * Move within modal?
  */
@@ -269,14 +269,14 @@ function mappingModal_addButton(){
 
 		const postData = {};
 
-		if (selectedNode.type == 'Subsystem') { 
-			postData.type = 'InterfaceToSubsystem';
+		if (selectedNode.type == 'System') { 
+			postData.type = 'InterfaceToSystem';
 			postData.id_interface = $("#mappingModalSelect option:selected").data("id");
-			postData.id_subsystem = selectedNode.id_subsystem;
+			postData.id_system = selectedNode.id_system;
 		}
 
-		if (selectedNode.type == 'SubsystemInterface') {
-			postData.type = 'NetworkToSubsystemInterface';
+		if (selectedNode.type == 'SystemInterface') {
+			postData.type = 'NetworkToSystemInterface';
 			postData.id_network = $("#mappingModalSelect option:selected").data("id");
 			postData.id_SIMap = selectedNode.id_SIMap;
 		}
@@ -295,22 +295,22 @@ function mappingModal_addButton(){
 
 /**
  * @description Handler for the button on the mapModal which either deletes an interface from a
- * subsystem, or deletes a network from a subsystem's interface
+ * system, or deletes a network from a system's interface
  * 
  * Move within modal?
  */
 function mappingModal_deleteButton(idToDelete){
 	debug('In mappingModal_deleteButton()')
-	//Try to delete the interface from the subsystem
+	//Try to delete the interface from the system
 	//May fail due to foreign key constraints
 	const postData = {};
 
-	if (selectedNode.type == 'Subsystem') { 
-		postData.type = 'DeleteInterfaceFromSubsystem';
+	if (selectedNode.type == 'System') { 
+		postData.type = 'DeleteInterfaceFromSystem';
 		postData.id_SIMap = idToDelete;
 	}
 
-	if (selectedNode.type == 'SubsystemInterface') { 
+	if (selectedNode.type == 'SystemInterface') { 
 		postData.type = 'DeleteNetworkFromInterface';
 		postData.id_SINMap = idToDelete;
 	}

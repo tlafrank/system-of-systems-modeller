@@ -581,16 +581,16 @@ function getReferenceURL(reference){
  * 
  */
  const graphTable = {
-	Subsystem: [
-		{ label: 'Subsystem Name', type: 'text', columnName: 'name' },
+	System: [
+		{ label: 'System Name', type: 'text', columnName: 'name' },
 		{ label: 'Quantities', type: 'text', columnName: '' },
 		{ label: 'Block Diagram', type: 'link', columnName: 'reference'},
 		{ label: 'Description', type: 'text', columnName: 'description' },
 		
 	],
-	SubsystemInterface: [
+	SystemInterface: [
 		{ label: 'Interface Name', type: 'text', columnName: 'interfaceName' },
-		{ label: 'Installed In', type: 'text', columnName: 'subsystemName' },
+		{ label: 'Installed In', type: 'text', columnName: 'systemName' },
 		{ label: 'Description', type: 'text', columnName: 'description' },	
 	],
 	Network: [

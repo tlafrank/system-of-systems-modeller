@@ -1,12 +1,12 @@
-class Subsystem {
+class System {
 
-    constructor(subsystemRow, quantitiesRows, showInterfaces){
+    constructor(systemRow, quantitiesRows, showInterfaces){
 		
-		this.id_subsystem = subsystemRow.id_subsystem;
-		this.name = subsystemRow.name;
-		this.image = subsystemRow.image;
+		this.id_system = systemRow.id_system;
+		this.name = systemRow.name;
+		this.image = systemRow.image;
 		this.qtyYears = [];
-		this.qtySubsystemsThisYear = 0;
+		this.qtySystemsThisYear = 0;
 		this.interfaces = [];
 		this.showInterfaces = showInterfaces;
 
@@ -33,12 +33,12 @@ class Subsystem {
 
 	
 	/**
-	 * @description Returns the classes to apply to the subsystem node
+	 * @description Returns the classes to apply to the system node
 	 * 
 	 * 
 	 */
-	getSubsystemCyClasses(){
-		var classString = 'subsystem';
+	getSystemCyClasses(){
+		var classString = 'system';
 		//Handle classes (class1, class2, etc)
 
 		return classString;
@@ -81,7 +81,7 @@ class Subsystem {
 		return classString;
 	}
 
-	getSubsystemToSIClasses(iface){
+	getSystemToSIClasses(iface){
 		var classString = '';
 		
 		if (iface.isProposed){
@@ -92,16 +92,15 @@ class Subsystem {
 	}
 
 	/**
-	 * @description Determines if this subsystem exists in the focus year
+	 * @description Determines if this system exists in the focus year
 	 * 
 	 * @param  {} year
 	 */
 	presentInYear(year){
 		if (this.qtyYears[year-2000].quantity > 0){
-			this.qtySubsystemsThisYear = this.qtyYears[year-2000].quantity;
+			this.qtySystemsThisYear = this.qtyYears[year-2000].quantity;
 			return true;
 		} else {
-			//console.log(`year ${year} doesnt exist for ${this.name}`)
 			return false;
 		}
 	}
@@ -113,22 +112,22 @@ class Subsystem {
 
 		var returnArr = []
 
-		//Subsystem node
+		//System node
 		returnArr.push({
 			group: 'nodes',
 			data: {
-				id: 'node_s_' + this.id_subsystem,
-				idNo: this.id_subsystem,
-				id_subsystem: this.id_subsystem,
-				nodeType: 'Subsystem',
+				id: 'node_s_' + this.id_system,
+				idNo: this.id_system,
+				id_system: this.id_system,
+				nodeType: 'System',
 				name: this.name,
 				filename: './images/' + this.image,
 			},
-			classes: this.getSubsystemCyClasses()
+			classes: this.getSystemCyClasses()
 		})
 
 		if(this.showInterfaces == true){
-			//Subsystem interface nodes and their edges with the subsystem
+			//System interface nodes and their edges with the system
 			this.interfaces.forEach((element) => {
 				//this.debug(element)
 				//Add interface node
@@ -137,9 +136,9 @@ class Subsystem {
 					data: {
 						id: 'node_si_' + element.id_SIMap,
 						idNo: this.id_SIMap,
-						id_subsystem: this.id_subsystem,
+						id_system: this.id_system,
 						id_SIMap: element.id_SIMap,
-						nodeType: 'SubsystemInterface',
+						nodeType: 'SystemInterface',
 						name: element.name,
 						filename: './images/' + element.image,
 					},
@@ -152,10 +151,10 @@ class Subsystem {
 					data: {
 						id: 'edge_s_si_' + element.id_SIMap,
 						idNo: element.id_SIMap,
-						source: 'node_s_' + this.id_subsystem,
+						source: 'node_s_' + this.id_system,
 						target: 'node_si_' + element.id_SIMap,
 					},
-					classes: this.getSubsystemToSIClasses(element)
+					classes: this.getSystemToSIClasses(element)
 				})
 
 				//Network edges
@@ -177,21 +176,21 @@ class Subsystem {
 			})
 
 		} else {
-			//Subsystem to network edges
+			//System to network edges
 			this.interfaces.forEach((element) => {
-				this.debug('element')
-				this.debug(element)
+				//this.debug('element')
+				//this.debug(element)
 				
 				element.networks.forEach((element2) => {
-					this.debug('element2')
-					this.debug(element2)
+					//this.debug('element2')
+					//this.debug(element2)
 					returnArr.push({
 						group: 'edges',
 						data: {
-							id: 'edge_s_' + this.id_subsystem + '_n_' + element2.id_network,
+							id: 'edge_s_' + this.id_system + '_n_' + element2.id_network,
 							idNo: element2.id_network,
 							id_network: element2.id_network,
-							source: 'node_s_' + this.id_subsystem,
+							source: 'node_s_' + this.id_system,
 							target: 'node_n_' + element2.id_network,
 						},
 						classes: 'orange'
@@ -213,4 +212,4 @@ class Subsystem {
 	}
 }
 
-module.exports = Subsystem;
+module.exports = System;

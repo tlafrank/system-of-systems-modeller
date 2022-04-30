@@ -1,39 +1,30 @@
 const { format } = require('./db');
 const sql = require('./db');
-const Subsystem = require('./Subsystem');
+const System = require('./System');
 
-let debugOn = false;
-debugOn = true;
-
+let debugLevel = 2;
 
 //Debug function local to the methods in this file
-function debug(msg){
-	if (debugOn){
-		console.log(msg);
-	}
+function debug(level, msg){
+	if (debugLevel >= level){
+        console.log(msg);
+    }
 }
 
+
 exports.switch = (req,res) => {
-    //debug(req.body);
-	debug('graph.js req.body.type: ' + req.body.type)
+	debug(1, `graph.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 
     var queryString = [];
-
-	//const subsystem = new Subsystem();
-
-
-
 
     //******************************** Graph ****************************************
     //Gets the nodes for the graph
 
 
-	//Get all the subsystems requested by the user
-	queryString[0] = sql.format(`SELECT id_subsystem, name, image, tags FROM subsystems`);
+	//Get all the systems requested by the user
+	queryString[0] = sql.format(`SELECT id_system, name, image, tags FROM systems`);
 	var includedTags = [];
 	var excludedTags = [];
-
-	debug(2 * Boolean(req.body.includedFilterTag) + Boolean(req.body.excludedFilterTag))
 
 	switch (2 * Boolean(req.body.includedFilterTag) + Boolean(req.body.excludedFilterTag)){
 		case 3:
@@ -77,11 +68,11 @@ exports.switch = (req,res) => {
 	}
 
 	
-	//Produce the query to get the quantitiy of subsystems
-	queryString[1] = sql.format(`SELECT * FROM quantities ORDER BY id_subsystem;`);
+	//Produce the query to get the quantitiy of systems
+	queryString[1] = sql.format(`SELECT * FROM quantities ORDER BY id_system;`);
 
-	var subsystemsArr = [];
-	var subsystemsIdArr = [];
+	var systemsArr = [];
+	var systemsIdArr = [];
 	var quantities = [];
 	var interfacesArr = [];
 	var SIIdArr = [];
@@ -89,75 +80,69 @@ exports.switch = (req,res) => {
 	var statsObj = {};
 
 	Promise.all([
-	executeQuery(queryString[0]), //Subsystem table
+	executeQuery(queryString[0]), //System table
 	executeQuery(queryString[1]), //Quantities table
 	])
 		.then((result) => {
-			//Create a new subsystem object for each row of the subsystems table, remove those subsystem objects
-			//which are not available the current year and get the list of subsystem interfaces from the database
+			//Create a new system object for each row of the systems table, remove those system objects
+			//which are not available the current year and get the list of system interfaces from the database
 
-			//Loop through the subsystems table, creating a new Subsystem object for each row
+			//Loop through the systems table, creating a new System object for each row
 			result[0].forEach(element => {
 
-				//Loop through and build the quantity/years object for each subsystem
+				//Loop through and build the quantity/years object for each system
 				quantities = [];
 
 				for (var i = 0; i < result[1].length; i++ ){
-					if (result[1][i].id_subsystem == element.id_subsystem){
+					if (result[1][i].id_system == element.id_system){
 						quantities.push({
 							year: result[1][i].year, 
 							quantity: result[1][i].quantity,
 						});
 					}
 				}
-				//debug('quantities for: ' + element.name)
-				//debug(quantities)
 
-				//Create a new subsystem object in the subsystemsArr
-				subsystemsArr.push(new Subsystem(element, quantities, req.body.showInterfaces))
+				//Create a new system object in the systemsArr
+				systemsArr.push(new System(element, quantities, req.body.showInterfaces))
 			});
 
-			//debug(subsystemsArr[1].qtyYears);
+			//debug(systemsArr[1].qtyYears);
 
-			//Prune the subsystemsArr for any subsystems which do not exist in the given year
-			for (var i = 0; i < subsystemsArr.length; i++){
-
-				//debug(`i: ${i}, subsystemsArr[i].name: ${subsystemsArr[i].name}`);
-				//debug(subsystemsArr[i].qtyYears);
+			//Prune the systemsArr for any systems which do not exist in the given year
+			for (var i = 0; i < systemsArr.length; i++){
 				
-				//Check if the subsystem exists in the current year
-				if (subsystemsArr[i].presentInYear(req.body.year)){
-					//Store id_subsystem for the next query
-					subsystemsIdArr.push(subsystemsArr[i].id_subsystem);
+				//Check if the system exists in the current year
+				if (systemsArr[i].presentInYear(req.body.year)){
+					//Store id_system for the next query
+					systemsIdArr.push(systemsArr[i].id_system);
 				} else {
 					//Remove the object from the array
-					debug('Removing ' + subsystemsArr[i].name)
-					subsystemsArr.splice(i,1);
+					debug(5, 'Removing ' + systemsArr[i].name)
+					systemsArr.splice(i,1);
 					i--;
 				}
 			}
 
-			//Check if there are no subsystems to display
-			if (subsystemsIdArr.length == 0){
-				debug('subsystemsIdArr is 0')
+			//Check if there are no systems to display
+			if (systemsIdArr.length == 0){
 				return new Promise((resolve,reject) => {
-					reject({msg: 'There are no subsystems available for the given year, given filter terms.'})
+					reject({msg: 'There are no systems available for the given year, given filter terms.'})
 				})
 			} else {
-				//Get only the subsystem interfaces which belong to subsystems which are available in the current year
+				//Get only the system interfaces which belong to systems which are available in the current year
 				return executeQuery(sql.format(`
 					SELECT * FROM interfaces;
-					SELECT SIMap.id_SIMap, SIMap.id_subsystem, interfaces.id_interface, interfaces.name, interfaces.image, SIMap.isProposed
+					SELECT SIMap.id_SIMap, SIMap.id_system, interfaces.id_interface, interfaces.name, interfaces.image, SIMap.isProposed
 					FROM SIMap 
 					LEFT JOIN interfaces ON interfaces.id_interface = SIMap.id_interface
-					WHERE SIMap.id_subsystem IN (?)
-					ORDER BY SIMap.id_subsystem;`, [subsystemsIdArr]))
+					WHERE SIMap.id_system IN (?)
+					ORDER BY SIMap.id_system;`, [systemsIdArr]))
 			}
 
 		})
 		.then((result) => {
 			//Create an interfaces table for capturing the quantity of interfaces available and 
-			//add each subsystem interface to the respective subsystem and fetch their associated networks.
+			//add each system interface to the respective system and fetch their associated networks.
 
 			//Loop through the interfaces table, creating a new Interface object for each row
 			interfacesArr = [];
@@ -167,22 +152,21 @@ exports.switch = (req,res) => {
 					id_interface: element.id_interface,
 					name: element.name,
 					quantity: 0,
-					subsystems: []
+					systems: []
 				})
 			})
 
-			//Loop through the subsystem interfaces table and add the interfaces to the respective subsystem
-			//Additionally, add the quanitity of subsystems available in this year to interfacesArr
+			//Loop through the system interfaces table and add the interfaces to the respective system
+			//Additionally, add the quanitity of systems available in this year to interfacesArr
 			result[1].forEach((element) => {
-				//debug(element);
 
 				//For next query, track the SI's which are used in this year
 				SIIdArr.push(element.id_SIMap);
 
-				for (var i = 0; i < subsystemsArr.length; i++){
-					if (subsystemsArr[i].id_subsystem == element.id_subsystem){
-						//Add the subsystems interface
-						subsystemsArr[i].interfaces.push({
+				for (var i = 0; i < systemsArr.length; i++){
+					if (systemsArr[i].id_system == element.id_system){
+						//Add the systems interface
+						systemsArr[i].interfaces.push({
 							id_SIMap: element.id_SIMap,
 							id_interface: element.id_interface,
 							name: element.name,
@@ -192,12 +176,12 @@ exports.switch = (req,res) => {
 							issues: [],
 						})
 
-						//Update interfacesArr total quantity, as well as an array to track which subsystems the interface is installed within
+						//Update interfacesArr total quantity, as well as an array to track which systems the interface is installed within
 						for (var j = 0; j < interfacesArr.length; j++){
 							if (interfacesArr[j].id_interface == element.id_interface){
 								//found the matching generic interface
-								interfacesArr[j].quantity += subsystemsArr[i].qtySubsystemsThisYear;
-								interfacesArr[j].subsystems.push(element.id_subsystem)
+								interfacesArr[j].quantity += systemsArr[i].qtySystemsThisYear;
+								interfacesArr[j].systems.push(element.id_system)
 								break;
 							}
 						}
@@ -215,9 +199,7 @@ exports.switch = (req,res) => {
 				}
 			}
 
-			//debug(interfacesArr)
-
-			//Return the networks associated with the subsystem interfaces
+			//Return the networks associated with the system interfaces
 			return executeQuery(sql.format(`
 				SELECT SINMap.id_SIMap, SINMap.id_network, networks.name, networks.image
 				FROM SINMap
@@ -226,10 +208,7 @@ exports.switch = (req,res) => {
 		})
 		.then((result) => {
 
-			//Add the network to the subsystem interface
-
-			//debug(result)
-
+			//Add the network to the system interface
 
 			//Loop through SIN records, assigning them to every SI, if they match
 			result.forEach((element) => {
@@ -237,18 +216,17 @@ exports.switch = (req,res) => {
 				//Track if the network is used in this year
 				var flag = false;
 
-				//Loop through every subsystem
-				for (var i=0; i < subsystemsArr.length; i++){
+				//Loop through every system
+				for (var i=0; i < systemsArr.length; i++){
 
 					//Loop through every SI
-					for (var j=0; j < subsystemsArr[i].interfaces.length; j++){
+					for (var j=0; j < systemsArr[i].interfaces.length; j++){
 						//Setup a SIN object for the SI
-						//subsystemsArr[i].interfaces[j].networks = [];
+						//systemsArr[i].interfaces[j].networks = [];
 
 						//Assign the network to the SI
-						if (subsystemsArr[i].interfaces[j].id_SIMap == element.id_SIMap){
-							//debug('Assigning network to SI: ' + element.id_SIMap)
-							subsystemsArr[i].interfaces[j].networks.push({
+						if (systemsArr[i].interfaces[j].id_SIMap == element.id_SIMap){
+							systemsArr[i].interfaces[j].networks.push({
 								id_network: element.id_network,
 								//name: element.name,
 								//image: element.image,
@@ -269,16 +247,16 @@ exports.switch = (req,res) => {
 
 			})
 
-			//Return the issues associated with Subsystem Interfaces
+			//Return the issues associated with System Interfaces
 			return Promise.all([
 				executeQuery(sql.format(`
-				SELECT subsystems.id_subsystem, issues.*
+				SELECT systems.id_system, issues.*
 				FROM issues
 				LEFT JOIN SIMap
 				ON SIMap.id_SIMap = issues.id_type
-				LEFT JOIN subsystems
-				ON SIMap.id_subsystem = subsystems.id_subsystem
-				WHERE id_type IN (?) AND type = 'SubsystemInterface';`, [SIIdArr])), //SubsystemInterface issues
+				LEFT JOIN systems
+				ON SIMap.id_system = systems.id_system
+				WHERE id_type IN (?) AND type = 'SystemInterface';`, [SIIdArr])), //SystemInterface issues
 				executeQuery(sql.format(`SELECT * FROM interfaces;
 				
 				`,[])), //Quantities table
@@ -286,31 +264,28 @@ exports.switch = (req,res) => {
 
 
 			return executeQuery(sql.format(`
-			SELECT subsystems.id_subsystem, issues.*
+			SELECT systems.id_system, issues.*
 			FROM issues
 			LEFT JOIN SIMap
 			ON SIMap.id_SIMap = issues.id_type
-			LEFT JOIN subsystems
-			ON SIMap.id_subsystem = subsystems.id_subsystem
-			WHERE id_type IN (?) AND type = 'SubsystemInterface';`, [SIIdArr]))
+			LEFT JOIN systems
+			ON SIMap.id_system = systems.id_system
+			WHERE id_type IN (?) AND type = 'SystemInterface';`, [SIIdArr]))
 		})
-		.then((result) => {	//Handle SubsystemInterface issues
+		.then((result) => {	//Handle SystemInterface issues
 
-			//debug(result);
+			debug(6, result);
 
-			
-
-
-			//Go through each subsystem
-			subsystemsArr.forEach((subsystemElement) => {
-				//Go through the subsystem's interfaces
-				subsystemElement.interfaces.forEach((interfaceElement) => {
-					//Go through Subsystem Interface issues
+			//Go through each system
+			systemsArr.forEach((systemElement) => {
+				//Go through the system's interfaces
+				systemElement.interfaces.forEach((interfaceElement) => {
+					//Go through System Interface issues
 					result[0].forEach((issueElement) => {
-						if (issueElement.id_subsystem == subsystemElement.id_subsystem){
+						if (issueElement.id_system == systemElement.id_system){
 												
 							if (issueElement.id_type == interfaceElement.id_SIMap){
-								//Issue is a match to this subsystem interface
+								//Issue is a match to this system interface
 								interfaceElement.issues.push(
 									{
 										severity: issueElement.severity,
@@ -327,10 +302,10 @@ exports.switch = (req,res) => {
 
 			//Save each issue to statsObj
 			statsObj.issues = {}
-			statsObj.issues.subsystemInterfaces = [];
+			statsObj.issues.systemInterfaces = [];
 			
 			result[0].forEach((element) => {
-				statsObj.issues.subsystemInterfaces.push(element.id_issue)
+				statsObj.issues.systemInterfaces.push(element.id_issue)
 			})
 
 
@@ -354,23 +329,20 @@ exports.switch = (req,res) => {
 			})
 
 			
-			//Produce the subsystem nodes and edges (links)
-			subsystemsArr.forEach((element) => {
+			//Produce the system nodes and edges (links)
+			systemsArr.forEach((element) => {
 				responseArr = responseArr.concat(element.getCyObject());
 			})
 
 			//Build an array of stats to assist with other info
 			statsObj.interfaceCounts = interfacesArr;
 
-			debug("responsing to client");
-			
-
 			//Respond to the client
 			res.send([responseArr,statsObj])
 		})
 		.catch((err) => {
-			console.log(err)
-			if (err.msg == 'No subsystems'){
+			debug(1, err)
+			if (err.msg == 'No systems'){
 				res.json({data: {}});
 			} else {
 				res.json({err: 'There was an error executing the query'})
@@ -384,7 +356,7 @@ var executeQuery = (queryString) => new Promise((resolve,reject) => {
 	queryString = queryString.trim();
 	let re = /\n\s\s+/gi;
 	queryString = queryString.replace(re,'\n\t')
-	debug('Query:  ' + queryString);
+	debug(7, 'Query:  ' + queryString);
 	sql.query(queryString, (err,res) => {
 		if (err) { 
             reject(err);
