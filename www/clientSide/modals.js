@@ -120,7 +120,7 @@
 		if (excludedTagsString.length > 0){ excludedTagsString = excludedTagsString.substring(0,excludedTagsString.length - 1);	}
 		localStorage.setItem('excludedFilterTag', excludedTagsString);
 
-		newCy();
+		pageSwitch(sessionStorage.getItem('currentPage'));
 		$('#mainModal').modal('hide');
 	});
 
@@ -168,8 +168,7 @@ function settingsModal(message){
 			//debug(localStorage.getItem(element.id));
 		})
 
-		debug(localStorage);
-		newCy();
+		pageSwitch(sessionStorage.getItem('currentPage'));
 		$('#mainModal').modal('hide');
 	});
 }
@@ -1564,8 +1563,8 @@ function updateFeaturesModal(message){
 		//Get node details from the server
 		const postData3 = {type: 'Network', id_network: $(`#mainModalNetworkSelect option:selected`).attr('data-id_network')}
 		$.post('./select.json', postData3, (result) => {
-			debug('Passed to select.json:', postData3);
-			debug('Response:', result)
+			debug(3,'Passed to select.json:', postData3);
+			debug(3,'Response:', result)
 
 			//Check the result
 			if (result.msg){
@@ -1583,7 +1582,7 @@ function updateFeaturesModal(message){
 					title: 'Update Network',
 					description: '',
 					type: 'Network',
-					NodeModal: new NodeModal('Network', selectedNetwork),
+					//NodeModal: new NodeModal('Network', selectedNetwork),
 				});				
 			}
 		})

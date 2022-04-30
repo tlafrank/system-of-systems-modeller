@@ -2,7 +2,7 @@ const { format } = require('./db');
 const sql = require('./db');
 const System = require('./System');
 
-let debugLevel = 2;
+let debugLevel = 7;
 
 //Debug function local to the methods in this file
 function debug(level, msg){
@@ -26,6 +26,7 @@ exports.switch = (req,res) => {
 	var includedTags = [];
 	var excludedTags = [];
 
+	//Handle included and excluded tags
 	switch (2 * Boolean(req.body.includedFilterTag) + Boolean(req.body.excludedFilterTag)){
 		case 3:
 			//Both included and excluded tags have been provided
@@ -67,7 +68,6 @@ exports.switch = (req,res) => {
 		default:
 	}
 
-	
 	//Produce the query to get the quantitiy of systems
 	queryString[1] = sql.format(`SELECT * FROM quantities ORDER BY id_system;`);
 
@@ -84,9 +84,11 @@ exports.switch = (req,res) => {
 	executeQuery(queryString[1]), //Quantities table
 	])
 		.then((result) => {
+			debug(7, 'System Table result no rows: ' + result[0].length);
+			debug(7, 'Quantities Table result no rows: ' + result[1].length);
 			//Create a new system object for each row of the systems table, remove those system objects
 			//which are not available the current year and get the list of system interfaces from the database
-
+			
 			//Loop through the systems table, creating a new System object for each row
 			result[0].forEach(element => {
 
@@ -96,7 +98,7 @@ exports.switch = (req,res) => {
 				for (var i = 0; i < result[1].length; i++ ){
 					if (result[1][i].id_system == element.id_system){
 						quantities.push({
-							year: result[1][i].year, 
+							year: result[1][i].year,
 							quantity: result[1][i].quantity,
 						});
 					}
@@ -141,7 +143,9 @@ exports.switch = (req,res) => {
 
 		})
 		.then((result) => {
-			//Create an interfaces table for capturing the quantity of interfaces available and 
+			debug(7, 'Interfaces Table result no rows: ' + result[0].length);
+			debug(7, 'SIMap Table result no rows: ' + result[1].length);
+			//Create an interfaces table for capturing the quantity of interfaces available,
 			//add each system interface to the respective system and fetch their associated networks.
 
 			//Loop through the interfaces table, creating a new Interface object for each row
@@ -204,10 +208,11 @@ exports.switch = (req,res) => {
 				SELECT SINMap.id_SIMap, SINMap.id_network, networks.name, networks.image
 				FROM SINMap
 				LEFT JOIN networks
-				ON SINMap.id_network = networks.id_network;`, [SIIdArr]))
+				ON SINMap.id_network = networks.id_network;`, [SIIdArr])
+			)
 		})
 		.then((result) => {
-
+			debug(7, 'SINMap Table result no rows: ' + result.length);
 			//Add the network to the system interface
 
 			//Loop through SIN records, assigning them to every SI, if they match
@@ -246,44 +251,28 @@ exports.switch = (req,res) => {
 				}
 
 			})
-
 			//Return the issues associated with System Interfaces
-			return Promise.all([
-				executeQuery(sql.format(`
+			return executeQuery(sql.format(`
 				SELECT systems.id_system, issues.*
 				FROM issues
 				LEFT JOIN SIMap
 				ON SIMap.id_SIMap = issues.id_type
 				LEFT JOIN systems
 				ON SIMap.id_system = systems.id_system
-				WHERE id_type IN (?) AND type = 'SystemInterface';`, [SIIdArr])), //SystemInterface issues
-				executeQuery(sql.format(`SELECT * FROM interfaces;
-				
-				`,[])), //Quantities table
-				])
-
-
-			return executeQuery(sql.format(`
-			SELECT systems.id_system, issues.*
-			FROM issues
-			LEFT JOIN SIMap
-			ON SIMap.id_SIMap = issues.id_type
-			LEFT JOIN systems
-			ON SIMap.id_system = systems.id_system
-			WHERE id_type IN (?) AND type = 'SystemInterface';`, [SIIdArr]))
+				WHERE id_type IN (?) AND type = 'SystemInterface';`, [SIIdArr]) //SystemInterface issues
+			)
 		})
 		.then((result) => {	//Handle SystemInterface issues
-
-			debug(6, result);
+			debug(7, 'Issues Table result no rows: ' + result.length);
 
 			//Go through each system
 			systemsArr.forEach((systemElement) => {
 				//Go through the system's interfaces
 				systemElement.interfaces.forEach((interfaceElement) => {
 					//Go through System Interface issues
-					result[0].forEach((issueElement) => {
+					result.forEach((issueElement) => {
 						if (issueElement.id_system == systemElement.id_system){
-												
+
 							if (issueElement.id_type == interfaceElement.id_SIMap){
 								//Issue is a match to this system interface
 								interfaceElement.issues.push(
@@ -304,7 +293,7 @@ exports.switch = (req,res) => {
 			statsObj.issues = {}
 			statsObj.issues.systemInterfaces = [];
 			
-			result[0].forEach((element) => {
+			result.forEach((element) => {
 				statsObj.issues.systemInterfaces.push(element.id_issue)
 			})
 
@@ -313,7 +302,7 @@ exports.switch = (req,res) => {
 	//*************************************** Response to client *******************************************************/
 			var responseArr = []
 
-			//Produce the network nodes																		//Need to look more closely how thi works
+			//Produce the network nodes																		//Need to look more closely how this works
 			networksArr.forEach((element) => {
 				responseArr.push({
 					group: 'nodes',
@@ -327,7 +316,6 @@ exports.switch = (req,res) => {
 					classes: 'network'
 				})
 			})
-
 			
 			//Produce the system nodes and edges (links)
 			systemsArr.forEach((element) => {

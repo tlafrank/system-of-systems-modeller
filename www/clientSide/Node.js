@@ -13,7 +13,7 @@ class Node {
 		let flag = true;
 		this.err = [];
 
-		if (this.type == 'Subsystem'){
+		if (this.type == 'System'){
 			if (this.name == ""){ flag = false; this.err.push({err: 'No name provided.'})}
 			if (this.image == ""){ flag = false; this.err.push({err: 'No image provided.'})}
 			if (this.quantity == ""){ flag = false; this.err.push({err: 'No quantity provided.'})}
@@ -66,11 +66,11 @@ class Node {
 			this.description = node.description;
 		}
 
-		if (node.type == 'Subsystem'){
+		if (node.type == 'System'){
 			standardSet();
 			
-			this.id_subsystem = node.id_subsystem;
-			this.idNo = node.id_subsystem;
+			this.id_system = node.id_system;
+			this.idNo = node.id_system;
 		}
 
 		if (node.type == 'Interface'){
@@ -90,16 +90,16 @@ class Node {
 			}
 		}
 
-		if (node.type == 'SubsystemInterface'){
+		if (node.type == 'SystemInterface'){
 			this.name = node.interfaceName;
 			this.image = node.interfaceImage;
 			this.description = node.description;
 			this.id_SIMap = node.id_SIMap;
 			this.idNo = node.id_SIMap;
-			this.subsystemName = node.subsystemName;
-			this.subsystemImage = node.subsystemImage;
+			this.systemName = node.systemName;
+			this.systemImage = node.systemImage;
 			this.id_interface = node.id_interface;
-			this.id_subsystem = node.id_subsystem;
+			this.id_system = node.id_system;
 			
 			
 			if (node.features) {
@@ -138,8 +138,8 @@ class Node {
 		data.name = this.name;
 		data.description = this.description;
 
-		if (this.type == "Subsystem"){
-			if (this.id_subsystem) { data.id_subsystem = this.id_subsystem } //Indicates this should be considered an update, not an insert
+		if (this.type == "System"){
+			if (this.id_system) { data.id_system = this.id_system } //Indicates this should be considered an update, not an insert
 			data.quantity = this.quantity;
 			data.image = this.image;
 			data.qtyInYears = this.qtyInYears;
@@ -171,22 +171,22 @@ class Node {
 	getNodeDetails(){
 		var data = [];
 
-		if (this.type == "Subsystem"){
+		if (this.type == "System"){
 			data.push(
-				//{ label: 'Node ID', value: this.id_subsystem },
-				{ label: 'Subsystem Name', value: this.name },
+				//{ label: 'Node ID', value: this.id_system },
+				{ label: 'System Name', value: this.name },
 				//{ label: 'Node Type', value: this.type },
 				{ label: 'Quantities' },
-				//{ label: 'Qty subsystems', value: this.quantity },
+				//{ label: 'Qty systems', value: this.quantity },
 				{ label: 'Description', value: this.description }
 			)            
 		}
 
-		if (this.type == "SubsystemInterface"){	//Removed "Interface"
+		if (this.type == "SystemInterface"){	//Removed "Interface"
 			data.push(
 				//{ label: 'Node ID', value: this.id_SIMap },
 				{ label: 'Interface Name', value: this.name },
-				{ label: 'Installed In', value: this.subsystemName },
+				{ label: 'Installed In', value: this.systemName },
 				//{ label: 'Node Type', value: this.type },
 				{ label: 'Interface Lifespan' },
 				{ label: 'Description', value: this.description }

@@ -19,14 +19,6 @@ function update_system(){
  */
 function update_interface(){
 	updateInterfaceModal({ id_interface: 1 });
-
-	//selectInterfaceModal();
-
-	// $('#nodeModalTitle').text("Edit Interfaces");
-	// $("#nodeModalNodeDescription").text("Modify existing interfaces in the database.");
-	// modal = new NodeModal('Interface');
-	// $("#editInterfaceModal").modal('show')
-	// interfaceModal();
 }
 
 /**
@@ -51,21 +43,16 @@ function update_features(){
  * 
  */
 function view_graph(){
-	localStorage.setItem('mainPage', 'graph');
-	uploadSettings();
-	mainPage();
+	pageSwitch('graph');
 }
-
 function view_summary(){
-	localStorage.setItem('mainPage', 'summary');
-	uploadSettings();
-	mainPage();
+	pageSwitch('summary');
 }
-
 function view_issues(){
-	localStorage.setItem('mainPage', 'issues');
-	uploadSettings();
-	mainPage();
+	pageSwitch('issues');
+}
+function view_issues2(){
+	pageSwitch('issues2');
 }
 
 /**
@@ -73,13 +60,19 @@ function view_issues(){
  * 
  */
 function reorgGraph(){
-	debug ('In reorgGraph()')
-
+	debug (1,'In reorgGraph()')
 	cy.layout(cyLayout).run();
-
-	// var layout = cy.layout();
-	// layout.run();
 }
+
+/**
+ * @description 
+ * 
+ */
+ function redrawGraph(){
+	debug (1,'In redrawGraph()')
+	pageSwitch();
+}
+
 
 /**
  * @description 
@@ -99,7 +92,7 @@ function savePng(){
 
 
 /**
- * @description User clicks on a node in the graph
+ * @description User clicks the button to hide the currently selected node from the graph
  * 
  */
 function hideSelectedNodeButton(){
@@ -107,11 +100,11 @@ function hideSelectedNodeButton(){
 }
 
 /**
- * @description User clicks on a node in the graph
+ * @description Hide a node from the graph
  * 
  */
 function hideNode(id, idNo, type){
-	debug(`Hiding ${id} of type ${type} with ID: ${idNo}`);
+	debug(2,`Hiding ${id} of type ${type} with ID: ${idNo}`);
 
 	//Remove clicked node from the graph
 	cy.remove(`[id = '${id}']`)
@@ -125,8 +118,8 @@ function hideNode(id, idNo, type){
 
 		//Get associated interfaces from the server
 		$.post('./select.json', postData, (result) => {
-			debug('Passed to select.json:', postData);
-			debug('Response:', result)
+			debug(3,'Passed to select.json:', postData);
+			debug(3,'Response:', result)
 
 			//Check the result
 			if (result.msg){
@@ -144,20 +137,20 @@ function hideNode(id, idNo, type){
 }
 
 
-//************************************************************ Graph Nodes ******************************************************/
 /**
  * @description User clicks on a node in the graph
  * 
  */
  function nodeSelected(eventTarget){
 
+	//Hide the node if the hide nodes toggle button is enabled
 	if (hideNodes){
-		debug('Hiding Node: ', eventTarget);
+		debug(3,'Hiding Node: ', eventTarget);
 		hideNode(eventTarget.data('id'), eventTarget.data('idNo'), eventTarget.data('nodeType'));
 	} else {
 
 		const postData = {};
-		debug('NodeType: ' + eventTarget.data('nodeType'))
+		debug(3,'NodeType: ' + eventTarget.data('nodeType'))
 		postData.type = eventTarget.data('nodeType');
 
 		switch (eventTarget.data('nodeType')){
@@ -171,14 +164,13 @@ function hideNode(id, idNo, type){
 				postData.id_network = eventTarget.data('id_network');			
 				break;
 			default:
-				debug('Error in nodeSelected with unexpected nodeType: ' + eventTarget.data('nodeType'))
-						
+				debug(1,'Error in nodeSelected with unexpected nodeType: ' + eventTarget.data('nodeType'))
 		}
 		
 		//Get node details from the server
 		$.post('./select.json', postData, (result) => {
-			debug('Passed to select.json:', postData);
-			debug('Response:', result)
+			debug(3,'Passed to select.json:', postData);
+			debug(3,'Response:', result)
 
 			//Check the result
 			if (result.msg){
@@ -186,11 +178,10 @@ function hideNode(id, idNo, type){
 
 			} else {
 				//Set the selected node object
-
 				result[0].type = postData.type;
 				selectedNode.update(result[0], eventTarget.data('id'));
 
-				debug('selectedNode:', selectedNode)
+				debug(3,'selectedNode:', selectedNode)
 			}
 			//Populate the table
 			//$('#nodeDetailsTable').replaceWith(nodeDetailsTable());
@@ -207,14 +198,14 @@ function hideNode(id, idNo, type){
  * 
  */
 function editNodeButton(){
-	debug('In editNode()');
-	//debug('selectedNode', selectedNode)
+	debug(1,'In editNode()');
+	debug(3, 'selectedNode is',selectedNode)
 	switch (selectedNode.type){
 		case 'System':
 			updateSystemModal({id_system: selectedNode.id_system})
 			break;
 		case 'SystemInterface':
-			debug(selectedNode)
+			debug(2,selectedNode)
 			updateSystemInterfacesModal({ id_system: selectedNode.id_system, id_SIMap: selectedNode.id_SIMap })
 			break;
 		case 'Network':
@@ -232,13 +223,13 @@ function decrementYearButton(){
 	var newYear = parseInt(localStorage.getItem('activeYear'));
 	newYear--;
 	localStorage.setItem('activeYear', newYear)
-	newCy();
+	pageSwitch();
 }
 function incrementYearButton(){
 	var newYear = parseInt(localStorage.getItem('activeYear'));
 	newYear++;
 	localStorage.setItem('activeYear', newYear)
-	newCy();
+	pageSwitch();
 }
 
 
@@ -263,7 +254,7 @@ function incrementYearButton(){
  * Move within modal?
  */
 function mappingModal_addButton(){
-	debug('In mappingModal_addButton()')
+	debug(1,'In mappingModal_addButton()')
 	$("#mappingModalAddButton").unbind();
 	$("#mappingModalAddButton").on("click", () => {
 
@@ -283,8 +274,8 @@ function mappingModal_addButton(){
 
 
 		$.post(`update.json`, postData, (result) => {
-			debug('Passed to update.json: ', postData);
-			debug('Response: ', result)
+			debug(3,'Passed to update.json: ', postData);
+			debug(3,'Response: ', result)
 
 			//Reload the modal
 			editConnectionsButton();
@@ -300,7 +291,7 @@ function mappingModal_addButton(){
  * Move within modal?
  */
 function mappingModal_deleteButton(idToDelete){
-	debug('In mappingModal_deleteButton()')
+	debug(1,'In mappingModal_deleteButton()')
 	//Try to delete the interface from the system
 	//May fail due to foreign key constraints
 	const postData = {};
@@ -317,8 +308,8 @@ function mappingModal_deleteButton(idToDelete){
 
 
 	$.post('/update.json', postData, (result) => {
-		debug('Passed to update.json: ', postData);
-		debug('Response: ', result)
+		debug(3,'Passed to update.json: ', postData);
+		debug(3,'Response: ', result)
 
 		//Check the result
 		if (result.err){ $("#mappingModalWarning").removeClass('d-none').text(result.err);}
@@ -334,7 +325,7 @@ function mappingModal_deleteButton(idToDelete){
  * 
  */
  function hideNodesButton(){
-	debug ('In hideNodesButton()');
+	debug(1,'In hideNodesButton()');
 	var button = document.querySelector('#hideNodeToggleButton')
 
 	//Toggle hidenodes

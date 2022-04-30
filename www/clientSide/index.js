@@ -1,71 +1,80 @@
 //Global variables
 var debugOn = false;
 debugOn = true;
+
+var debugLevel = 4;
 var cy = cytoscape();
 let selectedNode; //Holds the Node object which is selected by the user
 let modal; //Holds the object to provide modal setup information and the Node object being built
 let graphSettings; //Holds the object to track graph settings between sessions
-let sosm;
+//let sosm;
+let sosmData, sosmStats;
 
 const imagePath = './images/'
 var hideNodes = false; //Tracks whether a click on a node should remove it from the graph
 
 $(document).ready(function(){
 	graphSettings = new GraphSettings();
-	mainPage();
+	pageSwitch();
   	selectedNode = new Node();
 })
 
 //Load the appropriate main pane data
-function mainPage(){
-	debug('In mainPage()')
-	switch (localStorage.getItem('defaultLandingPage')){
-		case 'graph':
-			var pageContent = `<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`
+function pageSwitch(page){
+	debug(1,'In pageSwitch()')
 
+	if (!page){
+		if (sessionStorage.getItem('currentPage') === null){
+			page = localStorage.getItem('defaultLandingPage');
+		} else {
+			page = sessionStorage.getItem('currentPage');
+		}
+	}
+	
+	//await getGraphData();
+
+	switch (page){
+		case 'graph':
+			sessionStorage.setItem('currentPage', 'graph');
 			$('#mainPaneContainer').empty();
-			$('#mainPaneContainer').append(pageContent);
-			
-			newCy()
+			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`);
+			getGraphData(newCy);
 		break;
 		case 'summary':
-			//var pageContent = ``
-
+			sessionStorage.setItem('currentPage', 'summary');
 			$('#mainPaneContainer').empty();
-			//$('#mainPaneContainer').append(pageContent);
-
-			listSummary();
-			
+			getGraphData(listSummary);
 		break;
 		case 'issues':
-			//var pageContent = ``
-
+			sessionStorage.setItem('currentPage', 'issues');
 			$('#mainPaneContainer').empty();
-			//$('#mainPaneContainer').append(pageContent);
-			
-			listIssues();
+			getGraphData(listIssues);
+		break;
+		case 'issues2':
+			sessionStorage.setItem('currentPage', 'issues2');
+			$('#mainPaneContainer').empty();
+			getGraphData(listIssues2);
 		break;
 	}
 }
 
-async function listSummary(){
-	await getGraphData();
-	debug('listSummary()')
+function listSummary(){
+	debug(1,'listSummary()')
 	
 	var table = `<table class="table table-sm table-striped"><thead>
 	<tr>
 		<th scope="col">Interface Name</th>
 		<th scope="col">Quantity</th>
-		<th scope="col">Number of different subsystem types</th>
+		<th scope="col">Number of different system types</th>
 	</tr>
 	</thead>
 	<tbody>`
 	
-	sosm.interfaceCounts.forEach((element) => {
+	sosmStats.interfaceCounts.forEach((element) => {
 		table += `<tr>
 			<td scope="row"><a href="#" onclick="updateInterfaceModal({ id_interface: ${element.id_interface} });">${element.name}</a></td>
 			<td class="">${element.quantity}</td>
-			<td>${element.subsystems.length}</td>
+			<td>${element.systems.length}</td>
 		</tr>`
 	})
 	table += `</tbody></table>`
@@ -74,19 +83,17 @@ async function listSummary(){
 }
 
 async function listIssues(){
-	await getGraphData();
-	debug('listIssues()')
-	debug(sosm.issues)
+	debug(2, 'listIssues()')
 
 	const postData = {
 		type: 'Issues',
-		subtype: 'SubsystemInterface',
-		id_issueArr: sosm.issues.subsystemInterfaces
+		subtype: 'SystemInterface',
+		id_issueArr: sosmStats.issues.systemInterfaces
 	}
 
 	$.post('select.json', postData, (result) => {
-		debug('Passed to select.json: ', postData);
-		debug('Result: ', result)
+		debug(3,'Passed to select.json: ', postData);
+		debug(3,'Result: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -95,7 +102,7 @@ async function listIssues(){
 		
 			var table = `<table class="table table-sm table-striped"><thead>
 			<tr>
-				<th scope="col">Subsystem Name</th>
+				<th scope="col">System Name</th>
 				<th scope="col">Severity</th>
 				<th scope="col">Interface Name</th>
 				<th scope="col">Issue</th>
@@ -106,10 +113,10 @@ async function listIssues(){
 			
 			result.forEach((element) => {
 				table += `<tr>
-					<td scope="row"><a href="#" onclick="updateSubsystemModal(${element.id_subsystem})">${element.subsystemName}</a></td>
+					<td scope="row"><a href="#" onclick="updateSystemModal(${element.id_system})">${element.systemName}</a></td>
 					<td class="text-center">${severity(element.severity)}</td>
-					<td><a href="#" onclick="updateSubsystemInterfacesModal({id_subsystem: ${element.id_subsystem}, id_SIMap: ${element.id_SIMap}})">${element.interfaceName}</a></td>
-					<td><a href="#" onclick="updateIssuesModal({type: 'SubsystemInterface', id_SIMap: ${element.id_SIMap}, id_subsystem: ${element.id_subsystem}, id_issue: ${element.id_issue}})"><strong>${element.issueName}. </strong></a>${element.issue}</td>
+					<td><a href="#" onclick="updateSystemInterfacesModal({id_system: ${element.id_system}, id_SIMap: ${element.id_SIMap}})">${element.interfaceName}</a></td>
+					<td><a href="#" onclick="updateIssuesModal({type: 'SystemInterface', id_SIMap: ${element.id_SIMap}, id_system: ${element.id_system}, id_issue: ${element.id_issue}})"><strong>${element.issueName}. </strong></a>${element.issue}</td>
 					<td>${element.resolution}</td>
 					
 				</tr>`
@@ -135,17 +142,76 @@ async function listIssues(){
 			
 		}
 	}
-
 }
 
+async function listIssues2(){
+	debug(2, 'listIssues2()')
 
+	const postData = {
+		type: 'Issues',
+		subtype: 'SystemInterface',
+		id_issueArr: sosmStats.issues.systemInterfaces
+	}
+
+	$.post('select.json', postData, (result) => {
+		debug(3,'Passed to select.json: ', postData);
+		debug(3,'Result: ', result)
+
+		//Check the result
+		if (result.msg){
+			//An error was passed
+		} else {
+		
+			var table = `<table class="table table-sm table-striped"><thead>
+			<tr>
+				<th scope="col">System Name</th>
+				<th scope="col">Severity</th>
+				<th scope="col">Interface Name</th>
+				<th scope="col">Issue</th>
+				<th scope="col">Proposed Resolution</th>
+			</tr>
+			</thead>
+			<tbody>`
+			
+			result.forEach((element) => {
+				table += `<tr>
+					<td scope="row"><a href="#" onclick="updateSystemModal(${element.id_system})">${element.systemName}</a></td>
+					<td class="text-center">${severity(element.severity)}</td>
+					<td><a href="#" onclick="updateSystemInterfacesModal({id_system: ${element.id_system}, id_SIMap: ${element.id_SIMap}})">${element.interfaceName}</a></td>
+					<td><a href="#" onclick="updateIssuesModal({type: 'SystemInterface', id_SIMap: ${element.id_SIMap}, id_system: ${element.id_system}, id_issue: ${element.id_issue}})"><strong>${element.issueName}. </strong></a>${element.issue}</td>
+					<td>${element.resolution}</td>
+					
+				</tr>`
+			})
+			table += `</tbody></table>`
+
+			$('#mainPaneContainer').append(table);
+		}
+
+	})	
+
+	var severity = (severity) => {
+		switch (severity){
+			case 'critical':
+				return '<img src="./assets/critical.png" width="20">'
+			break;
+			case 'warning':
+				return '<img src="./assets/warning.png" width="20">'
+			break;
+			case 'notice':
+				return '<img src="./assets/notice.png" width="20">'
+			break;
+			
+		}
+	}
+}
 
 /**
  * @description Builds a new CY graph
  * 
  */
 function newCy(){
-	debug('In newCy()')
+	debug(1,'In newCy()')
 
 	cy = cytoscape({ 
 		container: $("#cy"),
@@ -155,9 +221,10 @@ function newCy(){
 
 	$('#nodeDetailsTable').empty();
 
-	getGraphData(cy);
-
 	$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
+
+	cy.add(sosmData);
+	cy.layout(graphSettings.getGraphLayout()).run();
 
 	selectedNode = new Node();
 
@@ -167,7 +234,7 @@ function newCy(){
 
 //Reset the Cy object
 function resetCy(){
-	debug('in resetCy()');
+	debug(1,'In resetCy()');
 	cy = cytoscape({
 		container: $("#cy"),
 		style: cyStyle,
@@ -183,8 +250,8 @@ function resetCy(){
  * @param  {} cy The Cytoscape.js graph to populate
  * @param  {} id TBC
  */
-async function getGraphData(cy){
-	debug('in getGraphData()');
+function getGraphData(callback){
+	debug(1,'In getGraphData()');
 
 	//Year of graph
 	const postData = {
@@ -194,40 +261,18 @@ async function getGraphData(cy){
 		showIssues: localStorage.getItem('showIssues')
 	}
 
-	//debug('TEST:', 2*false + false);
-
-	//Filters
-	
-	if (localStorage.getItem('includedFilterTag').length > 0){
-		//debug(localStorage.getItem('includedFilterTag').split(','))
-		postData.includedFilterTag = localStorage.getItem('includedFilterTag')
-	}
-	
-	if (localStorage.getItem('excludedFilterTag').length > 0){
-		postData.excludedFilterTag = localStorage.getItem('excludedFilterTag')
-	}
-	
-
+	//Tag filters
+	if (localStorage.getItem('includedFilterTag').length > 0){ postData.includedFilterTag = localStorage.getItem('includedFilterTag') }
+	if (localStorage.getItem('excludedFilterTag').length > 0){ postData.excludedFilterTag = localStorage.getItem('excludedFilterTag') }
 
 	//New post which will return an object suitable for direct insertion into cy
-	await $.post('/graph.json', postData, (result) => {
-		debug('Passed to graph.json:', postData);
-		debug('Response:', result)
+	$.post('/graph.json', postData, (result) => {
+		debug(3,'Passed to graph.json:', postData);
+		debug(3,'Response:', result)
 
-		//Handle the stats data as well
-		sosm = result[1];
-
-		if (cy) { 
-			cy.add(result[0]);
-			
-
-			cy.layout(graphSettings.getGraphLayout()).run();
-			
-			
-			//cy.stop(true, true); 
-		}
-		
-		return true;
+		sosmData = result[0]
+		sosmStats = result[1];
+		callback();
 	})
 }
 

@@ -33,7 +33,7 @@
 
 		<!-- Page scripts -->
 		<script src="./clientSide/Node.js" type="text/javascript" defer></script>
-		<script src="./clientSide/NodeModal.js" type="text/javascript" defer></script>
+		<!--<script src="./clientSide/NodeModal.js" type="text/javascript" defer></script> -->
 		<script src="./clientSide/GraphSettings.js" type="text/javascript" defer></script>
 
 		<script src="./clientSide/helpers.js" type="text/javascript" defer></script>
@@ -72,6 +72,7 @@
 						<a class="dropdown-item" href="#" onclick="view_graph()">Graph</a>
 						<a class="dropdown-item" href="#" onclick="view_summary()">System Summary</a>
 						<a class="dropdown-item" href="#" onclick="view_issues()">Issue Summary</a>
+						<a class="dropdown-item" href="#" onclick="view_issues2()">Issue Summary2</a>
 					</div>
 				</li>
 
@@ -111,7 +112,7 @@
 							<button id="reorgGraph" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="reorgGraph()">Reorganise Graph</button>
 						</div>
 						<div class="col">
-							<button id="redrawGraph" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="newCy()">Redraw Graph</button>
+							<button id="redrawGraph" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="redrawGraph()">Redraw Graph</button>
 						</div>
 					</div>
 

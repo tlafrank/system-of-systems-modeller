@@ -3,7 +3,7 @@ const sql = require('./db');
 
 let debugLevel = 2;
 
-//System controller
+//Debug function local to the methods in this file
 function debug(level, msg){
 	if (debugLevel >= level){
         console.log(msg);

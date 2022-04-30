@@ -35,8 +35,8 @@ function addIconButton($selector, image, name, data){
  * 
  */
 function nodeTable($selector, node){
-	debug('nodeTable()');
-	debug(node);
+	debug(1, 'In nodeTable()');
+	debug(3, node);
 
 	var responseString = '<table id="nodeDetailsTable" class="table table-sm mx-1"><tbody>';
 
@@ -75,9 +75,18 @@ function nodeTable($selector, node){
  * handle multiple paramaters, perhaps debug levels too
  */
 function debug(...msg){
-	if (debugOn) {
-		for (var i = 0; i < msg.length; i++){
-			console.log(msg[i]);
+	//console.log(typeof msg[0])
+	if (typeof msg[0] === 'number'){
+		if (debugLevel >= msg[0]){
+			for (var i = 1; i < msg.length; i++){
+				console.log(msg[i]);
+			}	
+		}
+	} else {
+		if (debugLevel > 0){
+			for (var i = 0; i < msg.length; i++){
+				console.log(msg[i]);
+			}	
 		}
 	}
 }

@@ -7,7 +7,7 @@
 class GraphSettings{
 	constructor(){
 		//Setup localStorage with default values if not already populated
-		debug('In GraphSettings Class');
+		debug(1, 'In GraphSettings Class');
 
 		//Constants
 		this.graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random'];
@@ -32,7 +32,7 @@ class GraphSettings{
 		if(!localStorage.getItem('graphLayoutRows')) { localStorage.setItem('graphLayoutRows', 5) }
 		if(!localStorage.getItem('graphLayoutAnimate')) { localStorage.setItem('graphLayoutAnimate', 0) }
 		
-		debug(localStorage)
+		debug(3,localStorage)
 	}
 	
 	/**
@@ -47,9 +47,7 @@ class GraphSettings{
 			rows: localStorage.getItem('graphLayoutRows'),
 			animate: localStorage.getItem('graphLayoutAnimate'),
 		}
-
 		return layout;
-
 	 }
 
 	/**
