@@ -164,22 +164,25 @@ async function listIssues2(){
 		
 			var table = `<table class="table table-sm table-striped"><thead>
 			<tr>
-				<th scope="col">System Name</th>
 				<th scope="col">Severity</th>
-				<th scope="col">Interface Name</th>
 				<th scope="col">Issue</th>
 				<th scope="col">Proposed Resolution</th>
+				<th scope="col">System</th>
+				<th scope="col">Interface</th>
 			</tr>
 			</thead>
 			<tbody>`
 			
 			result.forEach((element) => {
 				table += `<tr>
-					<td scope="row"><a href="#" onclick="updateSystemModal(${element.id_system})">${element.systemName}</a></td>
 					<td class="text-center">${severity(element.severity)}</td>
-					<td><a href="#" onclick="updateSystemInterfacesModal({id_system: ${element.id_system}, id_SIMap: ${element.id_SIMap}})">${element.interfaceName}</a></td>
 					<td><a href="#" onclick="updateIssuesModal({type: 'SystemInterface', id_SIMap: ${element.id_SIMap}, id_system: ${element.id_system}, id_issue: ${element.id_issue}})"><strong>${element.issueName}. </strong></a>${element.issue}</td>
 					<td>${element.resolution}</td>
+					
+					<td scope="row"><a href="#" onclick="updateSystemModal(${element.id_system})">${element.systemName}</a></td>
+					<td><a href="#" onclick="updateSystemInterfacesModal({id_system: ${element.id_system}, id_SIMap: ${element.id_SIMap}})">${element.interfaceName}</a></td>
+					
+					
 					
 				</tr>`
 			})
