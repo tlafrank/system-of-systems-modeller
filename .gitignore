@@ -2,3 +2,11 @@ www/node_modules
 www/images
 package-lock.json
 private/
+assets/bootstrap.min.css
+assets/bootstrap.min.css.map
+assets/bootstrap.min.js
+assets/bootstrap.min.js.map
+assets/cytoscape.min.js
+assets/jquery-3.5.1.min.js
+assets/popper.min.js
+assets/popper.min.js.map

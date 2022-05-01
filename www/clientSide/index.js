@@ -38,21 +38,25 @@ function pageSwitch(page){
 			sessionStorage.setItem('currentPage', 'graph');
 			$('#mainPaneContainer').empty();
 			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`);
+			$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
 			getGraphData(newCy);
 		break;
 		case 'summary':
 			sessionStorage.setItem('currentPage', 'summary');
 			$('#mainPaneContainer').empty();
+			$('#pageTitle').text(`SOS Model Summary ${parseInt(localStorage.getItem('activeYear'))}`)
 			getGraphData(listSummary);
 		break;
 		case 'issues':
 			sessionStorage.setItem('currentPage', 'issues');
 			$('#mainPaneContainer').empty();
+			$('#pageTitle').text(`SOS Model Issues ${parseInt(localStorage.getItem('activeYear'))}`)
 			getGraphData(listIssues);
 		break;
 		case 'issues2':
 			sessionStorage.setItem('currentPage', 'issues2');
 			$('#mainPaneContainer').empty();
+			$('#pageTitle').text(`SOS Model Issues 2 ${parseInt(localStorage.getItem('activeYear'))}`)
 			getGraphData(listIssues2);
 		break;
 	}
@@ -165,10 +169,10 @@ async function listIssues2(){
 			var table = `<table class="table table-sm table-striped"><thead>
 			<tr>
 				<th scope="col">Severity</th>
+				<th scope="col">Interface</th>
 				<th scope="col">Issue</th>
 				<th scope="col">Proposed Resolution</th>
-				<th scope="col">System</th>
-				<th scope="col">Interface</th>
+				<th scope="col">Affected Systems</th>
 			</tr>
 			</thead>
 			<tbody>`
@@ -176,14 +180,10 @@ async function listIssues2(){
 			result.forEach((element) => {
 				table += `<tr>
 					<td class="text-center">${severity(element.severity)}</td>
+					<td><a href="#" onclick="updateSystemInterfacesModal({id_system: ${element.id_system}, id_SIMap: ${element.id_SIMap}})">${element.interfaceName}</a></td>
 					<td><a href="#" onclick="updateIssuesModal({type: 'SystemInterface', id_SIMap: ${element.id_SIMap}, id_system: ${element.id_system}, id_issue: ${element.id_issue}})"><strong>${element.issueName}. </strong></a>${element.issue}</td>
 					<td>${element.resolution}</td>
-					
 					<td scope="row"><a href="#" onclick="updateSystemModal(${element.id_system})">${element.systemName}</a></td>
-					<td><a href="#" onclick="updateSystemInterfacesModal({id_system: ${element.id_system}, id_SIMap: ${element.id_SIMap}})">${element.interfaceName}</a></td>
-					
-					
-					
 				</tr>`
 			})
 			table += `</tbody></table>`
@@ -204,7 +204,6 @@ async function listIssues2(){
 			case 'notice':
 				return '<img src="./assets/notice.png" width="20">'
 			break;
-			
 		}
 	}
 }

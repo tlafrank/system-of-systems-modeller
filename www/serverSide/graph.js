@@ -11,18 +11,23 @@ function debug(level, msg){
     }
 }
 
-
 exports.switch = (req,res) => {
 	debug(1, `graph.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 
-    var queryString = [];
+    var queryString = '';
 
     //******************************** Graph ****************************************
     //Gets the nodes for the graph
 
 
 	//Get all the systems requested by the user
-	queryString[0] = sql.format(`SELECT id_system, name, image, tags FROM systems`);
+	queryString = sql.format(`SELECT a.id_system, name, image, tags, a.quantity
+	FROM quantities AS a
+	LEFT JOIN quantities AS b
+	ON a.id_system = b.id_system AND a.year < b.year
+	LEFT JOIN systems
+	ON systems.id_system = a.id_system
+	WHERE b.year IS NULL AND a.year <= ${req.body.year} AND a.quantity > 0`);
 	var includedTags = [];
 	var excludedTags = [];
 
@@ -32,115 +37,79 @@ exports.switch = (req,res) => {
 			//Both included and excluded tags have been provided
 			includedTags = req.body.includedFilterTag.split(',');
 			excludedTags = req.body.excludedFilterTag.split(',');
-			queryString[0] += sql.format(` WHERE (`);
+			queryString += sql.format(` AND (`);
 			includedTags.forEach((element) => {
-				queryString[0] += sql.format(`tags LIKE ? OR `, ['%' + element + '%']);
+				queryString += sql.format(`tags LIKE ? OR `, ['%' + element + '%']);
 			})
-			queryString[0] = queryString[0].substring(0, queryString[0].length - 4);
-			queryString[0] += ') AND NOT (';
+			queryString = queryString.substring(0, queryString.length - 4);
+			queryString += ') AND NOT (';
 			excludedTags.forEach((element) => {
-				queryString[0] += sql.format(`tags LIKE ? OR `, ['%' + element + '%']);
+				queryString += sql.format(`tags LIKE ? OR `, ['%' + element + '%']);
 			})
-			queryString[0] = queryString[0].substring(0, queryString[0].length - 4);
-			queryString[0] += ');';
+			queryString = queryString.substring(0, queryString.length - 4);
+			queryString += ');';
 			break;
 		case 2:
 			//Only included tags have been provided
 			includedTags = req.body.includedFilterTag.split(',');
-			queryString[0] += sql.format(` WHERE`);
+			queryString += sql.format(` AND (`);
 			includedTags.forEach((element) => {
-				queryString[0] += sql.format(` tags LIKE ? OR`, ['%' + element + '%']);
+				queryString += sql.format(` tags LIKE ? OR`, ['%' + element + '%']);
 			})
-			queryString[0] = queryString[0].substring(0, queryString[0].length - 3);
+			queryString = queryString.substring(0, queryString.length - 3);
+			queryString += ');';
 			break;
 		case 1:
 			//Only excluded tags have been provided
 			excludedTags = req.body.excludedFilterTag.split(',');
-			queryString[0] += sql.format(` WHERE`);
+			queryString += sql.format(` AND`);
 			excludedTags.forEach((element) => {
-				queryString[0] += sql.format(` tags NOT LIKE ? AND`, ['%' + element + '%']);
+				queryString += sql.format(` tags NOT LIKE ? AND`, ['%' + element + '%']);
 			})
-			queryString[0] = queryString[0].substring(0, queryString[0].length - 3);
+			queryString = queryString.substring(0, queryString.length - 4);
+			queryString += ';';
 			break;
 		case 0:
 			//No tags have been provided
-			queryString[0] += ';'
+			queryString += ';'
 		default:
 	}
 
-	//Produce the query to get the quantitiy of systems
-	queryString[1] = sql.format(`SELECT * FROM quantities ORDER BY id_system;`);
-
 	var systemsArr = [];
 	var systemsIdArr = [];
-	var quantities = [];
 	var interfacesArr = [];
 	var SIIdArr = [];
 	var networksArr = [];
 	var statsObj = {};
 
-	Promise.all([
-	executeQuery(queryString[0]), //System table
-	executeQuery(queryString[1]), //Quantities table
-	])
+	executeQuery(queryString)
 		.then((result) => {
-			debug(7, 'System Table result no rows: ' + result[0].length);
-			debug(7, 'Quantities Table result no rows: ' + result[1].length);
-			//Create a new system object for each row of the systems table, remove those system objects
-			//which are not available the current year and get the list of system interfaces from the database
+			debug(7, 'System Table result no rows: ' + result.length);
 			
-			//Loop through the systems table, creating a new System object for each row
-			result[0].forEach(element => {
+			//Create a new system object for each row of the systems table
+			//Make sure there are systems to display
+			if (result.length > 0){
+				//Loop through the systems table, creating a new System object for each row
+				result.forEach(element => {
 
-				//Loop through and build the quantity/years object for each system
-				quantities = [];
-
-				for (var i = 0; i < result[1].length; i++ ){
-					if (result[1][i].id_system == element.id_system){
-						quantities.push({
-							year: result[1][i].year,
-							quantity: result[1][i].quantity,
-						});
-					}
-				}
-
-				//Create a new system object in the systemsArr
-				systemsArr.push(new System(element, quantities, req.body.showInterfaces))
-			});
-
-			//debug(systemsArr[1].qtyYears);
-
-			//Prune the systemsArr for any systems which do not exist in the given year
-			for (var i = 0; i < systemsArr.length; i++){
-				
-				//Check if the system exists in the current year
-				if (systemsArr[i].presentInYear(req.body.year)){
-					//Store id_system for the next query
-					systemsIdArr.push(systemsArr[i].id_system);
-				} else {
-					//Remove the object from the array
-					debug(5, 'Removing ' + systemsArr[i].name)
-					systemsArr.splice(i,1);
-					i--;
-				}
-			}
-
-			//Check if there are no systems to display
-			if (systemsIdArr.length == 0){
+					//Create a new system object in the systemsArr
+					systemsArr.push(new System(element, req.body.showInterfaces))
+					systemsIdArr.push(element.id_system);
+				});
+			} else {
 				return new Promise((resolve,reject) => {
 					reject({msg: 'There are no systems available for the given year, given filter terms.'})
 				})
-			} else {
-				//Get only the system interfaces which belong to systems which are available in the current year
-				return executeQuery(sql.format(`
-					SELECT * FROM interfaces;
-					SELECT SIMap.id_SIMap, SIMap.id_system, interfaces.id_interface, interfaces.name, interfaces.image, SIMap.isProposed
-					FROM SIMap 
-					LEFT JOIN interfaces ON interfaces.id_interface = SIMap.id_interface
-					WHERE SIMap.id_system IN (?)
-					ORDER BY SIMap.id_system;`, [systemsIdArr]))
 			}
 
+			//Get only the system interfaces which belong to systems which are available in the current year
+			return executeQuery(sql.format(`
+				SELECT * FROM interfaces;
+				SELECT SIMap.id_SIMap, SIMap.id_system, interfaces.id_interface, interfaces.name, interfaces.image, SIMap.isProposed
+				FROM SIMap 
+				LEFT JOIN interfaces ON interfaces.id_interface = SIMap.id_interface
+				WHERE SIMap.id_system IN (?)
+				ORDER BY SIMap.id_system;`, [systemsIdArr]))
 		})
 		.then((result) => {
 			debug(7, 'Interfaces Table result no rows: ' + result[0].length);

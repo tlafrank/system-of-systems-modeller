@@ -34,8 +34,12 @@ function update_features(){
  * @description Update the networks by choosing the network from a list
  * 
  */
- function update_network(){
+function update_network(){
 	updateNetworkModal({id_network: 1});
+}
+
+function update_issues2(){
+	updateIssuesModal2();
 }
 
 /**

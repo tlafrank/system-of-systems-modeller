@@ -1,34 +1,13 @@
 class System {
 
-    constructor(systemRow, quantitiesRows, showInterfaces){
+    constructor(systemRow, showInterfaces){
 		
 		this.id_system = systemRow.id_system;
 		this.name = systemRow.name;
 		this.image = systemRow.image;
-		this.qtyYears = [];
-		this.qtySystemsThisYear = 0;
+		this.qtySystemsThisYear = systemRow.quantity;
 		this.interfaces = [];
 		this.showInterfaces = showInterfaces;
-
-		//Make the years/qty array
-		for (var i = 0; i < 100; i++){
-			this.qtyYears.push({ year: 2000 + i });
-		}
-
-		//Populate the years/qty array with data from quantitiesRow
-		quantitiesRows.forEach((element) => {
-			this.qtyYears[element.year - 2000].quantity = element.quantity;
-		})
-
-		//Complete the years/qty array
-		var lastQuantity = 0;
-		for (var i = 0; i < this.qtyYears.length; i++){
-			if (this.qtyYears[i].quantity === undefined){
-				this.qtyYears[i].quantity = lastQuantity;
-			} else {
-				lastQuantity = this.qtyYears[i].quantity;
-			}
-		}
     }
 
 	
@@ -90,23 +69,6 @@ class System {
 
 		return classString
 	}
-
-	/**
-	 * @description Determines if this system exists in the focus year
-	 * 
-	 * @param  {} year
-	 */
-	presentInYear(year){
-		if (this.qtyYears[year-2000].quantity > 0){
-			this.qtySystemsThisYear = this.qtyYears[year-2000].quantity;
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-
-	
 
 	getCyObject(){
 
@@ -200,9 +162,6 @@ class System {
 			})
 
 		}
-
-
-
 
 		return returnArr;
 	}

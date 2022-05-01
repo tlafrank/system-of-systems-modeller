@@ -628,3 +628,80 @@ function dragDrop(ev) {
 	const data = ev.dataTransfer.getData("text");
 	ev.target.appendChild(document.getElementById(data));
 }
+
+function breadcrumbs($selector, details){
+
+	var breadcrumbArr = [];
+	var breadcrumbHtml = '<nav aria-label="breadcrumb"><ol class="breadcrumb">';
+	//var breadcrumbHtml = `<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb"><ol class="breadcrumb">`;
+
+
+	//Start by pushing the detail of each breadcrumb into the array
+
+	switch (details.type){
+		case 'System':
+			breadcrumbArr.push({ name: 'System', active: true, data: [{ key: 'id_system', value: details.id_system }]})
+		break;
+		case 'UpdateInterface':
+			breadcrumbArr.push({ name: 'Interface', active: true, data: []})
+		break;
+		case 'SystemInterface':
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
+			//breadcrumbArr.push({ name: 'System Interface', active: true, data: [{ key: 'id_SIMap', value: details.id_SIMap }, {key: 'id_system', value: details.id_system}]})
+			breadcrumbArr.push({ name: 'System Interface', active: true, data: [] })
+		break;
+		case 'Network':
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
+			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_SIMap', value: details.id_SIMap }]})
+			breadcrumbArr.push({ name: 'Map Network', active: true, data: []})
+		break;
+		case 'UpdateNetwork':
+			breadcrumbArr.push({ name: 'Network', active: true, data: []})
+		break;
+		case 'IssuesSystemInterface':
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
+			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_SIMap', value: details.id_SIMap }]})
+			breadcrumbArr.push({ name: 'Issue', active: true, data: []})
+		break;
+		case 'Quantities':
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
+			//breadcrumbArr.push({ name: 'System Interface', active: true, data: [{ key: 'id_SIMap', value: details.id_SIMap }, {key: 'id_system', value: details.id_system}]})
+			breadcrumbArr.push({ name: 'System Quantities', active: true, data: [] })
+		break;
+		default:
+			debug(`Breadcrumb switch default. Shouldn't make it here`)
+	}
+
+	/*
+		case 'System':
+			updateSystemModal(selectedNode.id_system)
+			break;
+		case 'SystemInterface':
+			debug(selectedNode)
+			updateSystemInterfacesModal({ id_system: selectedNode.id_system, id_SIMap: selectedNode.id_SIMap })
+			break;
+		case 'Network':
+			updateNetworkModal(selectedNode.id_network);
+			break;
+	*/
+	
+
+	//Produce the HTML
+	breadcrumbArr.forEach((element) => {
+		var paramData = '{ '
+		element.data.forEach((element2) => {
+			paramData += `${element2.key}: ${element2.value},`
+		})
+		paramData += '}'
+
+		if (element.active){
+			breadcrumbHtml += `<li class="breadcrumb-item active" aria-current="page">${element.name}<li>`;
+		} else {
+			breadcrumbHtml += `<li class="breadcrumb-item"><a href="#" onclick="${element.module}(${paramData})">${element.name}</a></li>`;
+		}
+
+	})
+	breadcrumbHtml += `</ol></nav>`
+
+	$($selector).before(breadcrumbHtml)
+}
