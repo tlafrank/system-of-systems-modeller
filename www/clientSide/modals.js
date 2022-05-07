@@ -1,251 +1,273 @@
-//******************************** Main Modals ****************************************
-
-
-
 /**
- * @description Handler for the different types of issues which may be encountered. Might not require.
+ * @description Modal to capture issues associated with interfaces, and the platforms affected
  * 
- * @param  {} issue
- * @param  {} message
+ * @param id_interface
+ * @param id_interfaceIssue
+ * @param {} message
  */
-function updateIssuesModal2(message){
-	debug(1, 'In updateIssuesModal2()')
+function updateIssuesModal(id_interface, id_interfaceIssue, message){
+	debug(1, 'In updateIssuesModal()')
 
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
 	$('#mainModal .modal-body').append('<form></form>');
 	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
-	$('#mainModalTitle').text('Update Issues 2');
+	$('#mainModalTitle').text('Update Interface Issues');
 	$('#mainModal').modal('show');
 	
 	//Notifications
 	if (message){ addBadge('#mainModal .warning-holder', message) }
 
-	debug('in updateIssuesModal2()');
-
 	//Add input fields
-	form.issue2.forEach((element) => { addFormElement('#mainModal form', element) })
+	form.issue.forEach((element) => { addFormElement('#mainModal form', element) })
 
 	//Add buttons
+	addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: 'Add New Issue'});
+	addButton('#mainModal .modal-footer', {type: 'delete', id: 'mainModalDelete', label: 'Delete Issue'});
 	addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Save Issue'});
-	addButton('#mainModal .modal-footer', {type: 'close'});	
+	addButton('#mainModal .modal-footer', {type: 'close'});
 
+	if (!id_interface){ var id_interface = 1 };
+	if (!id_interfaceIssue){ var id_interfaceIssue = 0 };
 
-	/*
-	if (issue.id_issue == 0){
-		//Disable select
-		$('#issueSelect').prop('disabled', true);
+	//Load the list of interfaces
+	var postData = { type: 'Interface' }
+	$.post('select.json', postData, (result) => {
+		debug(2, 'Passed to select.json: ', postData);
+		debug(2, 'Response: ', result)
 
-		//Place images
-		const postData3 = {
-			type: 'IssueImages',
-			subtype: 'SystemInterface',
-			id_SIMap: issue.id_SIMap,
-		}
-
-		$.post('select.json', postData3, (result) => {
-			debug('Passed to select.json: ', postData3);
-			debug('Response: ', result);
-
-			if (result.msg){
-				//An error was passed
-				updateIssuesModal({}, {info: 'failure', msg: `There was an error. Check the console.`});
-			} else {
-				//Populate the form
-				installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].systemName, image: result[0].systemImage}, true)
-				issue.id_system = result[0].id_system;
-			}
-		})
-
-	} else {
-		//Existing issue
-		debug('Existing issue')
-
-		//Add buttons
-		addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: 'Add New Issue'});
-		//addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalSystemInterface', label: 'Return to System interface'});
-		//addButton('#mainModal .modal-footer', {type: 'delete', id: 'mainModalDelete', label: 'Delete Issue'});
-		addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Save Issue'});
-		addButton('#mainModal .modal-footer', {type: 'close'});
-
-		//Add input fields
-		form.issue.systemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
-
-		//Load known issues	for this system interface
-		const postData = {
-			type: 'BasicIssues', 
-			subtype: 'SystemInterface',
-			id_SIMap: issue.id_SIMap
-		}
-
-		$.post('select.json', postData, (result) => {
-			debug('Passed to select.json: ', postData);
-			debug('Response: ', result)
-
-			if (result.msg){
-				//An error was passed
-				updateIssuesModal({}, {info: 'failure', msg: `There was an error. Check the console.`});
-			} else {
-				//Check if any issues are registered
-				if (result.length == 0){
-					//No issues recorded against this SI, reload to add
-					issue.id_issue = 0;
-					updateIssuesModal(issue, {info: 'warning', msg: `No issues recorded. Entering add new issue mode.`})
-
-				} else {
-					//Populate the form
-					//Load the select
-					result.forEach((element) => {
-						$('#issueSelect').append(`<option data-id_issue="${element.id_issue}">${element.name}</option>`)
-						//If a system ID was supplied to the method, set this system as selected
-						if (issue.id_issue == element.id_issue){
-							$(`#issueSelect option[data-id_issue="${issue.id_issue}"]`).prop('selected', true); 
-						}	
-					})
-
-					updateFormElements();
+		if (result.msg){
+			//An error was passed
+			updateIssuesModal(id_interface, null, {info: 'failure', msg: `There was an error. Check the console.`});
+		} else {
+			//Load the interface select
+			result.forEach((element) => {
+				$('#interfaceSelect').append(`<option data-id_interface="${element.id_interface}">${element.name}</option>`)
+				//If this is the interface that was provided, set this system as the selected option
+				if (id_interface == element.id_interface){ 
+					$(`#interfaceSelect option[data-id_interface="${element.id_interface}"]`).prop('selected', true); 
 				}
+			})
+			//Populate the form
+			updateFormElements();
+		}
+	})
+
+	//Load the data into the relevant fields
+	var updateFormElements = () => {
+		debug(1, 'In updateFormElements()');
+
+		//Empty all fields
+		$('#issueSelect').empty();
+		$('#issueTitle').empty();
+		$('#issueSeverity button').removeClass('btn-primary')
+		$('#issueDescription').empty();
+		$('#issueResolution').empty();
+		$('#unaffectedSystems .card-body').empty();		
+
+		//Load all systems which implement the interface into the unaffected droppable
+		postData = { type: 'SystemsWithSpecificInterface', id_interface: id_interface }
+		$.post('select.json', postData, (result) => {
+			debug(2,'Passed to select.json: ', postData);
+			debug(2,'Response: ', result)
+
+			//Load all systems which implement the interface into the unaffected droppable
+			result.forEach((element) => {
+				addDragableBadge('#unaffectedSystems .card-body', element.name, 'id_system', element.id_system)
+			})
+		})
+
+		if (id_interfaceIssue > -1){
+			//Get: [0] 
+			//	   [1] The oldest interface issue id
+			//	   [2] All the issues associated with the currently selected interface
+			//	   [3] The list of systems which are affected by this issue
+			
+			//Disable save button
+			controlState(null,['#mainModalSubmit'])	
 
 
+			//Update the form controls
+			postData2 = {
+				type: 'InterfaceIssues',
+				id_interface: id_interface,
+				id_interfaceIssue: id_interfaceIssue
 			}
+			$.post('select.json', postData2, (result) => {
+				debug(2,'Passed to select.json: ', postData2);
+				debug(2,'Response: ', result)
+
+				//Check if there are any results
+				if (result[1][0].id_interfaceIssue === null){ //No issues are currently associated with this interface
+
+					//Don't allow data entry until the user selects add new issue
+					controlState(null, ['#mainModalDelete', '#issueSelect', '#issueTitle', '#issueSeverity button', '#issueDescription', '#issueResolution'])
+
+					//Disable draggable systems
+					$('#unaffectedSystems span').prop('draggable', false);
+
+				} else { //There are results associated with the interface
+					
+					//Set the id_interfaceIssue to the oldest interfaceIssue for the selected interface
+					id_interfaceIssue = result[1][0].id_interfaceIssue
+
+					//Load each issue into the issues select
+					result[2].forEach((element) => {
+						debug(1, element)
+						$('#issueSelect').append(`<option data-id_interfaceIssue="${element.id_interfaceIssue}">${element.name}</option>`)
+
+						//Load the rest of the form if this is the issue to display
+						if (element.id_interfaceIssue == id_interfaceIssue) { populateFields(element, result[3]) }
+					})
+				}
+			})
+		}
+	}
+
+	//Populate fields
+	var populateFields = (interfaceIssue, affectedSystems) => {
+		debug(1, 'in popluateFields');
+
+		//Move the relevant affected systems from the unaffected systems div
+		setFormElement("#affectedSystems", {type: 'droppable', $source: '#unaffectedSystems', dataAttr: 'id_system'}, affectedSystems);
+
+		//Set the selected interfaceIssue item
+		$(`#issueSelect option[data-id_interfaceIssue="${interfaceIssue.id_interfaceIssue}"]`).prop('selected', true);
+
+		//Populate the remainder of the form fields
+		form.issue.forEach((element) => {
+			//Set the relevant form control values
+			if(element.columnName && element.type != 'droppable'){ setFormElement('#' + element.id, element, interfaceIssue[element.columnName]) }
 		})
-
-		//Event: Return to system interface clicked
-		$('#mainModalSystemInterface').unbind();
-		$('#mainModalSystemInterface').click(() => {
-			$('#mainModal').modal('hide');
-			updateSystemInterfacesModal({ id_SIMap: issue.id_SIMap, id_system: issue.id_system} )
-		});
-
-		//Event: Add new issue selected
-		$('#mainModalAddNew').unbind();
-		$('#mainModalAddNew').click(() => {
-			$('#mainModal').modal('hide');
-			updateIssuesModal({ type: 'SystemInterface', id_SIMap: issue.id_SIMap, id_issue: 0} )
-		});
-
-		//Event: Delete issue
-
-		//Event: Issue select change
-		$('#issueSelect').unbind();
-		$('#issueSelect').change(() => {
-			$('#mainModal').modal('hide');
-			updateIssuesModal({ type: 'SystemInterface', id_SIMap: issue.id_SIMap, id_issue: $('#issueSelect option:selected').attr(`data-id_issue`)} )
-		})
-
-
 	}
 
 	//Event: Save issue
 	$('#mainModalSubmit').unbind();
 	$('#mainModalSubmit').click(() => {
 		const postData = {
-			type: 'Issue',
-			subtype: 'SystemInterface',
-			id_SIMap: issue.id_SIMap,
+			type: 'Issue2',
+			id_interface: id_interface,
+			id_interfaceIssue: id_interfaceIssue,
 		}
 
-		//Provide id_issue if this is an existing issue
-		if (issue.id_issue > 0){ postData.id_issue = parseInt($('#issueSelect option:selected').attr(`data-id_issue`)) }
-
-		//System details
-		form.issue.systemInterface.forEach((element) => {
+		//Load issue details into postData
+		form.issue.forEach((element) => {
 			if (element.columnName){ postData[element.columnName] = getFormElement('#' + element.id, element) }
 		})
-			
+		
 		$.post('update.json', postData, (result) => {
-			debug('Passed to update.json: ', postData);
-			debug('Response: ', result)
+			debug(2,'Passed to update.json: ', postData);
+			debug(2,'Response: ', result)
+	
+			//Check the result
+			if (result.msg){
+				//An error was passed
+				updateIssuesModal(id_interface, id_interfaceIssue,{info: 'failure', msg: `There was an error. Check the console.`});
+			} else {
+				//Check if entry was a new entry
+				if (result[1].insertId == 0){
+					//Submission was an update
+					$('#mainModal').modal('hide');
+					updateIssuesModal(id_interface, id_interfaceIssue, {info: 'success', msg: `The '${postData.name}' record was successfully updated.`});
+					
+				} else {
+					//Submission was a new interface
+					updateIssuesModal(id_interface, result[1].insertId, {info: 'success', msg: `The '${postData.name}' record was successfully added.`});
+				}
+			}
+		})
+	});
+
+	//Event: Delete issue
+	$('#mainModalDelete').unbind();
+	$('#mainModalDelete').click(() => {
+
+		//Check if there is an issue loaded
+		if (id_interfaceIssue == 0){
+			updateIssuesModal(id_interface, id_interfaceIssue,{info: 'failure', msg: `No interface is selected.`});
+		}
+
+		const postData = {
+			type: 'DeleteIssue2',
+			id_interfaceIssue: id_interfaceIssue,
+		}
+		
+		$.post('update.json', postData, (result) => {
+			debug(2,'Passed to update.json: ', postData);
+			debug(2,'Response: ', result)
 	
 			//Check the result																												//Working here, having trouble adding a new system
 			if (result.msg){
 				//An error was passed
-				updateIssuesModal({},{info: 'failure', msg: `There was an error. Check the console.`});
+				updateIssuesModal(id_interface, id_interfaceIssue,{info: 'failure', msg: `There was an error. Check the console.`});
 			} else {
+				
 				//Check if entry was a new entry
-				if (result.insertId == 0){
-					//Submission was an update
+				if (true){
+					//Delete was successful
 					$('#mainModal').modal('hide');
-					updateIssuesModal({type: postData.subtype, id_SIMap: postData.id_SIMap, id_issue: postData.id_issue}, {info: 'success', msg: `The ${postData.name} record was successfully updated.`});
-					
-				} else {
-					//Submission was a new interface
-					updateIssuesModal({type: postData.subtype, id_SIMap: postData.id_SIMap, id_issue: result.insertId}, {info: 'success', msg: `The ${postData.name} record was successfully added.`});
+					updateIssuesModal(id_interface, 0, {info: 'success', msg: `The record was successfully deleted.`});
 				}
 				
 			}
 		})
+		
 	});
-*/
 
+	//Event: Interface select changes
+	$('#interfaceSelect').unbind();
+	$('#interfaceSelect').change(() => {
+		updateIssuesModal($('#interfaceSelect option:selected').attr(`data-id_interface`), 0)
+	})
 
+	//Event: Issue select changes
+	$('#issueSelect').unbind();
+	$('#issueSelect').change(() => {
+		updateIssuesModal(id_interface, $('#issueSelect option:selected').attr(`data-id_interfaceIssue`))
+	})
+
+	//Event: Issue select changes
+	$('#affectedSystems, #unaffectedSystems').unbind();
+	$('#affectedSystems, #unaffectedSystems').on('drop',() => {
+		preventNavigationDuringUpdate();
+	})
+
+	//Event: Other controls change
+	$('#issueTitle, #issueDescription, #issueResolution').unbind();
+	$('#issueTitle, #issueDescription, #issueResolution').on('input',() => {
+		preventNavigationDuringUpdate();
+	})
 
 	//Event: Traffic light button clicked
 	$('#issueSeverity button').unbind();
 	$('#issueSeverity button').click((event) => {
-		debug('clicked')
 		$('#issueSeverity button').removeClass('btn-primary')
 		$(event.currentTarget)
 			.removeClass('btn-light')
 			.addClass('btn-primary')
+		preventNavigationDuringUpdate();
 	});
 
+	//Event: Add New Issue button clicked
+	$('#mainModalAddNew').unbind();
+	$('#mainModalAddNew').click((event) => {
+		$('#mainModal').modal('hide');
+		updateIssuesModal(id_interface, -1);
+		controlState(null, ['#interfaceSelect','#issueSelect', '#mainModalAddNew', '#mainModalDelete' ])
+	})
 
-	//Event: Return to system interfaces button
-	$('#mainModalSystemInterface').unbind();
-	$('#mainModalSystemInterface').click(() => {
-		updateSystemInterfacesModal({ id_system: issue.id_system, id_SIMap: issue.id_SIMap })
-	});
-
-	//Load the data into the relevant fields
-	var updateFormElements = () => {
-
-		postData2 = {
-			type: 'Issue',
-			subtype: 'SystemInterface',
-			id_issue: parseInt($('#issueSelect option:selected').attr(`data-id_issue`))
-		}
-
-		//Update the form controls
-		$.post('select.json', postData2, (result) => {
-			debug('Passed to select.json: ', postData2);
-			debug('Response: ', result)
-
-			//Place images
-			installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].systemName, image: result[0].systemImage}, true)
-
-			//Populate the form controls
-			form.issue.systemInterface.forEach((element) => {
-				//Set the relevant form control values
-				if(element.columnName){ setFormElement('#' + element.id, element, result[0][element.columnName]) }										//Handle traffic lights
-			})
-		})
+	var preventNavigationDuringUpdate = () => {
+		controlState(['#mainModalSubmit'], ['#interfaceSelect','#issueSelect', '#mainModalAddNew', '#mainModalDelete'])
 	}
 }
 
 /**
- * @description A modal to allow the user to select the tags to include or exclude from the graph
- * 
+ * @description Modal to allow the user to select the tags to include or exclude from the graph and subsequent results pages
  * 
  */
  function manageTagsModal(){
 	
-	/*
-	var formControls = [
-		{ type: 'note', id: 'manageTagsDesc', text: 'Description of how these tags work.' },
-		{ type: 'select', id: 'availableTags', label: 'Available Tags' },
-		{ type: 'text', id: 'includedTags', label: 'Included Tags' },
-				
-	];
-	*/
-
 	var availableTags;
-	const pageLayout = [
-
-		{ type: 'droppable', id: 'availableTags', label: 'Availaible Tags' },
-		{ type: 'droppable', id: 'includedTags', label: 'Included Tags' },
-		{ type: 'droppable', id: 'excludedTags', label: 'Excluded Tags' },
-	];
 	
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
@@ -254,7 +276,7 @@ function updateIssuesModal2(message){
 	//Modal elements
 	document.querySelector('#mainModal .modal-body').innerHTML = `<p>Tags allow the graph contents to be filtered for the view. Tags are added to the system's definition page. When using tages, included tags are applied first, followed by excluded tags.</p>`
 	
-	pageLayout.forEach((element) => {
+	form.tags.forEach((element) => {
 		addFormElement('#mainModal .modal-body', element);
 	})
 
@@ -284,7 +306,7 @@ function updateIssuesModal2(message){
 
 		//Put all the tags which exist into the availableTags div
 		for (var i = 0; i < tagData.length; i++){
-			addDragableBadge('#availableTags .card-body', tagData[i], i )
+			addDragableBadge('#availableTags .card-body', tagData[i], 'id_system', tagData[i])
 		}
 
 		//Iterate through localStorage includedTags and move tags from availableTags to the includedTags div
@@ -324,6 +346,17 @@ function updateIssuesModal2(message){
 	//Event: Update button clicked
 	$('#mainModalSubmit').unbind();
 	$('#mainModalSubmit').click((event) => {
+
+		form.tags.forEach((element) => {
+			debug(1,'looping through form elements', element)
+			if (element.columnName){
+				debug(1,getFormElement('#' + element.id, element))
+			}
+		})
+
+		//localStorage.setItem('includedFilterTag',
+
+		
 		//Update localStorage with includedTags
 		var includedTags = document.querySelectorAll("#includedTags span");
 		var includedTagsString = '';
@@ -333,6 +366,7 @@ function updateIssuesModal2(message){
 		//Trim
 		if (includedTagsString.length > 0){ includedTagsString = includedTagsString.substring(0,includedTagsString.length - 1);	}
 		localStorage.setItem('includedFilterTag', includedTagsString);
+		
 
 		//Update localStorage with excludedTags
 		var excludedTags = document.querySelectorAll("#excludedTags span");
@@ -351,9 +385,9 @@ function updateIssuesModal2(message){
  }
 
 /**
- * @description Modify the graph settings for the local user
+ * @description Modal for changing graph settings for the local user
  * 
- * 
+ * @param {} message
  */
 function settingsModal(message){
 	//Prepare the modal
@@ -387,9 +421,7 @@ function settingsModal(message){
 		const settingsArr = [];
 
 		graphSettings.getFormControls().forEach((element) => {
-			//debug(element);
 			localStorage.setItem(element.id, getFormElement('#' + element.id, element))
-			//debug(localStorage.getItem(element.id));
 		})
 
 		pageSwitch(sessionStorage.getItem('currentPage'));
@@ -397,15 +429,15 @@ function settingsModal(message){
 	});
 }
 
-
-
 /**
  * @description Pick the interface to update from a select.
  * 
+ * @param {} interface
+ * @param {} message
  */
  function updateInterfaceModal(interface, message){
 	debug(`In updateInterfaceModal()`)
-	debug(interface)
+	debug(5,interface)
 
 	//Prepare the modal
 	$('#mainModal .modal-body').empty();
@@ -783,7 +815,10 @@ function settingsModal(message){
 	});
 }
 
-
+/**
+ * @description 
+ * 
+ */
 function mapNetworksToSystemInterface(systemInterface, message){
 	debug('In mapNetworksToSystemInterface()')
 	debug(systemInterface)
@@ -957,271 +992,9 @@ function mapNetworksToSystemInterface(systemInterface, message){
 	
 }
 
-
 /**
- * @description Handler for the different types of issues which may be encountered. Might not require.
+ * @description 
  * 
- * @param  {} issue
- * @param  {} message
- */
-function updateIssuesModal(issue,message){
-	debug('in updateIssuesModal()')
-	debug(issue)
-
-	//Prepare the modal
-	$('#mainModal .modal-body').empty();
-	$('#mainModal .modal-body').append('<form></form>');
-	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
-	$('#mainModalTitle').text('Update Issues');
-	$('#mainModal').modal('show');
-	
-	//Notifications
-	if (message){ addBadge('#mainModal .warning-holder', message) }
-
-	if (issue.type){
-		switch (issue.type){
-			case 'SystemInterface':
-				debug('in updateIssuesModal() systemInterface')
-
-				//Breadcrumbs
-				breadcrumbs('#mainModal form', { type: 'IssuesSystemInterface', id_system: issue.id_system, id_SIMap: issue.id_SIMap });
-
-				if (!issue.id_issue){ issue.id_issue = 0 }
-
-				if (issue.id_issue == 0){
-					//New issue
-					debug('New issue')
-
-					//Add buttons
-					addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Save Issue'});
-					addButton('#mainModal .modal-footer', {type: 'close'});
-
-					//Add input fields
-					form.issue.systemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
-
-					//Breadcrumbs
-					//breadcrumbs('#mainModal form', { type: 'SystemInterfaceIssue', id_system: issue.id_system, id_SIMap: issue.id_SIMap });
-
-					//Disable select
-					$('#issueSelect').prop('disabled', true);
-
-					//Place images
-					const postData3 = {
-						type: 'IssueImages',
-						subtype: 'SystemInterface',
-						id_SIMap: issue.id_SIMap,
-					}
-
-					$.post('select.json', postData3, (result) => {
-						debug('Passed to select.json: ', postData3);
-						debug('Response: ', result);
-
-						if (result.msg){
-							//An error was passed
-							updateIssuesModal({}, {info: 'failure', msg: `There was an error. Check the console.`});
-						} else {
-							//Populate the form
-							installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].systemName, image: result[0].systemImage}, true)
-							issue.id_system = result[0].id_system;
-						}
-					})
-
-
-					
-
-				} else {
-					//Existing issue
-					debug('Existing issue')
-
-					//Add buttons
-					addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: 'Add New Issue'});
-					//addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalSystemInterface', label: 'Return to System interface'});
-					//addButton('#mainModal .modal-footer', {type: 'delete', id: 'mainModalDelete', label: 'Delete Issue'});
-					addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Save Issue'});
-					addButton('#mainModal .modal-footer', {type: 'close'});
-
-					//Add input fields
-					form.issue.systemInterface.forEach((element) => { addFormElement('#mainModal form', element) })
-
-					//Load known issues	for this system interface
-					const postData = {
-						type: 'BasicIssues', 
-						subtype: 'SystemInterface',
-						id_SIMap: issue.id_SIMap
-					}
-
-					$.post('select.json', postData, (result) => {
-						debug('Passed to select.json: ', postData);
-						debug('Response: ', result)
-
-						if (result.msg){
-							//An error was passed
-							updateIssuesModal({}, {info: 'failure', msg: `There was an error. Check the console.`});
-						} else {
-							//Check if any issues are registered
-							if (result.length == 0){
-								//No issues recorded against this SI, reload to add
-								issue.id_issue = 0;
-								updateIssuesModal(issue, {info: 'warning', msg: `No issues recorded. Entering add new issue mode.`})
-
-							} else {
-								//Populate the form
-								//Load the select
-								result.forEach((element) => {
-									$('#issueSelect').append(`<option data-id_issue="${element.id_issue}">${element.name}</option>`)
-									//If a system ID was supplied to the method, set this system as selected
-									if (issue.id_issue == element.id_issue){
-										$(`#issueSelect option[data-id_issue="${issue.id_issue}"]`).prop('selected', true); 
-									}	
-								})
-
-								updateFormElements();
-							}
-
-
-						}
-					})
-
-					//Event: Return to system interface clicked
-					$('#mainModalSystemInterface').unbind();
-					$('#mainModalSystemInterface').click(() => {
-						$('#mainModal').modal('hide');
-						updateSystemInterfacesModal({ id_SIMap: issue.id_SIMap, id_system: issue.id_system} )
-					});
-
-					//Event: Add new issue selected
-					$('#mainModalAddNew').unbind();
-					$('#mainModalAddNew').click(() => {
-						$('#mainModal').modal('hide');
-						updateIssuesModal({ type: 'SystemInterface', id_SIMap: issue.id_SIMap, id_issue: 0} )
-					});
-
-					//Event: Delete issue
-
-					//Event: Issue select change
-					$('#issueSelect').unbind();
-					$('#issueSelect').change(() => {
-						$('#mainModal').modal('hide');
-						updateIssuesModal({ type: 'SystemInterface', id_SIMap: issue.id_SIMap, id_issue: $('#issueSelect option:selected').attr(`data-id_issue`)} )
-					})
-
-
-				}
-
-				//Event: Save issue
-				$('#mainModalSubmit').unbind();
-				$('#mainModalSubmit').click(() => {
-					const postData = {
-						type: 'Issue',
-						subtype: 'SystemInterface',
-						id_SIMap: issue.id_SIMap,
-					}
-
-					//Provide id_issue if this is an existing issue
-					if (issue.id_issue > 0){ postData.id_issue = parseInt($('#issueSelect option:selected').attr(`data-id_issue`)) }
-			
-					//System details
-					form.issue.systemInterface.forEach((element) => {
-						if (element.columnName){ postData[element.columnName] = getFormElement('#' + element.id, element) }
-					})
-						
-					$.post('update.json', postData, (result) => {
-						debug('Passed to update.json: ', postData);
-						debug('Response: ', result)
-				
-						//Check the result																												//Working here, having trouble adding a new system
-						if (result.msg){
-							//An error was passed
-							updateIssuesModal({},{info: 'failure', msg: `There was an error. Check the console.`});
-						} else {
-							//Check if entry was a new entry
-							if (result.insertId == 0){
-								//Submission was an update
-								$('#mainModal').modal('hide');
-								updateIssuesModal({type: postData.subtype, id_SIMap: postData.id_SIMap, id_issue: postData.id_issue}, {info: 'success', msg: `The ${postData.name} record was successfully updated.`});
-								
-							} else {
-								//Submission was a new interface
-								updateIssuesModal({type: postData.subtype, id_SIMap: postData.id_SIMap, id_issue: result.insertId}, {info: 'success', msg: `The ${postData.name} record was successfully added.`});
-							}
-							
-						}
-					})
-				});
-
-
-			break;
-			case 'Interface':
-
-			
-
-			break;
-			case 'Feature':
-
-			
-
-			break;
-			case 'Network':
-
-			
-
-			break;
-			default:
-				debug(`Default switch reached. Unexpected.`)
-
-		}
-	} else {
-		debug('No issue type was provided to updateIssuesModal()')
-
-	}
-
-	//Event: Traffic light button clicked
-	$('#issueSeverity button').unbind();
-	$('#issueSeverity button').click((event) => {
-		debug('clicked')
-		$('#issueSeverity button').removeClass('btn-primary')
-		$(event.currentTarget)
-			.removeClass('btn-light')
-			.addClass('btn-primary')
-		
-	});
-
-
-	//Event: Return to system interfaces button
-	$('#mainModalSystemInterface').unbind();
-	$('#mainModalSystemInterface').click(() => {
-		updateSystemInterfacesModal({ id_system: issue.id_system, id_SIMap: issue.id_SIMap })
-
-	});
-
-	//Load the data into the relevant fields
-	var updateFormElements = () => {
-
-		postData2 = {
-			type: 'Issue',
-			subtype: 'SystemInterface',
-			id_issue: parseInt($('#issueSelect option:selected').attr(`data-id_issue`))
-		}
-
-		//Update the form controls
-		$.post('select.json', postData2, (result) => {
-			debug('Passed to select.json: ', postData2);
-			debug('Response: ', result)
-
-			//Place images
-			installedInModalInsert(`#mainModal form`, {name: result[0].interfaceName, image: result[0].interfaceImage}, {name: result[0].systemName, image: result[0].systemImage}, true)
-
-			//Populate the form controls
-			form.issue.systemInterface.forEach((element) => {
-				//Set the relevant form control values
-				if(element.columnName){ setFormElement('#' + element.id, element, result[0][element.columnName]) }										//Handle traffic lights
-			})
-		})
-	}
-}
-
-
-/**
  * @param  {id_system, id_SIMap} system
  * @param  {} message
  */
@@ -1290,7 +1063,7 @@ function updateSystemInterfacesModal(system, message){
 			addIconButton(`#mainModalInstalledInterfaceContainer`, element.image, element.name, {name: 'id_SIMap', value: element.id_SIMap});
 
 
-			//Event: An interface button was selected (works)
+			//Event: An interface button was selected
 			$('#mainModalInstalledInterfaceContainer button:last-of-type').on( 'click', (event) => {
 
 				//Toggle the selected interface button styling
@@ -1328,7 +1101,6 @@ function updateSystemInterfacesModal(system, message){
 		mapNetworksToSystemInterface({ id_system: system.id_system, id_SIMap: system.id_SIMap })
 
 	});
-
 
 	//Event: Delete button selected
 	$('#mainModalDelete').unbind();
@@ -1436,6 +1208,8 @@ function updateSystemInterfacesModal(system, message){
 	});
 
 	var currentlyEditingAdditionalDetails = () => {
+		controlState(['#mainModalSubmit'],['#systemButton','#assignNetworksButton','#SIIssues','#mainModalDelete']);
+		/*
 		//Enable controls
 		$('#mainModalSubmit').prop('disabled', false);
 
@@ -1444,18 +1218,22 @@ function updateSystemInterfacesModal(system, message){
 		$('#assignNetworksButton').prop('disabled', true);
 		$('#SIIssues').prop('disabled', true);
 		$('#mainModalDelete').prop('disabled', true);
-
-
+		*/
 	}
 
 	//Populate the additional details
 	var populateAdditionalDetails = () => {
+
+		controlState(['#mainModalDelete','#systemButton','#assignNetworksButton','#SIIssues','#mainModalDelete'])
+
+		/*
 		//Enable/Disable particular buttons
 		$('#mainModalDelete').prop('disabled', false);
 		$('#systemButton').prop('disabled', false);
 		$('#assignNetworksButton').prop('disabled', false);
 		$('#SIIssues').prop('disabled', false);
 		$('#mainModalDelete').prop('disabled', false);
+		*/
 
 
 		const postData = {
@@ -1477,7 +1255,6 @@ function updateSystemInterfacesModal(system, message){
 		});
 	}
 }
-
 
 /**
  * @description Prepare and display the modal which allows the user to quickly update features															//Could add a 'do not use past' year
@@ -1627,7 +1404,6 @@ function updateFeaturesModal(message){
 		})
 	})
 }
-
 
 /**
  * @description Allows the user to easily map features to networks using selects
@@ -1779,10 +1555,6 @@ function updateFeaturesModal(message){
 		})
 	})
 }
-
-
-
-
 
 /**
  * @description Pick the system to update from a select. Helps find systems which
@@ -2013,12 +1785,6 @@ function updateSystemModal(system, message){
 	}
 }
 
-
-
-
-
-
-
 /**
  * @description A modal which maps the quantity of systems available each year
  * 
@@ -2184,12 +1950,6 @@ function updateSystemQuantities(id_system, message){
 	})
 }
 
-
-//******************************** Supporting Modals ****************************************
-
-
-
-
 /**
  * @description 
  * 
@@ -2251,10 +2011,8 @@ function selectIconModal(callingModal, initialIcon, callback){
 	});
 }
 
-
-
 /**
- * Handles the two different variants of the mappingModal.
+ * @description Handles the two different variants of the mappingModal.
  * 
  */
 function mappingModal(modalSetup){
@@ -2296,80 +2054,6 @@ function mappingModal(modalSetup){
 	$('#mappingModal').modal('show');
 }
 
-
-
-
-
-/**
- *CFD
- 
- Handle the 'Assign Networks to System Interfaces' modal
- * 
- * 
- */
-function mappingModal_interface(){
-	debug('In mappingModal_interface()')
-
-	//Set images & labels
-	installedInModalInsert('#mappingModalImageContainer', {name: selectedNode.name, image: selectedNode.image}, {name: selectedNode.systemName, image: selectedNode.systemImage})
-
-	//**********************    Get the list of compatible networks for this interface
-	const postData = {
-		type: 'CompatibleNetworks', 
-		//id_network: selectedNode.id_network,
-		features: selectedNode.features,
-	};
-	$.post('/select.json', postData, (result) => {
-		debug('Passed to select.json: ', postData);
-		debug('Response: ', result)
-		//debug(selectedNode)
-
-		//Load the list of interfaces into the select box
-		result.forEach((element) => {
-			$("#mappingModalSelect").append(`<option data-id="${element.id_network}">${element.name}</option>`)
-		})
-	})
-
-	//**********************    Get the networks already assigned to the system
-	const postData2 = {
-		type: 'AssignedNetworks', 
-		id_SIMap: selectedNode.id_SIMap,
-	};
-	$.post('/select.json', postData2, (result) => {
-		debug('Passed to select.json: ', postData2);
-		debug('Response: ', result)
-		//debug(selectedNode)
-
-		//Place an icon of each installed interface
-		result.forEach((element) => {
-
-			//Create the element
-			var imageButton = nodeSelectButton(element.id_SINMap, element.image, element.name);
-
-			//Event: Handle selection of the interface (for deleting)
-			$(imageButton).on("click", (event) => {
-
-				//Toggle styling
-				$("#mappingModalContainer button").removeClass("btn-primary").addClass("btn-secondary");
-				$(imageButton).removeClass('btn-secondary').addClass('btn-primary');
-				$("#mappingModalWarning").addClass('d-none');
-				
-				var id_SINMap = imageButton.getAttribute('data-id');
-				
-				debug('Delete ID: ' + id_SINMap)
-
-				//Delete button function
-				$("#mappingModalDeleteButton").prop('disabled', false);
-				$("#mappingModalDeleteButton").unbind();
-				$("#mappingModalDeleteButton").on("click", (event) => { mappingModal_deleteButton(id_SINMap) })
-			})
-
-			//Insert the image, its containing button and event handler into the modal
-			$("#mappingModalContainer").append(imageButton);
-		})
-	})
-}
-
 /**
  * @description Provides a common layout when showing a graphical depection of interfaces installed in a system
  * 
@@ -2399,260 +2083,4 @@ function installedInModalInsert($selector,left,right,prepend){
 	} else {
 		$($selector).append(response)
 	}
-}
-
-
-
-
-
-//******************************** Candidates for deletion ****************************************
-
-
-/**
- * @description Load images into the icon selector modal
- * 
- * 
- * @param  {} jQuerySelector
- */
- function loadIcons(jQuerySelector){
-	 debug(`SHOULDN'T BE HERE loadIcons()`)
-  
-    //Make sure the relevant location is empty
-    $(jQuerySelector).empty();
-  
-    //Get the list of images from the server
-    $.get('images.json', (result) => {
-  
-		//Iterate through the list and populate the relevant location
-		result.forEach(element => {
-		//Create the element
-		var domElement = document.createElement('button');
-		$(domElement).addClass('btn btn-secondary m-2');
-		$(domElement).attr('data-image', element);
-		$(domElement).html(`<img src="${imagePath + element}" width="100" height="100"><br>${element}`);
-
-		//Event: Image button clicked on
-		$(domElement).on("click", () => {
-			debug('User clicked on an image button')
-			//Reset all icon buttons
-			$(jQuerySelector + " button").removeClass('btn-primary').addClass('btn-secondary');
-
-			//Update targeted icon button
-			$(domElement).removeClass('btn-secondary').addClass('btn-primary');
-			
-			//Update calling modal
-			debug('Image was: ' + modal.node.image);
-			modal.node.image = element;
-			debug('Image iss: ' + modal.node.image);
-
-			$("#nodeModalimage").attr("src", imagePath + modal.node.image);
-		})
-		
-		//Insert the image, its containing button and event handler into the modal
-		$(jQuerySelector).append(domElement);
-		})
-    })
-}
-
-/**
- * @description Handles a user clicking on the add icon button in a node modal
- * 
- */
- function loadIconModal(lastModalSelector){
-	debug(`SHOULDN'T BE HERE loadIconModal()`)
-    debug('loadIconModal fired')
-    debug('Node image is ' + modal.node.image)
-    //if (!selectedIcon) { selectedIcon = 'tba.svg' }
-
-    //Set the currently selected icon in the icon modal
-    $('#iconContainer button').addClass('btn-secondary').removeClass('btn-primary');
-    $('#iconContainer [data-image="' + modal.node.image + '"]').addClass('btn-primary').removeClass('btn-secondary');
-    //$('#iconContainer').find('[data-image="' + modal.node.image + '"]').addClass('btn-primary').removeClass('btn-secondary');
-    
-    //Hide the current modal
-    //$('#nodeModal').modal('hide');
-  
-    //Show the icon modal
-    $('#iconModal').modal('show');
-
-    //Event: Set the icon chooser modal buttons to return to the system modal
-    $('#iconModalSave').unbind();
-    $('#iconModalSave').on("click", () => {
-        //Save the state
-        //modal.node.image = selectedIcon;
-
-        //Update the image displayed in nodeModal
-        //$("#iconNodeModal").attr("src", "./images/" + modal.node.image);
-    
-        //Revert to the previous modal
-        $('#iconModal').modal('hide');
-        $(lastModalSelector).modal('show');
-    })
-}
-
-
-
-//******************************** Modal helpers ****************************************
-
-function uploadSettings(){
-	debug('In uploadSettings()')
-
-	const postData = {
-		type: 'Settings',
-		settings: graphSettings.export(),
-	}
-
-	$.post('update.json', postData, (result) => {
-		debug('Passed to update.json: ', postData);
-		debug('Response: ', result)
-
-		//Check the result
-		if (result.msg){
-			//An error was passed
-		} else {
-			//Close the modal and reload the graph
-			//$('#mainModal').modal('hide');
-			//settingsModal({type: 'success', msg: `The global settings were updated successfully`})
-			//newCy();
-		}
-	})	
-}
-
-const form = {
-	issue2: [
-		{ type: 'select', id: 'issueSelect', label: 'Existing Issues'},
-		{ type: 'text', id: 'issueTitle', label: 'Issue Title', columnName: 'name'},
-		{ type: 'note', text: 'Issue severity'},
-		{ type: "trafficLightRadio", id: 'issueSeverity', columnName: 'severity'},
-		{ type: 'select', id: 'issueParty', label: 'Responsible Party', columnName: 'party'},
-		{ type: 'textarea', id: 'issueDescription', label: 'Issue', columnName: 'issue'},
-		{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},
-		{ type: 'buttons', buttons: [
-			//{ id: 'mainModalSystemInterface', label: 'Return to System Interfaces'},
-		]}
-	],
-	issue: {
-		systemInterface: [
-			{ type: 'select', id: 'issueSelect', label: 'Existing Issues'},
-			{ type: 'text', id: 'issueTitle', label: 'Issue Title', columnName: 'name'},
-			{ type: 'note', text: 'Issue severity'},
-			{ type: "trafficLightRadio", id: 'issueSeverity', columnName: 'severity'},
-			{ type: 'select', id: 'issueParty', label: 'Responsible Party', columnName: 'party'},
-			{ type: 'textarea', id: 'issueDescription', label: 'Issue', columnName: 'issue'},
-			{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},
-			{ type: 'buttons', buttons: [
-				//{ id: 'mainModalSystemInterface', label: 'Return to System Interfaces'},
-			]}
-			
-		],
-		interface: [
-			{ type: 'select', id: 'InterfaceSelect', label: 'Interface'},
-			{ type: 'select', id: 'issueSelect', label: 'Existing Issues'},
-			{ type: 'text', id: 'issueTitle', label: 'Issue Title', columnName: 'title'},
-			{ type: "radio", id: 'issueSeverity', label: 'Severity', columnName: 'severity', options: ['Critical', 'Warning', 'Notice']},
-			{ type: 'select', id: 'issueParty', label: 'Responsible Party', columnName: 'party'},
-			{ type: 'textarea', id: 'issueDescription', label: 'Issue', columnName: 'issue'},
-			{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},
-		],
-		feature:[
-			{ type: 'select', id: 'featureSelect', label: 'Feature' },
-			{ type: 'select', id: 'issueSelect', label: 'Existing Issues'},
-			{ type: 'text', id: 'issueTitle', label: 'Issue Title', columnName: 'title'},
-			{ type: "radio", id: 'issueSeverity', label: 'Severity', columnName: 'severity', options: ['Critical', 'Warning', 'Notice']},
-			{ type: 'select', id: 'issueParty', label: 'Responsible Party', columnName: 'party'},
-			{ type: 'textarea', id: 'issueDescription', label: 'Issue', columnName: 'issue'},
-			{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},
-		],
-
-		network: [
-			{ type: 'select', id: 'networkSelect', label: 'Network' },
-			{ type: 'select', id: 'issueSelect', label: 'Existing Issues'},
-			{ type: 'text', id: 'issueTitle', label: 'Issue Title', columnName: 'title'},
-			{ type: "radio", id: 'issueSeverity', label: 'Severity', columnName: 'severity', options: ['Critical', 'Warning', 'Notice']},
-			{ type: 'select', id: 'issueParty', label: 'Responsible Party', columnName: 'party'},
-			{ type: 'textarea', id: 'issueDescription', label: 'Issue', columnName: 'issue'},
-			{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},
-		],
-	},
-	system: [
-		{ type: 'select', id: 'mainModalSystemSelect', label: 'Existing Systems' },
-		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
-		{ type: 'heading', id: 'mainModalSystemName', align: 'center' },
-		{ type: 'text', id: 'mainModalName', label: 'Name', columnName: 'name'},
-		//Add a system class selector here
-		{ type: 'textarea', id: 'nodeDescription', label: 'Description', columnName: 'description'},
-		{ type: 'text', id: 'systemReference', label: 'System Block Diagram Reference', columnName: 'reference', append: {
-			id: 'systemReferenceDropZone', label: '&#8595'
-		} },
-		{ type: 'text', id: 'systemTags', label: 'Tag List (Comma separated)', columnName: 'tags'},
-		{ type: 'buttons', buttons: [
-			{ id: 'iconChooserButton', label: 'Choose Icon'},
-			{ id: 'systemQuantitiesButton', label: 'Map Systems to Years'},
-			{ id: 'updateSystemInterfacesButton', label: 'Update System Interfaces'},
-			
-		]}
-	],
-	interface: [
-		{ type: 'select', id: 'mainModalInterfaceSelect', label: 'Existing Interfaces' },
-		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
-		{ type: 'heading', id: 'mainModalInterfaceName', align: 'center', columnName: 'name' },
-		{ type: 'text', id: 'mainModalName', label: 'Name', columnName: 'name'},
-		{ type: 'select', id: 'mainModalFeaturesAvailable', label: 'Available Features', selectType: 'featuresAvailable', multiple: true},								//SelectType may be unnecessary
-		{ type: 'button', id: 'mainModalFeaturesAddButton', label: 'Attach Feature', fromId: 'nodeModalFeaturesAvailable', toId: 'nodeModalFeaturesAttached'},
-		{ type: 'button', id: 'mainModalFeaturesRemoveButton', label: 'Unattach Feature', fromId: 'nodeModalFeaturesAttached', toId: 'nodeModalFeaturesAvailable'},
-		{ type: 'select', id: 'mainModalFeaturesAttached', label: 'Attached Features', selectType: 'featuresAttached', multiple: true},
-		{ type: 'textarea', id: 'nodeDescription', label: 'Description', columnName: 'description'},
-		{ type: 'buttons', buttons: [
-			{ id: 'iconChooserButton', label: 'Choose Icon'},
-			{ id: 'interfaceIssues', label: 'Assign Issues'},
-		]}
-
-	],
-	systemInterface: [
-		
-		{ type: 'img', id: 'mainModalSystemImage', columnName: 'image' },
-		{ type: 'heading', id: 'mainModalSystemName', align: 'center' },
-		{ type: 'select', id: 'mainModalInterfaceSelect', label: 'Available Interfaces' },
-		{ type: 'button', id: 'mainModalInstallInterfaceButton', label: '&#8595 Install Interface &#8595', align: 'centre'},
-		{ type: 'container', id: 'mainModalInstalledInterfaceContainer' },
-		{ type: 'note', text: 'Select an interface to access additional details:'},
-		{ type: "checkbox", id: 'mainModalPropsedInterface', label: 'Proposed only?', columnName: 'isProposed', additional: true},
-		{ type: 'textarea', id: 'SIDescription', label: 'Description', columnName: 'description', additional: true},
-		{ type: 'buttons', buttons: [
-			{ id: 'SIIssues', label: 'Assign Issues'},
-			{ id: 'assignNetworksButton', label: 'Map Networks'},
-		]}
-	],
-	systemQuantities: [
-		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
-		{ type: 'heading', id: 'mainModalSystemName', align: 'center' },
-		{ type: 'note', text: `This form is used to track the introduction of new systems into the system. 
-		For systems being removed, include a 0 in the final year to indicate removal.`},
-		{ type: 'container', id: 'mainModalInstalledInterfaceContainer' },
-		{ type: 'buttons', buttons: [
-			{ id: 'addNewFieldsButton', label: 'Add New Field'},
-			{ id: 'removeLastFieldButton', label: 'Remove Last Field'},
-		]}
-	],
-	mapNetwork: [
-		{ type: 'select', id: 'mainModalNetworkSelect', label: 'Compatible Networks' },
-		{ type: 'button', id: 'mainModalNetworkAttachButton', label: 'Attach to Network' },
-		{ type: 'container', id: 'mainModalNetworkContainer' },
-		{ type: 'note', text: 'Select a network to access additional details:'},
-		{ type: 'buttons', buttons: [
-
-		]}
-
-	],
-	network: [
-		{ type: 'select', id: 'mainModalNetworkSelect', label: 'Existing Networks' },
-		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
-		{ type: 'heading', id: 'mainModalNetworkName', align: 'center' },
-		{ type: 'text', id: 'mainModalName', label: 'Name', columnName: 'name'},
-		{ type: 'select', id: 'mainModalFeatureSelect', label: 'Associated Feature', columnName: 'id_feature', dataAttr: 'id_feature' },
-		{ type: 'textarea', id: 'mainModalDescription', label: 'Description', columnName: 'description'},
-		{ type: 'buttons', buttons: [
-			{ id: 'iconChooserButton', label: 'Choose Icon'},
-		]}
-	],
 }

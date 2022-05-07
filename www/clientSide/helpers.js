@@ -29,7 +29,6 @@ function addIconButton($selector, image, name, data){
 	$($selector).append(formElement);
 }
 
-
 /**
  * @description Create a table based on the node selected
  * 
@@ -66,9 +65,6 @@ function nodeTable($selector, node){
 	$($selector).replaceWith(responseString);
 }
 
-
-
-
 /**
  * @description Console logging helper
  * 
@@ -91,7 +87,6 @@ function debug(...msg){
 	}
 }
 
-
 /**
  * @description Button background toggling function
  * 
@@ -103,7 +98,6 @@ function toggleButton($selector){
 		$($selector).addClass('btn-primary').removeClass('btn-secondary')
 	)
 }
-
 
 /**
  * @description Adds a button to the modal at $selector
@@ -128,7 +122,6 @@ function addButton($selector, button){
   	}
 }
 
-
 /**
  * @description Gets the value of form element specified at selector
  * 
@@ -137,6 +130,31 @@ function addButton($selector, button){
  */
 function getFormElement($selector, properties){
 	switch (properties.type){
+		case 'droppable':
+			//Gets the list of indexes stored in the data attribute in columnName for each badge contained in the droppable div.
+			//Update localStorage with includedTags
+			var droppable = document.querySelectorAll(`${$selector} span`);
+			var dataArr = [];
+			
+			switch (properties.source){
+				case 'data-attr':
+					droppable.forEach((element) => {
+						dataArr.push($(element).data(`${properties.attr}`));
+					})
+					return dataArr;
+				break;
+				case 'text':
+					droppable.forEach((element) => {
+						dataString += element.textContent + ','
+					})
+				break;
+				default:
+					debug(1,'getFormElement droppable switch default. Shouldnt be here')
+			}
+			//Trim
+			if (dataString.length > 0){ dataString = dataString.substring(0,dataString.length - 1);	}
+			return dataString;
+		break
 		case 'select':
 			if (properties.dataAttr){
 				return $($selector + ' option:selected').attr(`data-${properties.dataAttr}`)
@@ -180,8 +198,6 @@ function getFormElement($selector, properties){
 	}
 }
 
-
-
 /**
  * @description Sets the value of the form element provided at selector
  * 
@@ -191,6 +207,19 @@ function getFormElement($selector, properties){
  */
 function setFormElement($selector, properties, value){
 	switch (properties.type){
+		case 'droppable':
+			debug(1, value)
+			var sourceElements = document.querySelectorAll(properties.$source + ' span');
+			value.forEach((element) => {
+				//Iterate through each source element and move to the target selector's .card-body
+				sourceElements.forEach((element2) => {
+					if (element2.dataset[properties.dataAttr] == element[properties.dataAttr]){
+						$($selector + ' .card-body').append(element2);
+					}
+				})
+			})
+
+		break;
 		case 'select':
 			if (value == '')
 			$($selector).empty();
@@ -249,10 +278,9 @@ function setFormElement($selector, properties, value){
 		break;
 
 		default:
-			debug(`Switch default, shouldn't make it here in helpers.setFormElement() due to '${properties.type}'`)
+			debug(1, `Switch default, shouldn't make it here in helpers.setFormElement() due to:`, properties)
 	}
 }
-
 
 /**
  * @description Inserts form elements into the DOM.
@@ -267,7 +295,7 @@ function addFormElement(selector, properties){
 		case 'droppable':
 			formElement += `<h5 class="my-2">${properties.label}</h5>
 			<div id="${properties.id}" class="card bg-light border-secondary">
-				<div class="card-body" ondrop="dragDrop(event)" ondragover="dragOver(event)"></div>
+				<div class="card-body" ondrop="dragDrop(event, this)" ondragover="dragOver(event)"></div>
 			</div>`
 		break;
 		case 'select':
@@ -534,9 +562,12 @@ function swapSelectOptions(buttonSelector, sourceSelector, destinationSelector){
  * @param  {} $selector
  * @param  msg
  */
- function addDragableBadge($selector, msg, index){
+ function addDragableBadge($selector, text, dataAttrName, dataAttrValue){
 
-	$($selector).append(`<span id="drag_${index}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${msg}</span>`);
+	$($selector).append(`<span id="drag_${dataAttrValue}" data-${dataAttrName}="${dataAttrValue}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${text}</span>`);
+
+	//$($selector).append(`<span id="drag_${index}" data-${dataAttr}="${index}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${text}</span>`);
+
 }
 
 
@@ -589,7 +620,7 @@ function getReferenceURL(reference){
  * @description  
  * 
  */
- const graphTable = {
+const graphTable = {
 	System: [
 		{ label: 'System Name', type: 'text', columnName: 'name' },
 		{ label: 'Quantities', type: 'text', columnName: '' },
@@ -612,7 +643,6 @@ function getReferenceURL(reference){
  * @description Drag/Drop Handlers
  * 
  */
-
 function dragStart(ev){
 	 // Add the target element's id to the data transfer object
 	 ev.dataTransfer.setData("text", ev.target.id);
@@ -622,11 +652,11 @@ function dragOver(ev) {
 	ev.preventDefault();
 }
 
-function dragDrop(ev) {
+function dragDrop(ev,el) {
 	ev.preventDefault();
-	// Get the id of the target and add the moved element to the target's DOM
+	// Get the id of the target and add the moved element to the target
 	const data = ev.dataTransfer.getData("text");
-	ev.target.appendChild(document.getElementById(data));
+	el.appendChild(document.getElementById(data));
 }
 
 function breadcrumbs($selector, details){
@@ -704,4 +734,26 @@ function breadcrumbs($selector, details){
 	breadcrumbHtml += `</ol></nav>`
 
 	$($selector).before(breadcrumbHtml)
+}
+
+/**
+ * @description 
+ * 
+ * @param [] toEnable
+ * @param [] toDisable
+ * 
+ */
+function controlState(toEnable, toDisable){
+
+	if (toEnable){
+		toEnable.forEach((element) => {
+			$(element).prop('disabled', false);
+		})
+	}
+
+	if (toDisable){
+		toDisable.forEach((element) => {
+			$(element).prop('disabled', true);
+		})
+	}
 }

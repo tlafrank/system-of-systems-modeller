@@ -12,7 +12,7 @@ function debug(level, msg){
     }
 }
 
-const tableList = ['systems','subsystems','SIMap','SINMap','features','interfaces','issues','networks','parties','SSMap','quantities','dataExchanges'];
+const tableList = ['systems','subsystems','SIMap','SINMap','features','interfaces','interfaceIssues','issues','networks','parties','SSMap','quantities','dataExchanges'];
 
 exports.run = (req,res) => {
 	debug(1, `select.js debug level: ${debugLevel}`);

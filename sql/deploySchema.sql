@@ -3,6 +3,8 @@
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+SET autocommit = 0;
+-- SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 
 -- -----------------------------------------------------
 -- Schema db_sosm
@@ -74,6 +76,42 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`interfaces` (
   `reference` VARCHAR(45) NULL,
   PRIMARY KEY (`id_interface`),
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+-- -----------------------------------------------------
+-- Table `db_sosm`.`interfaceIssues`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `db_sosm`.`interfaceIssues` (
+  `id_interfaceIssue` INT NOT NULL AUTO_INCREMENT,
+  `id_interface` INT NULL,
+  `name` VARCHAR(256) NULL COMMENT 'A summary title of the issue',
+  `severity` INT NULL,
+  `issue` LONGTEXT NULL COMMENT 'The description of the issue',
+  `resolution` LONGTEXT NULL,
+  PRIMARY KEY (`id_interfaceIssue`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `db_sosm`.`issuesToSystemsMap`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `db_sosm`.`issuesToSystemsMap` (
+  `id_issuesToSystemsMap` INT NOT NULL AUTO_INCREMENT,
+  `id_interfaceIssue` INT NULL,
+  `id_system` INT NULL,
+  PRIMARY KEY (`id_issuesToSystemsMap`),
+  INDEX `id_interfaceIssue_idx` (`id_interfaceIssue` ASC) VISIBLE,
+  INDEX `id_system_idx` (`id_system` ASC) VISIBLE,
+  CONSTRAINT `fk_issuesToSystemsMap_interfaceIssue`
+    FOREIGN KEY (`id_interfaceIssue`)
+    REFERENCES `db_sosm`.`interfaceIssues` (`id_interfaceIssue`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_issuesToSystemsMap_system`
+    FOREIGN KEY (`id_system`)
+    REFERENCES `db_sosm`.`systems` (`id_system`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 

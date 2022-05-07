@@ -152,7 +152,7 @@ async function listIssues2(){
 	debug(2, 'listIssues2()')
 
 	const postData = {
-		type: 'Issues',
+		type: 'Issues2',
 		subtype: 'SystemInterface',
 		id_issueArr: sosmStats.issues.systemInterfaces
 	}

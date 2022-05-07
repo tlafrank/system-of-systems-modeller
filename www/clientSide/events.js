@@ -38,8 +38,8 @@ function update_network(){
 	updateNetworkModal({id_network: 1});
 }
 
-function update_issues2(){
-	updateIssuesModal2();
+function update_issues(){
+	updateIssuesModal();
 }
 
 /**

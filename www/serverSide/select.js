@@ -36,6 +36,20 @@ exports.switch = (req,res) => {
         queryString += ' ORDER BY name;';
     }
 
+	//Get a list of systems which implement a particular interface
+	//For: updateIssuesModal()
+	if (req.body.type == 'SystemsWithSpecificInterface'){
+		queryString = sql.format(`
+		SELECT systems.id_system, systems.name
+		FROM systems
+		LEFT JOIN SIMap
+		ON systems.id_system = SIMap.id_system
+		LEFT JOIN interfaces
+		ON SIMap.id_interface = interfaces.id_interface
+		WHERE interfaces.id_interface = ?
+		GROUP BY id_system;`, req.body.id_interface)
+	}
+
     //******************************** Features ****************************************
 
     //Get all features in alphabertical order
@@ -56,6 +70,9 @@ exports.switch = (req,res) => {
 
     //******************************** Interfaces ****************************************
 
+
+
+	//
     //For: nodeSelected()
     if (req.body.type == 'Interface'){
         //Build the query
@@ -79,7 +96,8 @@ exports.switch = (req,res) => {
 
     }
 
-	//Get the list of all interfaces attached to the system
+	//Get the list of all interfaces attached to a particular system
+	//For: TBC
 	if (req.body.type == 'SystemInterfaces'){ 
         //Build the query
         queryString = sql.format(`
@@ -124,6 +142,29 @@ exports.switch = (req,res) => {
     }
 
 	//******************************** Issues ****************************************
+
+
+	if (req.body.type == 'InterfaceIssues'){
+		queryString = sql.format(`SET @id_interface = ?;`, req.body.id_interface)
+
+		if (req.body.id_interfaceIssue == 0){
+			queryString += sql.format(`SELECT @id_interfaceIssue:= MIN(id_interfaceIssue) AS id_interfaceIssue FROM interfaceIssues WHERE  id_interface = @id_interface;`)
+		} else {
+			queryString += sql.format(`SELECT @id_interfaceIssue:= ? AS id_interfaceIssue;`, req.body.id_interfaceIssue)
+		}
+
+		queryString += sql.format(`
+			SELECT interfaceIssues.*, interfaceIssues.name
+			FROM interfaceIssues
+			LEFT JOIN interfaces
+			ON interfaceIssues.id_interface = interfaces.id_interface
+			WHERE interfaces.id_interface = @id_interface;
+			SELECT id_system, id_interfaceIssue
+			FROM issuesToSystemsMap
+			WHERE id_interfaceIssue = @id_interfaceIssue;`);
+
+
+	}
 
     if (req.body.type == 'BasicIssues'){
         //Build the query
@@ -175,8 +216,6 @@ exports.switch = (req,res) => {
 			break;
         }
     }
-
-
 
 	if (req.body.type == 'IssueImages'){
         //Build the query
@@ -256,13 +295,6 @@ exports.switch = (req,res) => {
 		FROM quantities
 		WHERE quantities.id_system = ?
 		ORDER BY quantities.year;`, [req.body.id_system])
-    }
-
-
-    //******************************** Graph Settings ****************************************
-    if (req.body.type == 'graphSettings'){
-        //Build the query
-        queryString = sql.format(`SELECT * FROM graphSettings`)
     }
 
     queryString = queryString.trim();
