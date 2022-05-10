@@ -1,3 +1,137 @@
+
+/**
+ * @description 
+ * 
+ * @param id_interface
+ * @param id_interfaceIssue
+ * @param {} message
+ */
+ function dataExchangesModal(id_dataExchange, message){
+	debug(1, 'In dataExchangesModal()', id_dataExchange)
+
+	//Prepare the modal
+	$('#mainModal .modal-body').empty();
+	$('#mainModal .modal-body').append('<form></form>');
+	$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
+	$('#mainModalTitle').text('Update Data Exchanges');
+	$('#mainModal').modal('show');
+	
+	//Notifications
+	if (message){ addBadge('#mainModal .warning-holder', message) }
+
+	//Add input fields
+	form.dataExchanges.forEach((element) => { addFormElement('#mainModal form', element) })
+
+	//Add buttons
+	defaultButtons([
+		{type: 'new', label: 'Add New Exchange'},
+		{type: 'delete', label: 'Delete Exchange'},
+		{type: 'submit', label: 'Save Exchange'},
+		{type: 'close'},
+	])
+
+	if (!id_dataExchange) { var id_dataExchange = 1 };
+
+	//Check if adding a new data exchange
+	if(id_dataExchange == -1){ //New data exchange entry
+
+		controlState(null, ['#dataExchangeSelect', '#mainModalAddNew', '#mainModalDelete' ])
+
+	} else { //Load the list of data exchanges
+		var postData = { type: 'DataExchanges' }
+		$.post('select.json', postData, (result) => {
+			debug(2, 'Passed to select.json: ', postData);
+			debug(2, 'Response: ', result)
+
+			if (result.msg){
+				//An error was passed
+				dataExchangesModal(id_dataExchange, {info: 'failure', msg: `There was an error. Check the console.`});
+			} else {
+				//Load the data exchange select
+				result.forEach((element) => {
+
+					$('#dataExchangeSelect').append(`<option data-id_dataExchange="${element.id_dataExchange}">${element.name}</option>`)
+					//If this is the interface that was provided, set this system as the selected option
+					debug(1, 'id_dataExchange is ' + id_dataExchange)
+					if (id_dataExchange == element.id_dataExchange){ 
+						debug(1, 'match on ' + element.id_dataExchange)
+						$(`#dataExchangeSelect option[data-id_dataExchange="${element.id_dataExchange}"]`).prop('selected', true);
+
+						//Populate the form
+						form.dataExchanges.forEach((element2) => {
+							if (element2.columnName){ 
+								setFormElement('#' + element2.id, element2, element[element2.columnName]) 
+								//Event for changes
+								$(`#${element2.id}`).on('input',() => {
+									controlState(['#mainModalSubmit'], ['#dataExchangeSelect', '#mainModalAddNew', '#mainModalDelete'])
+								})
+							}
+						})
+					}
+				})
+			}
+		})		
+	}
+
+
+	//Event: Issue select changes
+	$('#dataExchangeSelect').unbind();
+	$('#dataExchangeSelect').change(() => {
+		$('#mainModal').modal('hide');
+		dataExchangesModal($('#dataExchangeSelect option:selected').attr(`data-id_dataExchange`))
+	})
+
+	//Event: Add New Issue button clicked
+	$('#mainModalAddNew').unbind();
+	$('#mainModalAddNew').click((event) => {
+		$('#mainModal').modal('hide');
+		dataExchangesModal(-1);
+	})
+
+//Event: Save
+$('#mainModalSubmit').unbind();
+$('#mainModalSubmit').click(() => {
+	const postData = { type: 'DataExchange' }
+
+	if (id_dataExchange > 0){
+		postData.id_dataExchange = id_dataExchange;
+	}
+	
+	//Load issue details into postData
+	form.dataExchanges.forEach((element) => {
+		if (element.columnName){ postData[element.columnName] = getFormElement('#' + element.id, element) }
+	})
+	
+	$.post('update.json', postData, (result) => {
+		debug(2,'Passed to update.json: ', postData);
+		debug(2,'Response: ', result)
+
+		//Check the result
+		if (result.msg){
+			//An error was passed
+			dataExchangesModal(id_dataExchange, {info: 'failure', msg: `There was an error. Check the console.`});
+		} else {
+			//Check if entry was a new entry
+			if (result.insertId == 0){
+				//Submission was an update
+				$('#mainModal').modal('hide');
+				dataExchangesModal(id_dataExchange, {info: 'success', msg: `The '${postData.name}' record was successfully updated.`});
+				
+			} else {
+				//Submission was a new interface
+				dataExchangesModal(result.insertId, {info: 'success', msg: `The '${postData.name}' record was successfully added.`});
+			}
+		}
+	})
+});
+
+}
+
+
+
+
+
+
 /**
  * @description Modal to capture issues associated with interfaces, and the platforms affected
  * 
@@ -22,10 +156,12 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 	form.issue.forEach((element) => { addFormElement('#mainModal form', element) })
 
 	//Add buttons
-	addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: 'Add New Issue'});
-	addButton('#mainModal .modal-footer', {type: 'delete', id: 'mainModalDelete', label: 'Delete Issue'});
-	addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Save Issue'});
-	addButton('#mainModal .modal-footer', {type: 'close'});
+	defaultButtons([
+		{type: 'new', label: 'Add New Issue'},
+		{type: 'delete', label: 'Delete Issue'},
+		{type: 'submit', label: 'Save Issue'},
+		{type: 'close'},
+	])
 
 	if (!id_interface){ var id_interface = 1 };
 	if (!id_interfaceIssue){ var id_interfaceIssue = 0 };
@@ -289,29 +425,15 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 		debug('Passed to select.json: ', postData);
 		debug('Response: ', result)
 
-		var tagData = [];
-		var tagList = [];
-		//Iterate over each tag list
+		//Put all the tags which exist into the availableTags div
 		result.forEach((element) => {
-			//Split the tags into an array and check if the tag has already been entered into tagData
-			tagList = element.tags.split(',');
-			for (var i = 0; i<tagList.length; i++){
-				if (!tagData.includes(tagList[i])){
-					tagData.push(tagList[i]);
-				}
-			}
+			addDragableBadge2('#availableTags .card-body', { text: element.tag, dataAttrName: 'tag', dataAttrValue: element.tag })
 		})
 
-		tagData = tagData.sort();
-
-		//Put all the tags which exist into the availableTags div
-		for (var i = 0; i < tagData.length; i++){
-			addDragableBadge('#availableTags .card-body', tagData[i], 'id_system', tagData[i])
-		}
 
 		//Iterate through localStorage includedTags and move tags from availableTags to the includedTags div
 		//Convert to array
-		var includedTags = localStorage.getItem("includedFilterTag").split(",");
+		var includedTags = JSON.parse(localStorage.getItem('includedFilterTag'));
 		availableTags = document.querySelectorAll("#availableTags span");
 		includedTags.forEach((element) => {
 			//Iterate through availableTags until found
@@ -321,10 +443,10 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 				}
 			})
 		})
-
+		
 		//Iterate through localStorage excludedTags and move tags from availableTags to the excludedTags div
 		//Convert to array
-		var excludedTags = localStorage.getItem("excludedFilterTag").split(",");
+		var excludedTags = JSON.parse(localStorage.getItem('excludedFilterTag'));
 		availableTags = document.querySelectorAll("#availableTags span");
 		excludedTags.forEach((element) => {
 			//Iterate through availableTags until found
@@ -347,15 +469,34 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 	$('#mainModalSubmit').unbind();
 	$('#mainModalSubmit').click((event) => {
 
+		//Update localStorage with includedTags
+		var includedTags = document.querySelectorAll("#includedTags span");
+		var includedTagsArr = [];
+		includedTags.forEach((element) => {
+			includedTagsArr.push(element.textContent)
+		})
+		//Trim
+		localStorage.setItem('includedFilterTag', JSON.stringify(includedTagsArr));
+		
+		//Update localStorage with excludedTags
+		var excludedTags = document.querySelectorAll("#excludedTags span");
+		var excludedTagsArr = [];
+		excludedTags.forEach((element) => {
+			excludedTagsArr.push(element.textContent)
+		})
+		//Trim
+		localStorage.setItem('excludedFilterTag', JSON.stringify(excludedTagsArr));
+
+		pageSwitch(sessionStorage.getItem('currentPage'));
+		$('#mainModal').modal('hide');
+
+		/*
 		form.tags.forEach((element) => {
 			debug(1,'looping through form elements', element)
 			if (element.columnName){
 				debug(1,getFormElement('#' + element.id, element))
 			}
 		})
-
-		//localStorage.setItem('includedFilterTag',
-
 		
 		//Update localStorage with includedTags
 		var includedTags = document.querySelectorAll("#includedTags span");
@@ -380,6 +521,7 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 
 		pageSwitch(sessionStorage.getItem('currentPage'));
 		$('#mainModal').modal('hide');
+		*/
 	});
 
  }
@@ -1602,6 +1744,7 @@ function updateSystemModal(system, message){
 
 		//Buttons
 		addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: 'Add New System'});
+		addButton('#mainModal .modal-footer', {type: 'delete', id: 'mainModalDelete', label: 'Delete System'});
 		addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: 'Update Interface'});
 		addButton('#mainModal .modal-footer', {type: 'close'});
 
@@ -1683,7 +1826,6 @@ function updateSystemModal(system, message){
 		updateSystemInterfacesModal({ id_system: system.id_system });
 	});
 
-
 	//Event: Add a new blank system 
 	$('#mainModalAddNew').unbind();
 	$('#mainModalAddNew').click(() => {
@@ -1691,24 +1833,12 @@ function updateSystemModal(system, message){
 		updateSystemModal({ id_system: 0 });
 	});
 
-	
-	//Event: Modal hidden																						//Firing incorrectly when reloading the modal
-	/*
-	$('#mainModal').on('hidden.bs.modal', () => {
-		debug('Modal closing')
-		if (graphSettings.refreshOnUpdate) {
-			//newCy();										
-		}
-	})
-	*/
-
 	//Event: Select changes
 	$('#mainModalSystemSelect').unbind();
 	$('#mainModalSystemSelect').change(() => {
 		//system.id_system = $('#mainModalSystemSelect option:selected').attr(`data-id_system`)
 		updateSystemModal({ id_system: $('#mainModalSystemSelect option:selected').attr(`data-id_system`) });
 	})
-
 
 	//Event: Assign Icon button clicked
 	$('#iconChooserButton').unbind();
@@ -1719,6 +1849,28 @@ function updateSystemModal(system, message){
 		});
 	})
 
+	//Event: Delete button clicked
+	$('#mainModalDelete').unbind();
+	$('#mainModalDelete').click(() => {
+		const postData = {
+			type: 'DeleteSystem',
+			id_system: $('#mainModalSystemSelect option:selected').attr(`data-id_system`),
+			name: $('#mainModalSystemSelect option:selected').text()
+		}
+
+		$.post('update.json', postData, (result) => {
+			debug('Passed to update.json: ', postData);
+			debug('Response: ', result)
+	
+			//Check the result
+			if (result.msg){
+				//An error was passed
+				updateSystemModal({info: 'failure', msg: `There was an error. Check the console.`});
+			} else {
+				updateSystemModal({ id_system: 1 }, {info: 'success', msg: `The ${postData.name} record was successfully deleted.`});
+			}
+		})
+	})
 
 	//Event: Submit
 	$('#mainModalSubmit').unbind();
@@ -1746,12 +1898,12 @@ function updateSystemModal(system, message){
 				updateSystemModal({info: 'failure', msg: `There was an error. Check the console.`});
 			} else {
 				//Check if entry was a new entry
-				if (result.insertId == 0){
+				if (result[1].insertId == 0){
 					//Submission was an update
 					updateSystemModal({id_system: postData.id_system}, {info: 'success', msg: `The ${postData.name} record was successfully updated.`});
 				} else {
 					//Submission was a new interface
-					updateSystemModal({ id_system: result.insertId}, {info: 'success', msg: `The ${postData.name} record was successfully added.`});
+					updateSystemModal({ id_system: result[1].insertId}, {info: 'success', msg: `The ${postData.name} record was successfully added.`});
 				}
 				
 			}
@@ -1771,14 +1923,24 @@ function updateSystemModal(system, message){
 		$.post('select.json', postData2, (result) => {
 			debug('Passed to select.json: ', postData2);
 			debug('Response: ', result)
+			const systemDetails = result[0];
+			const tagDetails = result[1];
+			var tagString = '';
+
+			//Turn tagDetails into a comma separated list
+			tagDetails.forEach((element) => {
+				tagString += element.tag + ',';
+			})
+			tagString = tagString.substring(0, tagString.length -1);
+			systemDetails[0].tags = tagString;
 
 			//Update heading
-			$('#mainModalSystemName').text(result[0].name);
+			$('#mainModalSystemName').text(systemDetails[0].name);
 
 			form.system.forEach((element) => {
 				//Set the relevant form control values
 				if(element.columnName){
-					setFormElement('#' + element.id, element, result[0][element.columnName]);
+					setFormElement('#' + element.id, element, systemDetails[0][element.columnName]);
 				}
 			})
 		})

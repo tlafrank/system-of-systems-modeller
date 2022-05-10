@@ -1,6 +1,6 @@
 const { format } = require('./db');
 const sql = require('./db');
-const System = require('./System');
+const System = require('../../private/Old/System');
 
 let debugLevel = 7;
 
@@ -14,22 +14,145 @@ function debug(level, msg){
 exports.switch = (req,res) => {
 	debug(1, `graph.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 
-    var queryString = '';
+/*
+	//Get the systems which are available in the given year
+	queryString = sql.format(`SELECT a.id_system, name, image, tags, a.quantity
+	FROM (SELECT * FROM quantities WHERE year <= ?) AS a
+	LEFT JOIN (SELECT * FROM quantities WHERE year <= ?) AS b
+	ON a.id_system = b.id_system AND a.year < b.year
+	LEFT JOIN systems
+	ON a.id_system = systems.id_system
+	WHERE b.year IS NULL AND a.quantity > 0`, [req.body.year,req.body.year]);
+
+
+*/
+
+
+    var queryString = sql.format(`
+	SET @inputYear = ?;
+	SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
+
+	DROP TABLE IF EXISTS systemsResult, SIResult, SINResult;
+	
+	#Get the systems present in the provided year
+	CREATE TEMPORARY TABLE systemsResult AS
+		(SELECT DISTINCT a.id_system, name, image, a.quantity
+		FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
+		LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
+		ON a.id_system = b.id_system AND a.year < b.year
+		LEFT JOIN systems
+		ON a.id_system = systems.id_system `,req.body.year);
+
+	includedTags = JSON.parse(req.body.includedFilterTag);
+	excludedTags = JSON.parse(req.body.excludedFilterTag);		
+
+	//Handle included and excluded tags
+	switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
+		case 3:
+			//Both included and excluded tags have been provided
+			queryString += sql.format(`
+			LEFT JOIN tags
+			ON tags.id_system = a.id_system
+			WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?) AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?))`, [includedTags, excludedTags]);
+			break;
+		case 2:
+			//Only included tags have been provided
+			queryString += sql.format(`
+			LEFT JOIN tags
+			ON tags.id_system = a.id_system
+			WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?)`, [includedTags]);
+			break;
+		case 1:
+			//Only excluded tags have been provided
+			queryString += sql.format(`
+			WHERE b.year IS NULL AND a.quantity > 0 AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?))`, [excludedTags]);
+			break;
+		case 0:
+			//No tags have been provided
+		default:
+	}
+
+	queryString += sql.format(`
+	);
+	SELECT * FROM systemsResult;
+	
+	#Get each system's interface
+	CREATE TEMPORARY TABLE SIResult AS
+		(SELECT SIMap.id_SIMap, SIMap.id_system, interfaces.*
+		FROM interfaces
+		LEFT JOIN SIMap
+		ON interfaces.id_interface = SIMap.id_interface
+		WHERE SIMap.id_system IN (SELECT id_system FROM systemsResult));
+	SELECT * FROM SIResult;
+	
+	#Get the networks associated with each system's interfaces
+	CREATE TEMPORARY TABLE SINResult AS
+		(SELECT SIMap.id_system, SINMap.id_SINMap, SINMap.id_SIMap, networks.*
+		FROM SIMap
+		LEFT JOIN SINMap
+		ON SIMap.id_SIMap = SINMap.id_SIMap
+		LEFT JOIN networks
+		ON networks.id_network = SINMap.id_network
+		WHERE SINMap.id_SIMap IN (SELECT id_SIMap FROM SIResult));
+	SELECT * FROM SINResult;
+	
+	#Statistics
+	SELECT SIResult.id_interface, SIResult.id_system, SIResult.name AS interfaceName, systemsResult.name AS systemName, systemsResult.quantity, COUNT(id_interface) AS interfaceQtyPerIndividualSystem, (systemsResult.quantity * COUNT(id_interface)) AS interfaceTotalAcrossEachSystemInYear
+	FROM SIResult
+	LEFT JOIN systemsResult
+	ON systemsResult.id_system = SIResult.id_system
+	GROUP BY id_interface, SIResult.id_system
+	ORDER BY id_interface;
+	`);
+
+	executeQuery(queryString).then((result) => { 
+		res.json([result[4], result[6], result[8], result[9]]) 
+	}).catch((err) => {
+		debug(3,err);
+		if (debugLevel == 7){
+			res.json({msg: 'There was an error executing the query (select.json)', err: err})
+		} else {
+			res.json({msg: 'There was an error executing the query (select.json)'})
+		}
+	});
+}
+
+var executeQuery = (queryString) => new Promise((resolve,reject) => {
+	//Submit the query to the database
+	queryString = queryString.trim();
+	let re = /\n\s\s+/gi;
+	queryString = queryString.replace(re,'\n\t')
+	debug(7, 'Query:  ' + queryString);
+	sql.query(queryString, (err,res) => {
+		if (err) { 
+			reject(err);
+		}
+		resolve(res);
+	})    
+}) 
+
+/*
 
     //******************************** Graph ****************************************
     //Gets the nodes for the graph
 
+	var systemsArr = [];
+	var systemsIdArr = [];
+	var interfacesArr = [];
+	var SIIdArr = [];
+	var networksArr = [];
+	var statsObj = {};
+	var includedTags = []; //Stores each tag used to restrict the result set to
+	var excludedTags = []; //Stores each tag used to exclude results from
 
-	//Get all the systems requested by the user
+	//Get the systems which are available in the given year
 	queryString = sql.format(`SELECT a.id_system, name, image, tags, a.quantity
-	FROM quantities AS a
-	LEFT JOIN quantities AS b
+	FROM (SELECT * FROM quantities WHERE year <= ?) AS a
+	LEFT JOIN (SELECT * FROM quantities WHERE year <= ?) AS b
 	ON a.id_system = b.id_system AND a.year < b.year
 	LEFT JOIN systems
-	ON systems.id_system = a.id_system
-	WHERE b.year IS NULL AND a.year <= ${req.body.year} AND a.quantity > 0`);
-	var includedTags = [];
-	var excludedTags = [];
+	ON a.id_system = systems.id_system
+	WHERE b.year IS NULL AND a.quantity > 0`, [req.body.year,req.body.year]);
 
 	//Handle included and excluded tags
 	switch (2 * Boolean(req.body.includedFilterTag) + Boolean(req.body.excludedFilterTag)){
@@ -75,20 +198,13 @@ exports.switch = (req,res) => {
 		default:
 	}
 
-	var systemsArr = [];
-	var systemsIdArr = [];
-	var interfacesArr = [];
-	var SIIdArr = [];
-	var networksArr = [];
-	var statsObj = {};
-
 	executeQuery(queryString)
 		.then((result) => {
+			//Create a new system object for each row of the returned systems table			
 			debug(7, 'System Table result no rows: ' + result.length);
-			
-			//Create a new system object for each row of the systems table
-			//Make sure there are systems to display
-			if (result.length > 0){
+
+			//Check that there are systems to process
+			if (result.length > 0){ //Systems were returned
 				//Loop through the systems table, creating a new System object for each row
 				result.forEach(element => {
 
@@ -96,13 +212,12 @@ exports.switch = (req,res) => {
 					systemsArr.push(new System(element, req.body.showInterfaces))
 					systemsIdArr.push(element.id_system);
 				});
-			} else {
-				return new Promise((resolve,reject) => {
-					reject({msg: 'There are no systems available for the given year, given filter terms.'})
-				})
+			} else { //There are no records, throw a rejection
+																																														//Check if this can be simplified
+				return new Promise((resolve,reject) => { reject({msg: 'There are no systems available for the given year, given filter terms.' }) })
 			}
 
-			//Get only the system interfaces which belong to systems which are available in the current year
+			//Get the system interfaces which belong to the systems listed in systemsIdArr
 			return executeQuery(sql.format(`
 				SELECT * FROM interfaces;
 				SELECT SIMap.id_SIMap, SIMap.id_system, interfaces.id_interface, interfaces.name, interfaces.image, SIMap.isProposed
@@ -112,14 +227,12 @@ exports.switch = (req,res) => {
 				ORDER BY SIMap.id_system;`, [systemsIdArr]))
 		})
 		.then((result) => {
+			
 			debug(7, 'Interfaces Table result no rows: ' + result[0].length);
 			debug(7, 'SIMap Table result no rows: ' + result[1].length);
-			//Create an interfaces table for capturing the quantity of interfaces available,
-			//add each system interface to the respective system and fetch their associated networks.
 
-			//Loop through the interfaces table, creating a new Interface object for each row
+			//Create an interfaces table
 			interfacesArr = [];
-
 			result[0].forEach((element) => {
 				interfacesArr.push({
 					id_interface: element.id_interface,
@@ -220,7 +333,7 @@ exports.switch = (req,res) => {
 				}
 
 			})
-			//Return the issues associated with System Interfaces
+			//Return the issues associated 
 			return executeQuery(sql.format(`
 				SELECT systems.id_system, issues.*
 				FROM issues
@@ -228,8 +341,10 @@ exports.switch = (req,res) => {
 				ON SIMap.id_SIMap = issues.id_type
 				LEFT JOIN systems
 				ON SIMap.id_system = systems.id_system
-				WHERE id_type IN (?) AND type = 'SystemInterface';`, [SIIdArr]) //SystemInterface issues
+				WHERE id_type IN (?) AND type = 'SystemInterface';`, [SIIdArr])
 			)
+			
+
 		})
 		.then((result) => {	//Handle SystemInterface issues
 			debug(7, 'Issues Table result no rows: ' + result.length);
@@ -268,7 +383,7 @@ exports.switch = (req,res) => {
 
 
 
-	//*************************************** Response to client *******************************************************/
+	//*************************************** Response to client *******************************************************
 			var responseArr = []
 
 			//Produce the network nodes																		//Need to look more closely how this works
@@ -316,8 +431,11 @@ var executeQuery = (queryString) => new Promise((resolve,reject) => {
 	debug(7, 'Query:  ' + queryString);
 	sql.query(queryString, (err,res) => {
 		if (err) { 
-            reject(err);
-        }
+			reject(err);
+		}
 		resolve(res);
 	})    
 }) 
+
+
+*/

@@ -1,4 +1,10 @@
 const form = {
+	dataExchanges: [
+		{ type: 'select', id: 'dataExchangeSelect', label: 'Existing Data Exchanges'},
+		{ type: 'text', id: 'dataExchangeName', label: 'Data Exchange Title', columnName: 'name'},
+		{ type: 'textarea', id: 'dataExchangeDescription', label: 'Data Exchange Description', columnName: 'description'},
+
+	],
 	issue: [
 		{ type: 'select', id: 'interfaceSelect', label: 'Interfaces'},
 		{ type: 'select', id: 'issueSelect', label: 'Existing Interface Issues'},
@@ -6,6 +12,7 @@ const form = {
 		{ type: 'droppable', id: 'affectedSystems', label: 'Systems affected by this issue', columnName: 'affectedSystems', source: 'data-attr', attr: 'id_system' },
 		{ type: 'droppable', id: 'unaffectedSystems', label: 'Other systems which implement this interface' },
 		{ type: 'note', text: 'Issue severity'},
+		{ type: 'slider', text: 'Issue severity', max: 6 },
 		{ type: "trafficLightRadio", id: 'issueSeverity', columnName: 'severity'},
 		{ type: 'textarea', id: 'issueDescription', label: 'Issue', columnName: 'issue'},
 		{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},

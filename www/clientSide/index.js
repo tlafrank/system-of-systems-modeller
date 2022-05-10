@@ -7,8 +7,7 @@ var cy = cytoscape();
 let selectedNode; //Holds the Node object which is selected by the user
 let modal; //Holds the object to provide modal setup information and the Node object being built
 let graphSettings; //Holds the object to track graph settings between sessions
-//let sosm;
-let sosmData, sosmStats;
+let sosmSystemData, sosmSystemInterfaceData, sosmNetworkData, sosmStats;
 
 const imagePath = './images/'
 var hideNodes = false; //Tracks whether a click on a node should remove it from the graph
@@ -64,6 +63,24 @@ function pageSwitch(page){
 
 function listSummary(){
 	debug(1,'listSummary()')
+
+	//Process the stats
+	var lastInterfaceId = 0;
+	const statsArr = [];
+	for (var i = 0; i < sosmStats.length; i++){
+		if (sosmStats[i].id_interface > lastInterfaceId) { //First occurrance of a new interface
+			lastInterfaceId = sosmStats[i].id_interface
+
+			//Add to the statsArr
+			statsArr.push({interface_id: lastInterfaceId, name: sosmStats[i].interfaceName, totalInterfaces: sosmStats[i].quantity, systemsCount: 1}); 
+		} else { //Additional occurrances of the same interface
+			//Update statsArr
+			statsArr[statsArr.length - 1].systemsCount ++;
+			statsArr[statsArr.length - 1].totalInterfaces += sosmStats[i].quantity;
+
+		}
+	}
+	debug(1, 'statsArr', statsArr)
 	
 	var table = `<table class="table table-sm table-striped"><thead>
 	<tr>
@@ -74,13 +91,14 @@ function listSummary(){
 	</thead>
 	<tbody>`
 	
-	sosmStats.interfaceCounts.forEach((element) => {
+	statsArr.forEach((element) => {
 		table += `<tr>
 			<td scope="row"><a href="#" onclick="updateInterfaceModal({ id_interface: ${element.id_interface} });">${element.name}</a></td>
-			<td class="">${element.quantity}</td>
-			<td>${element.systems.length}</td>
-		</tr>`
+			<td class="">${element.totalInterfaces}</td>
+			<td>${element.systemsCount}</td>
+		</tr>`			
 	})
+
 	table += `</tbody></table>`
 
 	$('#mainPaneContainer').append(table);
@@ -215,6 +233,7 @@ async function listIssues2(){
 function newCy(){
 	debug(1,'In newCy()')
 
+	//Setup the graph 
 	cy = cytoscape({ 
 		container: $("#cy"),
 		style: cyStyle,
@@ -225,7 +244,131 @@ function newCy(){
 
 	$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
 
-	cy.add(sosmData);
+	if (localStorage.getItem('showInterfaces') == 1){ var showInterfaces = true	} else { var showInterfaces = false }
+	var showNetworkNodes = true;
+
+	//Prepare and add system data to the graph
+	var systemNodes = [];
+	sosmSystemData.forEach((element) => {
+		systemNodes.push({
+			group: 'nodes',
+			data: {
+				id: 'node_s_' + element.id_system,
+				idNo: element.id_system,
+				id_system: element.id_system,
+				nodeType: 'System',
+				name: element.name,
+				filename: './images/' + element.image,
+			}, 
+			classes: ''																			//Put classes here
+		})
+	})
+	cy.add(systemNodes);
+
+
+	//Prepare and add interface data to the graph
+	var interfaceNodes = [];
+	if (showInterfaces){ //Display interfaces on the graph
+		sosmSystemInterfaceData.forEach((element) => {
+			interfaceNodes.push({ //Interface node
+				group: 'nodes',
+				data: {
+					id: 'node_si_' + element.id_SIMap,
+					idNo: element.id_SIMap,
+					id_system: element.id_system,
+					id_SIMap: element.id_SIMap,
+					nodeType: 'SystemInterface',
+					name: element.name,
+					filename: './images/' + element.image,
+				},
+				classes: ''																				//Put classes here
+			})
+
+			interfaceNodes.push({ //S-SI edge
+				group: 'edges',
+				data: {
+					id: 'edge_s_si_' + element.id_SIMap,
+					idNo: element.id_SIMap,
+					source: 'node_s_' + element.id_system,
+					target: 'node_si_' + element.id_SIMap,
+				},
+				classes: ''																				//Put classes here
+			})
+		})
+	}
+	cy.add(interfaceNodes);
+
+	//Prepare and add network data to the graph
+	var networkNodes = [];
+
+	debug(2, 'Switch case result is ' + (2 * showInterfaces + 1 * showNetworkNodes))
+	switch (2 * showInterfaces + 1 * showNetworkNodes){
+		case 0: //Connect systems directly to each other (no interfaces nor network nodes)
+
+		break;
+		case 1: //Connect systems to network nodes (no interface nodes)
+			addNetworkNodes();
+			sosmNetworkData.forEach((element) => {
+				networkNodes.push({
+					group: 'edges',
+					data: {
+						id: 'edge_s_' + element.id_SIMap + '_n_' + element.id_network,
+						idNo: element.id_network,
+						id_network: element.id_network,
+						source: 'node_s_' + element.id_system,
+						target: 'node_n_' + element.id_network,
+						name: 'IF001',
+					},
+					classes: 'blue'																				//Put classes here
+				})
+			})
+		break;
+		case 2: //Connect interfaces directly to each other (no network nodes)
+
+		break;
+		case 3: //Connect interfaces to network nodes
+			addNetworkNodes();
+			sosmNetworkData.forEach((element) => {
+				networkNodes.push({
+					group: 'edges',
+					data: {
+						id: 'edge_si_' + element.id_SIMap + '_n_' + element.id_network,
+						idNo: element.id_network,
+						id_network: element.id_network,
+						source: 'node_si_' + element.id_SIMap,
+						target: 'node_n_' + element.id_network,
+						name: 'IF001',
+					},
+					classes: 'blue'																				//Put classes here
+				})
+			})
+		break;
+		default:
+			debug(1, `newCy switch default. Shouldn't make it here.`)
+	}
+
+
+	function addNetworkNodes(){
+		//Add network nodes to the graph
+		sosmNetworkData.forEach((element) => {
+			networkNodes.push({
+				group: 'nodes',
+				data: {
+					id: 'node_n_' + element.id_network,
+					id_network: element.id_network,
+					nodeType: 'Network',
+					name: element.name,
+					filename: './images/' + element.image,
+				},
+				classes: 'network'																			//Put classes here
+			})
+		})		
+	}
+
+
+	cy.add(networkNodes);
+
+	//Draw the graph
 	cy.layout(graphSettings.getGraphLayout()).run();
 
 	selectedNode = new Node();
@@ -272,8 +415,10 @@ function getGraphData(callback){
 		debug(3,'Passed to graph.json:', postData);
 		debug(3,'Response:', result)
 
-		sosmData = result[0]
-		sosmStats = result[1];
+		sosmSystemData = result[0];
+		sosmSystemInterfaceData = result[1];
+		sosmNetworkData = result[2];
+		sosmStats = result[3];
 		callback();
 	})
 }

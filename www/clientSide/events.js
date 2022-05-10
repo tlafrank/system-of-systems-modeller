@@ -1,5 +1,9 @@
 //************************************************************ Navigation Menu ******************************************************/
 
+function data_exchanges(){
+	dataExchangesModal();
+}
+
 function manageTags(){
 	manageTagsModal();
 }
@@ -146,6 +150,7 @@ function hideNode(id, idNo, type){
  * 
  */
  function nodeSelected(eventTarget){
+	debug(1,'In nodeSelected()')
 
 	//Hide the node if the hide nodes toggle button is enabled
 	if (hideNodes){
@@ -157,9 +162,10 @@ function hideNode(id, idNo, type){
 		debug(3,'NodeType: ' + eventTarget.data('nodeType'))
 		postData.type = eventTarget.data('nodeType');
 
-		switch (eventTarget.data('nodeType')){
+		switch (postData.type){
 			case 'System':
-				postData.id_system = eventTarget.data('id_system');		
+				postData.id_system = eventTarget.data('id_system');
+				postData.noTags = true;
 				break;
 			case 'SystemInterface':
 				postData.id_SIMap = eventTarget.data('id_SIMap');
@@ -183,7 +189,7 @@ function hideNode(id, idNo, type){
 			} else {
 				//Set the selected node object
 				result[0].type = postData.type;
-				selectedNode.update(result[0], eventTarget.data('id'));
+				selectedNode.update(result[0], eventTarget.data('id'));				
 
 				debug(3,'selectedNode:', selectedNode)
 			}

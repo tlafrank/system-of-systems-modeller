@@ -1,4 +1,26 @@
 
+
+function defaultButtons(buttonList){
+	buttonList.forEach((element) => {
+		switch (element.type){
+			case 'new':
+				addButton('#mainModal .modal-footer', {type: 'info', id: 'mainModalAddNew', label: element.label});
+			break;
+			case 'submit':
+				addButton('#mainModal .modal-footer', {type: 'submit', id: 'mainModalSubmit', label: element.label});
+			break;
+			case 'delete':
+				addButton('#mainModal .modal-footer', {type: 'delete', id: 'mainModalDelete', label: element.label});
+			break;
+			case 'close':
+				addButton('#mainModal .modal-footer', {type: 'close'});
+			break;			
+			default:
+				debug(1, 'Unknown button requested in defaultButton');
+		}
+	})
+}
+
 /**
  * @description  
  * 
@@ -292,6 +314,9 @@ function addFormElement(selector, properties){
 	var formElement = '';
 
 	switch (properties.type){
+		case 'slider':
+			formElement += `<div><label for="volume">Severity</label><input type="range" id="volume" name="volume" min="0" max="6"></div>`
+		break;
 		case 'droppable':
 			formElement += `<h5 class="my-2">${properties.label}</h5>
 			<div id="${properties.id}" class="card bg-light border-secondary">
@@ -560,7 +585,7 @@ function swapSelectOptions(buttonSelector, sourceSelector, destinationSelector){
  * @description Add dragable badges to the DOM at $selector
  * 
  * @param  {} $selector
- * @param  msg
+ * @param {} properties
  */
  function addDragableBadge($selector, text, dataAttrName, dataAttrValue){
 
@@ -569,7 +594,13 @@ function swapSelectOptions(buttonSelector, sourceSelector, destinationSelector){
 	//$($selector).append(`<span id="drag_${index}" data-${dataAttr}="${index}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${text}</span>`);
 
 }
+function addDragableBadge2($selector, properties){
+	//text: 			The text to display on the badge
+	//dataAttrName: 	The name of the data-attribute
+	//dataAttrValue:	The value to associate with the data-attribute
 
+	$($selector).append(`<span id="draggable_${properties.dataAttrValue}" data-${properties.dataAttrName}="${properties.dataAttrValue}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${properties.text}</span>`);
+}
 
 
 /**
@@ -645,7 +676,8 @@ const graphTable = {
  */
 function dragStart(ev){
 	 // Add the target element's id to the data transfer object
-	 ev.dataTransfer.setData("text", ev.target.id);
+	 //debug(1, ev)
+	 ev.dataTransfer.setData("draggableElement", ev.target.id);
 }
 
 function dragOver(ev) {
@@ -655,7 +687,7 @@ function dragOver(ev) {
 function dragDrop(ev,el) {
 	ev.preventDefault();
 	// Get the id of the target and add the moved element to the target
-	const data = ev.dataTransfer.getData("text");
+	const data = ev.dataTransfer.getData("draggableElement");
 	el.appendChild(document.getElementById(data));
 }
 

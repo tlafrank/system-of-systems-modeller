@@ -16,17 +16,63 @@ exports.switch = (req,res) => {
 
 	var queryString;
 
+	if (req.body.type == 'DataExchange'){
+		
+		if (req.body.id_dataExchange > 0) { //Update existing system
+			//Update system details
+			queryString = sql.format(`UPDATE dataExchanges SET name = ?, description = ? WHERE id_dataExchange = ?;`, [req.body.name, req.body.description, req.body.id_dataExchange]);
+		} else {
+			//Add new system
+			queryString = sql.format(`INSERT INTO dataExchanges (name, description) VALUES (?,?);`, [req.body.name, req.body.description]);
+		}
+	}
+
 
 	//******************************** System ****************************************
 	if (req.body.type == 'System'){
-		if (req.body.id_system > 0) {
-			//Update existing feature
-			queryString = sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, tags = ?, reference = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description,
-				req.body.tags, req.body.reference, req.body.id_system]);
+		//Manage tag list
+		var tagArr = req.body.tags.split(',');
+		
+		queryString = sql.format('START TRANSACTION;')
+		if (req.body.id_system > 0) { //Update existing system
+			//Update system details
+			queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description,
+				req.body.reference, req.body.id_system]);
+
+			//Delete existing tags
+			queryString += sql.format(`DELETE FROM tags WHERE id_system = ?;`, req.body.id_system)
+
+			//Add new tags
+			tagArr.forEach((element) => {
+				queryString += sql.format(`INSERT INTO tags (id_system, tag) VALUES (?,?);`, [req.body.id_system, element])
+			})
+
 		} else {
-			//Add new feature
-			queryString = sql.format(`INSERT INTO systems (name, image, description, tags, reference) VALUES (?,?,?,?,?);`, [req.body.name, req.body.image, req.body.description, req.body.tags, req.body.reference]);
+			//Add new system
+			queryString += sql.format(`INSERT INTO systems (name, image, description, reference) VALUES (?,?,?,?);`, [req.body.name, req.body.image, req.body.description, req.body.reference]);
+			queryString += sql.format(`SET @insertID = LAST_INSERT_ID();`)
+
+			//Add new tags
+			tagArr.forEach((element) => {
+				queryString += sql.format(`INSERT INTO tags (id_system, tag) VALUES (@insertID,?);`, element)
+			})
 		}
+		queryString += sql.format('COMMIT;')
+
+	}
+
+	if (req.body.type == 'DeleteSystem'){
+		
+		queryString = sql.format('START TRANSACTION;')
+
+		//Delete existing tags
+		queryString += sql.format(`DELETE FROM tags WHERE id_system = ?;`, req.body.id_system)
+
+		//Delete systems
+		queryString += sql.format(`DELETE FROM systems WHERE id_system = ?;`, req.body.id_system);
+
+		queryString += sql.format('COMMIT;')
+
 	}
 
 	//******************************** Interface ****************************************
