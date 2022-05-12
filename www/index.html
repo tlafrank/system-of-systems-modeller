@@ -61,16 +61,19 @@
 
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Update</a>
-					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 						<!--<a id="nodeConnections" class="dropdown-item" href="#">Node Connections</a> -->
 						<a class="dropdown-item" href="#" onclick="update_system()">Systems</a>
-						<a class="dropdown-item" href="#" onclick="update_interface()">Interfaces</a>
-						<a class="dropdown-item" href="#" onclick="update_features()">Interface Features</a>
-						<a class="dropdown-item" href="#" onclick="update_network()">Networks</a>
-						<a class="dropdown-item" href="#" onclick="update_issues()">Issues</a>
-						<a class="dropdown-item" href="#" onclick="data_exchanges()">Data Exchanges</a>
-						
-					</div>
+						<li><hr class="dropdown-divider"></li>
+						<li><a class="dropdown-item" href="#" onclick="update_interface()">Interfaces</a></li>
+						<li><a class="dropdown-item" href="#" onclick="update_network()">Networks</a></li>
+						<li><a class="dropdown-item" href="#" onclick="update_issues()">Issues</a></li>
+						<li><hr class="dropdown-divider"></li>
+						<li><a class="dropdown-item" href="#" onclick="update_subsystems()">Subsystems</a></li>
+						<li><a class="dropdown-item" href="#" onclick="update_technologies()">Link Technologies</a></li>
+						<li><a class="dropdown-item" href="#" onclick="data_exchanges()">Data Exchanges</a></li>
+						<li><a class="dropdown-item" href="#" onclick="update_systemLinks()">Link Systems</a></li>
+					</ul>
 				</li>
 
 				<li class="nav-item dropdown">

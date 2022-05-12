@@ -41,13 +41,13 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`subsystems` (
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`features`
+-- Table `db_sosm`.`technologies`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`features` (
-  `id_feature` INT NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `db_sosm`.`technologies` (
+  `id_technology` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NULL,
   `description` LONGTEXT NULL,
-  PRIMARY KEY (`id_feature`))
+  PRIMARY KEY (`id_technology`))
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
@@ -58,7 +58,6 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`interfaces` (
   `name` VARCHAR(45) NULL,
   `image` VARCHAR(45) NULL,
   `description` LONGTEXT NULL COMMENT 'A brief description of the interface',
-  `features` LONGTEXT NULL,
   `reference` VARCHAR(45) NULL,
   PRIMARY KEY (`id_interface`),
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE)
@@ -70,16 +69,17 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `db_sosm`.`networks` (
   `id_network` INT NOT NULL AUTO_INCREMENT,
-  `id_feature` INT NOT NULL,
+  `id_technology` INT NOT NULL,
   `name` VARCHAR(45) NULL,
+  `designation` VARCHAR(45) NULL,
   `image` VARCHAR(45) NULL,
   `class` INT NULL DEFAULT 0,
   `description` LONGTEXT NULL,
   PRIMARY KEY (`id_network`),
-  INDEX `fk_id_feature_idx` (`id_feature` ASC) VISIBLE,
-  CONSTRAINT `fk_id_feature`
-    FOREIGN KEY (`id_feature`)
-    REFERENCES `db_sosm`.`features` (`id_feature`)
+  INDEX `fk_id_technology_idx` (`id_technology` ASC) VISIBLE,
+  CONSTRAINT `fk_id_technology`
+    FOREIGN KEY (`id_technology`)
+    REFERENCES `db_sosm`.`technologies` (`id_technology`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -138,6 +138,7 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`SINMap` (
   `id_SINMap` INT NOT NULL AUTO_INCREMENT,
   `id_SIMap` INT NULL,
   `id_network` INT NULL,
+  `category` VARCHAR(45),
   PRIMARY KEY (`id_SINMap`),
   INDEX `fk_id_systemInterface_idx` (`id_SIMap` ASC) VISIBLE,
   INDEX `fk_id_network_idx` (`id_network` ASC) VISIBLE,
@@ -149,6 +150,28 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`SINMap` (
   CONSTRAINT `fk_SINMap_network`
     FOREIGN KEY (`id_network`)
     REFERENCES `db_sosm`.`networks` (`id_network`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+-- -----------------------------------------------------
+-- Table `db_sosm`.`TIMap`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `db_sosm`.`TIMap` (
+  `id_TIMap` INT NOT NULL AUTO_INCREMENT,
+  `id_interface` INT NULL,
+  `id_technology` INT NULL,
+  PRIMARY KEY (`id_TIMap`),
+  INDEX `id_interface_idx` (`id_interface` ASC) VISIBLE,
+  INDEX `id_technologies_idx` (`id_technology` ASC) VISIBLE,
+  CONSTRAINT `fk_TIMap_interface`
+    FOREIGN KEY (`id_interface`)
+    REFERENCES `db_sosm`.`interfaces` (`id_interface`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_TIMap_technology`
+    FOREIGN KEY (`id_technology`)
+    REFERENCES `db_sosm`.`technologies` (`id_technology`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

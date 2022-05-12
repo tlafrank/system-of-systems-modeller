@@ -13,24 +13,23 @@ function manageTags(){
  * @description Update the systems by choosing a system from a list
  * 
  */
-function update_system(){
-	updateSystemModal({ id_system: 1 });
-}
+function update_system(){ updateSystemsModal(1) }
+function update_subsystems(){ updateSubsystemsModal() }
 
 /**
  * @description Nav bar > Update > Interface. 
  * 
  */
-function update_interface(){
-	updateInterfaceModal({ id_interface: 1 });
-}
+function update_interface(){ updateInterfaceModal();}
+function update_systemLinks(){ updateSystemLinksModal() }
+
 
 /**
  * @description Nav bar > Update > Features
  * 
  */
-function update_features(){
-	updateFeaturesModal();
+function update_technologies(){
+	updateTechnologiesModal();
 
 }
 
@@ -39,7 +38,7 @@ function update_features(){
  * 
  */
 function update_network(){
-	updateNetworkModal({id_network: 1});
+	updateNetworkModal();
 }
 
 function update_issues(){

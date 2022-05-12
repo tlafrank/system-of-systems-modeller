@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
     fs.createReadStream('index.html').pipe(res);
 })
 
-
+app.use('/favicon.ico', express.static('favicon.ico'));
 app.use('/images', express.static('images'));
 app.use('/assets', express.static('assets'));
 

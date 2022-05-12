@@ -230,23 +230,27 @@ function getFormElement($selector, properties){
 function setFormElement($selector, properties, value){
 	switch (properties.type){
 		case 'droppable':
-			debug(1, value)
 			var sourceElements = document.querySelectorAll(properties.$source + ' span');
-			value.forEach((element) => {
-				//Iterate through each source element and move to the target selector's .card-body
-				sourceElements.forEach((element2) => {
-					if (element2.dataset[properties.dataAttr] == element[properties.dataAttr]){
-						$($selector + ' .card-body').append(element2);
-					}
-				})
-			})
-
+			if (value) {
+				value.forEach((element) => {
+					//Iterate through each source element and move to the target selector's .card-body
+					sourceElements.forEach((element2) => {
+						if (element2.dataset[properties.dataAttr] == element[properties.dataAttr]){
+							$($selector + ' .card-body').append(element2);
+						}
+					})
+				})				
+			}
 		break;
 		case 'select':
+			//Assumes select has been filled previously
+			//debug(1, 'in setForElement for a select: ' + properties.id, properties, value)
+			$(`#${properties.id} option[data-${properties.dataAttr}="${value}"]`).prop('selected', true);
+
+
 			if (value == '')
 			$($selector).empty();
 			break;
-
 		case 'number':
 
 		break;
@@ -333,14 +337,11 @@ function addFormElement(selector, properties){
 
 			if (properties.options) {
 				properties.options.forEach((element) => {
-					debug(properties.value +  ' ' + element)
 					if (properties.value == element){
-						debug('Match')
 						formElement += `<option selected>${element}</option>`;
 					} else {
 						formElement += `<option>${element}</option>`;
 					}
-					
 				})
 			}
 			formElement += `</select></div>`;
@@ -348,7 +349,6 @@ function addFormElement(selector, properties){
 		case 'option':
 			//Load options into the select identified by selector
 			if (properties.data){
-				debug(properties.data.name)
 				$(selector).append(`<option data-${properties.data.name}="${properties.data.value}">${properties.label}</option>`)
 			} else {
 				$(selector).append(`<option>${properties.label}</option>`)
@@ -609,7 +609,6 @@ function addDragableBadge2($selector, properties){
  */
 async function populateSelect(selector, postData, dataAttributeName, callback){
 
-	
 	await $.post('select.json', postData, async (result) => {
 		debug('Passed to select.json: ', postData);
 		debug('Response: ', result)
@@ -627,7 +626,6 @@ async function populateSelect(selector, postData, dataAttributeName, callback){
 					addFormElement(selector, {type: 'option', label: element.name})
 				}
 			})
-			//setTimeout(function(){ debug("timeout completed"); }, 3000);
 
 
 			if (callback) { callback() };
@@ -647,28 +645,6 @@ function getReferenceURL(reference){
 	return `./assets/${reference}`
 }
 
-/**
- * @description  
- * 
- */
-const graphTable = {
-	System: [
-		{ label: 'System Name', type: 'text', columnName: 'name' },
-		{ label: 'Quantities', type: 'text', columnName: '' },
-		{ label: 'Block Diagram', type: 'link', columnName: 'reference'},
-		{ label: 'Description', type: 'text', columnName: 'description' },
-		
-	],
-	SystemInterface: [
-		{ label: 'Interface Name', type: 'text', columnName: 'interfaceName' },
-		{ label: 'Installed In', type: 'text', columnName: 'systemName' },
-		{ label: 'Description', type: 'text', columnName: 'description' },	
-	],
-	Network: [
-		{ label: 'Network Name', type: 'text', columnName: 'name' },
-		{ label: 'Description', type: 'text', columnName: 'description' },	
-	],
-}
 
 /**
  * @description Drag/Drop Handlers
@@ -708,9 +684,8 @@ function breadcrumbs($selector, details){
 			breadcrumbArr.push({ name: 'Interface', active: true, data: []})
 		break;
 		case 'SystemInterface':
-			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
-			//breadcrumbArr.push({ name: 'System Interface', active: true, data: [{ key: 'id_SIMap', value: details.id_SIMap }, {key: 'id_system', value: details.id_system}]})
-			breadcrumbArr.push({ name: 'System Interface', active: true, data: [] })
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemsModal', data: [details.id_system]})
+			breadcrumbArr.push({ name: 'System Interfaces', active: true, data: [] })
 		break;
 		case 'Network':
 			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
@@ -726,40 +701,38 @@ function breadcrumbs($selector, details){
 			breadcrumbArr.push({ name: 'Issue', active: true, data: []})
 		break;
 		case 'Quantities':
-			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
-			//breadcrumbArr.push({ name: 'System Interface', active: true, data: [{ key: 'id_SIMap', value: details.id_SIMap }, {key: 'id_system', value: details.id_system}]})
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemsModal', data: [{ key: 'id_system', value: details.id_system }], id: details.id_system})
 			breadcrumbArr.push({ name: 'System Quantities', active: true, data: [] })
+		break;
+		case 'AssignSubsystems':
+			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemsModal', data: [details.id_system]})
+			breadcrumbArr.push({ name: 'Assign Subsystems', active: true, data: [] })
 		break;
 		default:
 			debug(`Breadcrumb switch default. Shouldn't make it here`)
 	}
 
-	/*
-		case 'System':
-			updateSystemModal(selectedNode.id_system)
-			break;
-		case 'SystemInterface':
-			debug(selectedNode)
-			updateSystemInterfacesModal({ id_system: selectedNode.id_system, id_SIMap: selectedNode.id_SIMap })
-			break;
-		case 'Network':
-			updateNetworkModal(selectedNode.id_network);
-			break;
-	*/
-	
-
 	//Produce the HTML
 	breadcrumbArr.forEach((element) => {
-		var paramData = '{ '
+		/*var paramData = '{ '
 		element.data.forEach((element2) => {
 			paramData += `${element2.key}: ${element2.value},`
 		})
 		paramData += '}'
+		
 
 		if (element.active){
 			breadcrumbHtml += `<li class="breadcrumb-item active" aria-current="page">${element.name}<li>`;
 		} else {
 			breadcrumbHtml += `<li class="breadcrumb-item"><a href="#" onclick="${element.module}(${paramData})">${element.name}</a></li>`;
+		}
+		*/
+		//debug(1, 'breadcrumb:', element)
+
+		if (element.active){
+			breadcrumbHtml += `<li class="breadcrumb-item active" aria-current="page">${element.name}<li>`;
+		} else {
+			breadcrumbHtml += `<li class="breadcrumb-item"><a href="#" onclick="${element.module}(${element.data[0]})">${element.name}</a></li>`;
 		}
 
 	})
@@ -788,4 +761,277 @@ function controlState(toEnable, toDisable){
 			$(element).prop('disabled', true);
 		})
 	}
+}
+
+
+function prepareModal(title, empty = true){
+	if (empty){
+		$('#mainModal .modal-body').empty();
+		$('#mainModal .modal-body').append('<form></form>');
+		$('#mainModal .modal-footer').html('<div class="warning-holder"></div>');
+		$('#mainModalTitle').text(title);
+		$('#mainModal').modal('show');	
+	} else {
+		$('#mainModal .warning-holder').empty();
+	}
+}
+
+//Populate the primary select for the modal
+async function populatePrimarySelect(callback, properties){
+
+	let subjectSelectExists = false;
+	debug(1, form[properties.formReference][0].type)
+	//Only process a select if it appears as the first entry in the form's definition
+	if (form[properties.formReference][0].type == "select"){
+		var subjectSelect = `#${form[properties.formReference][0].id}`
+		subjectSelectExists = true;
+	}
+	
+	var postData = { type: properties.postType }
+
+	//Add additional postData, if present
+	if (typeof properties.postData != 'undefined'){
+		properties.postData.forEach((element) => {
+			postData[element.key] = element.value;
+		})
+	}
+
+	await $.post('select.json', postData, (result) => {
+		debug(2, 'Passed to select.json: ', postData);
+		debug(2, 'Response: ', result)
+
+		if (result.msg){
+			//An error was passed
+			callback(-1, {info: 'failure', msg: `There was an error. Check the console.`});
+		} else {
+			if (subjectSelectExists){ //Handle populating of the select
+				result.forEach((element) => {
+					//Populate the primary select on the page
+					$(subjectSelect).append(`<option data-${properties.key}="${element[properties.key]}">${element.name}</option>`)
+					
+					//Check if the current item should be populated across the remaining fields
+					if (properties.subjectId == element[properties.key]){
+						
+						$(`#${form[properties.formReference][0].id} option[data-${properties.key}="${element[properties.key]}"]`).prop('selected', true);
+
+						//Populate the form
+						form[properties.formReference].forEach((element2) => {
+							if (element2.columnName){
+								setFormElement('#' + element2.id, element2, element[element2.columnName]) 
+							}
+						})
+					}
+				})
+				//Event: Select changes
+				$(subjectSelect).unbind();
+				$(subjectSelect).change(() => {
+					$('#mainModal').modal('hide');
+					callback($(`#${form[properties.formReference][0].id} option:selected`).attr(`data-${properties.key}`))
+				})
+			} else { //Populating of a select is unnecessary
+				result.forEach((element) => {
+					//Populate the form
+					form[properties.formReference].forEach((element2) => {
+						if (element2.columnName){ 
+							setFormElement('#' + element2.id, element2, element[element2.columnName]) 
+						}
+					})
+				})
+			}
+		}
+	})		
+}
+
+function deleteEntry(callback, properties){
+
+	//Handle delete confirmation
+		
+
+
+
+	const postData = { type: 'Delete' + properties.postType }
+
+	//Check if form submission includes an ID to delete
+	if(properties.subjectId > 0){
+		postData[properties.key] = properties.subjectId
+	} else {
+		callback(0, {info: 'failure', msg: `There was an error. An ID is required to delete and entry.`})
+	}
+
+	//Load issue details into postData
+	form[properties.formReference].forEach((element) => {
+		if (element.columnName){ postData[element.columnName] = getFormElement('#' + element.id, element) }
+	})
+	
+	//Submit the data
+	$.post('update.json', postData, (result) => {
+		debug(2,'Passed to update.json: ', postData);
+		debug(2,'Response: ', result)
+
+		//Check the result
+		if (result.msg){
+			//An error was passed
+			callback(properties.subjectId,{info: 'failure', msg: `There was an error. Check the console.`});
+		} else {
+			//Check if entry was a new entry
+			if (result.affectedRows == 1){
+				//Deletion was successful
+				$('#mainModal').modal('hide');
+				callback(1, {info: 'success', msg: `The '${postData.name}' record was successfully deleted.`});
+			}
+		}
+	})
+}
+
+
+function saveEntry(callback, properties){
+
+	const postData = { type: properties.postType }
+
+	//Check if form submission is an update
+	if(properties.subjectId > 0){ postData[properties.key] = properties.subjectId }
+
+	//Load form details into postData
+	form[properties.formReference].forEach((element) => {
+		if (element.columnName){ postData[element.columnName] = getFormElement('#' + element.id, element) }
+	})
+
+	//Load any additional data into postData
+	debug(1,properties)
+	if (properties.postData){
+		properties.postData.forEach((element) => {
+			postData[element.key] = element.value;
+		})		
+	}
+
+	//Submit the data
+	$.post('update.json', postData, (result) => {
+		debug(2,'Passed to update.json: ', postData);
+		debug(2,'Response: ', result)
+
+		//Check the result
+		if (result.msg){
+			//An error was passed
+			callback(properties.subjectId,{info: 'failure', msg: `There was an error. Check the console.`});
+		} else {
+			//Check if entry was a new entry
+			if (result.insertId == 0){
+				//Submission was an update
+				$('#mainModal').modal('hide');
+				callback(properties.subjectId, {info: 'success', msg: `The '${postData.name}' record was successfully updated.`});
+				
+			} else {
+				//Submission was a new interface
+				callback(result.insertId, {info: 'success', msg: `The '${postData.name}' record was successfully added.`});
+			}
+		}
+	})
+}
+
+
+
+function lockControlsOnUpdate(formDetails, lock = true){
+
+	formDetails.forEach((element) => {
+		switch (element.type){
+			case 'buttons':
+				element.buttons.forEach((element2) => {
+					if (element2.onUpdate == 'lock'){ 
+						$(`#${element2.id}`).prop('disabled', lock)
+					}
+				})
+			break;
+				case 'container':
+					$('#' + element.id).children().prop('disabled', lock)
+			break;
+			default:
+				if (element.onUpdate == 'lock'){
+					$(`#${element.id}`).prop('disabled', lock);
+				}				
+		}
+	})
+}
+
+
+function updateEvents(formDetails, callback){
+	formDetails.forEach((element) => {
+		switch (element.type){
+			case 'text':
+			case 'textarea':
+				$('#' + element.id).on('input',() => {
+					callback(formDetails)
+					controlState(['#mainModalSubmit'],['#mainModalAddNew','#mainModalDelete'])
+				})
+			break;
+			case 'droppable':
+				$('#' + element.id).on('drop', () => {
+					debug(1,'drop fired')
+					callback(formDetails)
+					controlState(['#mainModalSubmit'],['#mainModalAddNew','#mainModalDelete'])
+				})
+			break;
+			case 'select':
+			break;
+			default:
+		}
+	})
+}
+
+
+
+
+/**
+ * @description Provides a common layout when showing a graphical depection of interfaces installed in a system
+ * 
+ * @param  {string} $selector The insert location of the element
+ * @param  {name, image} left The left item, generally an interface
+ * @param  {name, image} right The right itme, generally a system
+ * @param  {boolean} prepend True if result should prepend to $selector. False appends.
+ */
+ function installedInModalInsert($selector,left,right,prepend){
+
+	var response = `<div class="row text-center">
+		<div class="col-sm">
+			<h5>${left.name}</h5>
+			<img src="${imagePath + left.image}" width="100px" height="100px">
+		</div>
+		<div class="col-sm mt-5">
+			<h5>Installed In<br><h3>&#8594</h3></h5>
+		</div>
+		<div class="col-sm">
+			<h5>${right.name}</h5>
+			<img src="${imagePath + right.image}" width="100px" height="100px">
+		</div>
+	</div>`
+
+	if (prepend){
+		$($selector).prepend(response)
+	} else {
+		$($selector).append(response)
+	}
+}
+
+
+function placeInterfaceButtons($selector, row, id_system, id_SIMap, callback){
+	//Create the button element for each interface installed into the system
+	addIconButton($selector, row.image, row.name, {name: 'id_SIMap', value: row.id_SIMap});
+
+	//Select the interface if it matches
+	if (id_SIMap == row.id_SIMap){
+		$($selector + ' button:last-of-type').removeClass('btn-secondary').addClass('btn-primary');
+	}
+
+	//Event: Interface Button
+	$($selector + ' button:last-of-type').on( 'click', (event) => {
+
+		//Toggle the selected interface button styling
+		$($selector + ' button').removeClass("btn-primary").addClass("btn-secondary");
+		$(event.currentTarget).removeClass('btn-secondary').addClass('btn-primary');
+
+		//Update the system object with the in-focus id_SIMap
+		//id_SIMap = parseInt($(event.currentTarget).attr('data-id_SIMap'));
+
+		//Populate the additional details
+		callback(id_system, null, row.id_SIMap)
+	});
 }
