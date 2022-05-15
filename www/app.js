@@ -5,6 +5,7 @@ const port = 3000;
 
 const select = require('./serverSide/select');
 const graph = require('./serverSide/graph');
+const chart = require('./serverSide/chart');
 const update = require('./serverSide/update');
 const backup = require('./serverSide/backup');
 
@@ -28,7 +29,6 @@ app.use('/css', express.static('css'));
 app.use('/clientSide', express.static('clientSide'));
 //app.use('/classes', express.static('classes'));
 
-
 app.use(bodyParser.urlencoded({ extended: true }));
 
 //Add or update nodes and features
@@ -40,6 +40,7 @@ app.post('/update.json', update.switch);
 //Basic select statements
 app.post('/select.json', select.switch)
 app.post('/graph.json', graph.switch)
+app.post('/chart.json', chart.switch)
 
 //Generate all the insert statements required to replicate the database
 app.get('/backup.txt', backup.run)

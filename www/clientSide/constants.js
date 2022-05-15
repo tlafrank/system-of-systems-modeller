@@ -8,32 +8,27 @@ const form = {
 	],
 	
 	subsystems: [
-		{ type: 'select', id: 'subsystemSelect', label: 'Existing Subsystems', onUpdate: 'lock'},
+		{ type: 'select', id: 'subsystemSelect', label: 'Existing Subsystems', onUpdate: 'lock', primary: true},
 		{ type: 'text', id: 'subsystemName', label: 'Subsystem Name', columnName: 'name'},
 		{ type: 'textarea', id: 'subsystemDescription', label: 'Subsystem Description', columnName: 'description'},
 	],
 	dataExchanges: [
-		{ type: 'select', id: 'dataExchangeSelect', label: 'Existing Data Exchanges', onUpdate: 'lock'},
+		{ type: 'select', id: 'dataExchangeSelect', label: 'Existing Data Exchanges', onUpdate: 'lock', primary: true},
 		{ type: 'text', id: 'dataExchangeName', label: 'Data Exchange Title', columnName: 'name'},
 		{ type: 'textarea', id: 'dataExchangeDescription', label: 'Data Exchange Description', columnName: 'description'},
 
 	],
 	issue: [
-		{ type: 'select', id: 'interfaceSelect', label: 'Interfaces'},
-		{ type: 'select', id: 'issueSelect', label: 'Existing Interface Issues'},
+		{ type: 'select', id: 'interfaceSelect', label: 'Interfaces', primary: true},
+		{ type: 'select', id: 'issueSelect', label: 'Existing Interface Issues', onUpdate: 'lock'},
 		{ type: 'text', id: 'issueTitle', label: 'Issue Title', columnName: 'name'},
 		{ type: 'droppable', id: 'affectedSystems', label: 'Systems affected by this issue', columnName: 'affectedSystems', source: 'data-attr', attr: 'id_system' },
 		{ type: 'droppable', id: 'unaffectedSystems', label: 'Other systems which implement this interface' },
-		{ type: 'note', text: 'Issue severity'},
-		{ type: 'slider', text: 'Issue severity', max: 6 },
-		{ type: "trafficLightRadio", id: 'issueSeverity', columnName: 'severity'},
+		//{ type: 'note', text: 'Issue severity'},
+		{ type: 'slider', id:'issueSeverity', text: 'Issue severity', max: 6, columnName: 'severity'},
+		//{ type: "trafficLightRadio", id: 'issueSeverity', columnName: 'severity'},
 		{ type: 'textarea', id: 'issueDescription', label: 'Issue', columnName: 'issue'},
 		{ type: 'textarea', id: 'issueResolution', label: 'Proposed Resolution', columnName: 'resolution'},
-
-
-		{ type: 'buttons', buttons: [
-			//{ id: 'mainModalSystemInterface', label: 'Return to System Interfaces'},
-		]}
 	],
 	tags: [
 		{ type: 'droppable', id: 'availableTags', label: 'Availaible Tags' },
@@ -42,7 +37,7 @@ const form = {
 	],
 	
 	system: [
-		{ type: 'select', id: 'mainModalSystemSelect', label: 'Existing Systems', onUpdate: 'lock' },
+		{ type: 'select', id: 'mainModalSystemSelect', label: 'Existing Systems', onUpdate: 'lock', primary: true},
 		{ type: 'img', id: 'mainModalImage', columnName: 'image', onUpdate: 'no change'},
 		{ type: 'heading', id: 'mainModalSystemName', align: 'center', columnName: 'name', onUpdate: ''},
 		{ type: 'text', id: 'mainModalName', label: 'Name', columnName: 'name', onUpdate: ''},
@@ -60,19 +55,12 @@ const form = {
 		]}
 	],
 	interface: [
-		{ type: 'select', id: 'mainModalInterfaceSelect', label: 'Existing Interfaces', onUpdate: 'lock' },
+		{ type: 'select', id: 'mainModalInterfaceSelect', label: 'Existing Interfaces', onUpdate: 'lock', primary: true},
 		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
 		{ type: 'heading', id: 'mainModalInterfaceName', align: 'center', columnName: 'name' },
 		{ type: 'text', id: 'mainModalName', label: 'Name', columnName: 'name'},
-
 		{ type: 'droppable', id: 'availableTechnologies', label: 'Available Technologies' },
 		{ type: 'droppable', id: 'attachedTechnologies', label: 'Interface Technologies' },
-		//, columnName: 'affectedSystems', source: 'data-attr', attr: 'id_technology'
-
-		//{ type: 'select', id: 'mainModalFeaturesAvailable', label: 'Available Features', selectType: 'featuresAvailable', multiple: true},								//SelectType may be unnecessary
-		//{ type: 'button', id: 'mainModalFeaturesAddButton', label: 'Attach Feature', fromId: 'nodeModalFeaturesAvailable', toId: 'nodeModalFeaturesAttached'},
-		//{ type: 'button', id: 'mainModalFeaturesRemoveButton', label: 'Unattach Feature', fromId: 'nodeModalFeaturesAttached', toId: 'nodeModalFeaturesAvailable'},
-		//{ type: 'select', id: 'mainModalFeaturesAttached', label: 'Attached Features', selectType: 'featuresAttached', multiple: true},
 		{ type: 'textarea', id: 'nodeDescription', label: 'Description', columnName: 'description'},
 		{ type: 'buttons', buttons: [
 			{ id: 'iconChooserButton', label: 'Choose Icon'},
@@ -80,18 +68,17 @@ const form = {
 
 	],
 	systemInterface: [
-		
 		{ type: 'img', id: 'mainModalSystemImage', columnName: 'image' },
 		{ type: 'heading', id: 'mainModalSystemName', align: 'center' },
-		{ type: 'select', id: 'mainModalInterfaceSelect', label: 'Available Interfaces' },
+		{ type: 'select', id: 'mainModalInterfaceSelect', label: 'Available Interfaces', primary: true},
 		{ type: 'button', id: 'mainModalInstallInterfaceButton', label: '&#8595 Install Interface &#8595', align: 'centre'},
 		{ type: 'container', id: 'mainModalInstalledInterfaceContainer' },
 		{ type: 'note', text: 'Select an interface to access additional details:'},
-		{ type: "checkbox", id: 'mainModalPropsedInterface', label: 'Proposed only?', columnName: 'isProposed', additional: true},
+		//{ type: "checkbox", id: 'mainModalPropsedInterface', label: 'Proposed only?', columnName: 'isProposed', additional: true},
 		{ type: 'textarea', id: 'SIDescription', label: 'Description', columnName: 'description', additional: true},
-		{ type: 'buttons', buttons: [
-			{ id: 'assignNetworksButton', label: 'Map Networks'},
-		]}
+		//{ type: 'buttons', buttons: [
+		//	{ id: 'assignNetworksButton', label: 'Map Networks'},
+		//]}
 	],
 	systemQuantities: [
 		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
@@ -104,15 +91,9 @@ const form = {
 			{ id: 'removeLastFieldButton', label: 'Remove Last Field'},
 		]}
 	],
-/*	mapNetwork: [
-		{ type: 'select', id: 'mainModalNetworkSelect', label: 'Compatible Networks' },
-		{ type: 'button', id: 'mainModalNetworkAttachButton', label: 'Attach to Network' },
-		{ type: 'container', id: 'mainModalNetworkContainer' },
-		{ type: 'note', text: 'Select a network to access additional details:'},
-	],*/
 
 	linkSystems: [
-		{ type: 'select', id: 'mainModalSystemSelect', label: 'Systems', onUpdate: 'lock'},
+		{ type: 'select', id: 'mainModalSystemSelect', label: 'Systems', onUpdate: 'lock', primary: true},
 		{ type: 'note', text: `This form is used to map links to system interfaces to identify communications paths between systems.`},
 		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
 		{ type: 'heading', id: 'mainModalSystemName', align: 'center', columnName: 'name' },
@@ -124,7 +105,7 @@ const form = {
 		{ type: 'droppable', id: 'incapableLinks', label: 'Incapable Links', columnName: 'incapableLinks', source: 'data-attr', attr: 'id_network' },
 	],
 	network: [
-		{ type: 'select', id: 'mainModalNetworkSelect', label: 'Existing Links' },
+		{ type: 'select', id: 'mainModalNetworkSelect', label: 'Existing Links', onUpdate: 'lock', primary: true },
 		{ type: 'img', id: 'mainModalImage', columnName: 'image'},
 		{ type: 'heading', id: 'mainModalNetworkName', align: 'center' },
 		{ type: 'text', id: 'mainModalName', label: 'Name', columnName: 'name'},
@@ -136,7 +117,7 @@ const form = {
 		]}
 	],
 	technologies: [
-		{ type: 'select', id: 'mainModalTechnologySelect', label: 'Link Technologies', onUpdate: 'lock' },
+		{ type: 'select', id: 'mainModalTechnologySelect', label: 'Link Technologies', onUpdate: 'lock', primary: true },
 		{ type: 'text', id: 'mainModalName', label: 'Name', columnName: 'name'},
 		{ type: 'textarea', id: 'mainModalDescription', label: 'Description', columnName: 'description'},
 	],
@@ -144,13 +125,13 @@ const form = {
 
 const labels = {
 	severity: [
-		{index: 6, label: 'informational', description: 'Non-issue. For information only.'},
-		{index: 5, label: 'notice', description: 'For notice and tracking only.'},
-		{index: 4, label: 'warning', description: 'An issue that is isolated to a small subset of the overall system.'},
-		{index: 3, label: 'error', description: 'An issue that has a limited impact on the overall system.'},
-		{index: 2, label: 'critical', description: 'An issue that has a wide impact on the overall system.'},
-		{index: 1, label: 'alert', description: 'An issue that has a detrimental impact on the overall system.'},
-		{index: 0, label: 'emergency', description: 'An issue that renders the overall system inoperable.'},
+		{index: 0, label: 'Information', description: 'Non-issue. For information only.'},
+		{index: 1, label: 'Notice', description: 'For notice and tracking only.'},
+		{index: 2, label: 'Warning', description: 'An issue that is isolated to a small subset of the overall system.'},
+		{index: 3, label: 'Error', description: 'An issue that has a limited impact on the overall system.'},
+		{index: 4, label: 'Critical', description: 'An issue that has a wide impact on the overall system.'},
+		{index: 5, label: 'Alert', description: 'An issue that has a detrimental impact on the overall system.'},
+		{index: 6, label: 'Emergency', description: 'An issue that renders the overall system inoperable.'},
 	]
 }
 
@@ -172,3 +153,129 @@ const graphTable = {
 		{ label: 'Description', type: 'text', columnName: 'description' },	
 	],
 }
+
+//Cy styling objects
+var cyStyle = [ // the stylesheet for the graph
+
+	{ selector: 'node',
+		style: {
+			'width': '100px',
+			'background-width': '92px',
+			'height': '100px',
+			'background-height': '92px',
+			'background-color': 'white',
+			'background-image': 'data(filename)',
+			'background-fit': 'none',
+			'label': 'data(name)',
+			'border-color': 'black',
+			'border-width': '3px'
+		}
+	},
+	{ selector: '.network',
+		style: {
+			'width': '80px',
+			'background-width': '80px',
+			'height': '80px',
+			'background-height': '80px',
+			'border-color': 'blue',
+			'shape': 'round-octagon'
+		}
+	},
+	{ selector: '.interface',
+		style: {
+			'width': '60px',
+			'background-width': '52px',
+			'height': '60px',
+			'background-height': '52px',
+			'border-color': 'black',
+		}
+	},
+
+	{ selector: '.critical', style: { 'background-color': 'red' }},
+	{ selector: '.warning', style: { 'background-color': '#ffcc00' }},
+	{ selector: '.notice', style: { 'background-color': '#33cc33' }},
+
+	{ selector: '.red', style: { 'line-color': 'red'	}},
+	{ selector: '.blue', style: { 'line-color': 'blue'	}},
+	{ selector: '.amber', style: { 'line-color': 'orange'	}},
+
+	{
+		selector: 'edge',
+		style: {
+			'width': 3,
+			'line-color': '#000',
+			'curve-style': 'bezier',
+		}
+	},
+	{
+		selector: 'edge[name]',
+		style: {
+			'label': 'data(name)',
+			'color': 'black',
+			'text-border-color': 'green',
+			'text-border-opacity': 1,
+			'text-border-width': 2,
+			'line-color': 'orange',
+			
+			'text-background-padding': 1,
+			'text-background-color': 'white',
+			'text-background-opacity': 1,
+		}
+	},
+	//Need to add styling for various subsystem classes
+		
+	{
+		selector: '.class1',
+		style: {
+			'border-color': 'black',
+		}
+	},
+	{
+		selector: '.class2',
+		style: {
+			'border-color': 'orange',
+		}
+	},
+	{
+		selector: '.class3',
+		style: {
+			'text-border-color': 'purple',
+		}
+	},
+	{
+		selector: '.class4',
+		style: {
+			'border-color': 'green',
+		}
+	},
+
+	{
+		selector: '.proposed',
+		style: {
+			'line-style': 'dashed',
+			'line-color': 'grey',
+			'border-style': 'dashed',
+			'border-color': 'grey',
+		}
+	},
+];
+
+const colors = [
+	'#b52626',
+	//'#5e388f',
+	'#b56726',
+	'#1f911f',
+	'#8f840c',
+	'#f5ea7s',
+	'#2b7f7f',
+	'#d34747',
+	'#39a939',
+	'#8c2f88',
+	'#d38647',
+	'#176c6c',
+	'#8f0c0c',
+	'#075656',
+	'#95ae25',
+	'#8f480c',
+	'#0a730a',
+]

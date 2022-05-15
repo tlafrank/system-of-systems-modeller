@@ -186,7 +186,7 @@ exports.switch = (req,res) => {
 			queryString = queryString = sql.format(`UPDATE networks SET name = ?, designation = ?, image = ?, description = ?, id_technology = ? WHERE id_network = ?;`, [req.body.name, req.body.designation, req.body.image, req.body.description, req.body.id_technology, req.body.id_network])
 		} else {
 			//Add new feature
-			queryString = sql.format(`INSERT INTO networks (name, designation, image, description, id_technology) VALUES (?,?,?,?)`, [req.body.name, req.body.designation, req.body.image, req.body.description, req.body.id_technology])
+			queryString = sql.format(`INSERT INTO networks (name, designation, image, description, id_technology) VALUES (?,?,?,?,?)`, [req.body.name, req.body.designation, req.body.image, req.body.description, req.body.id_technology])
 		}
 	}
 

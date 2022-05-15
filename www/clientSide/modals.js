@@ -1,3 +1,10 @@
+//Systems modal doesnt save icon appropriately when changing (form isnt locked out until update is selected)
+
+
+
+
+
+
 /**
  * @description 
  * 
@@ -7,19 +14,18 @@
  * @param {} message
  * @param id_SIMap
  */
-async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
-	debug(1, 'In updateSystemLinksModal() with id_system = ' + id_system + ' and id_SIMap = ' + id_SIMap);
+async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0, newWindow = false){
+	debug(1, 'In updateSystemLinksModal() with id_system = ' + id_system + ' and id_SIMap = ' + id_SIMap + ' and newWindow = ' + newWindow);
 
 	var properties = {
-		postType: 'System',
+		postType: 'SystemNoTags',
 		formReference: 'linkSystems', 
 		key: 'id_system', 
 		subjectId: id_system,
 		//postData: [{key: 'id_system', value: id_system}]
 	}
 
-	if (id_SIMap == 0){
-
+	if (id_SIMap == 0 || newWindow){
 		prepareModal('Link Systems');
 
 		//Add the input fields
@@ -59,6 +65,7 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 
 	//Unlock controls, in case they're locked
 	lockControlsOnUpdate(form[properties.formReference], false)
+	controlState(null,['#mainModalSubmit']);
 
 
 	//$('#mainModalDelete').prop('disabled', true);
@@ -108,8 +115,6 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 
 	}
 
-
-
 	//Events: Changes to controls
 	updateEvents(form[properties.formReference], lockControlsOnUpdate);
 
@@ -127,7 +132,7 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 		})
 
 		$.post("update.json", postData, (result) => {
-			debug('Passed to select.json: ', postData);
+			debug('Passed to update.json: ', postData);
 			debug('Response: ', result)
 
 			if (result.msg){
@@ -140,13 +145,6 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 	});
 }
 
-
-
-
-
-
-
-
 /**
  * @description 
  * 
@@ -158,7 +156,7 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 	debug('In updateSystemInterfacesModal() with id_system = ' + id_system + ' and id_SIMap = ' + id_SIMap)
 
 	var properties = {
-		postType: 'System',
+		postType: 'SystemNoTags',
 		formReference: 'systemInterface', 
 		key: 'id_system', 
 		subjectId: id_system,
@@ -236,6 +234,12 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 
 					//Populate the additional details
 					populateAdditionalDetails();
+
+					//Event: Map Networks button
+					$('#assignNetworksButton').unbind();
+					$('#assignNetworksButton').click(() => {
+						updateSystemLinksModal(id_system, null, id_SIMap, true)
+					});					
 				});
 			})
 			//Select the interface button if a system.id_SIMap was supplied
@@ -304,11 +308,7 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 		});
 	});
 
-	//Event: Map Networks button
-	$('#assignNetworksButton').unbind();
-	$('#assignNetworksButton').click(() => {
-		mapNetworksToSystemInterface(id_system, id_SIMap)
-	});
+
 
 	//Event: Install Interface button
 	$('#mainModalInstallInterfaceButton').unbind();
@@ -403,7 +403,7 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 	debug(1, 'In updateSystemToSubsystemMap()')
 
 	var properties = {
-		postType: 'System',
+		postType: 'SystemNoTags',
 		formReference: 'mapSubsystems', 
 		key: 'id_system', 
 		subjectId: id_system,
@@ -496,7 +496,7 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 	debug('In updateSystemQuantities() with id_system = ' + id_system);
 
 	const properties = {
-		postType: 'System',
+		postType: 'SystemNoTags',
 		formReference: 'systemQuantities', 
 		key: 'id_system',
 		subjectId: id_system,
@@ -634,7 +634,7 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 	debug(1, 'In updateSystemsModal() with id_system = ' + id_system)
 
 	var properties = {
-		postType: 'System',
+		postType: 'SystemNoTags',
 		formReference: 'system', 
 		key: 'id_system',
 		subjectId: id_system
@@ -668,7 +668,7 @@ async function updateSystemLinksModal(id_system = 1, message, id_SIMap = 0){
 
 	} else { //Existing entry
 		await populatePrimarySelect(updateSystemsModal, properties);
-		
+		controlState(null,['#mainModalSubmit'])
 		const postData2 = {
 			type: 'System',
 			id_system: id_system 
@@ -1048,8 +1048,15 @@ async function updateSubsystemsModal(id_subsystem = 1, message){
  * @param id_interfaceIssue
  * @param {} message
  */
-function updateIssuesModal(id_interface, id_interfaceIssue, message){
-	debug(1, 'In updateIssuesModal()')
+async function updateIssuesModal(id_interface = 1, message, id_interfaceIssue = 0){
+	debug(1, `In updateIssuesModal() with id_interface = ${id_interface} & id_interfaceIssue = ${id_interfaceIssue}`)
+
+	var properties = {
+		postType: 'Interface',
+		formReference: 'issue', 
+		key: 'id_interface', 
+		subjectId: id_interface
+	}
 
 	//Prepare the modal
 	prepareModal('Update Interface Issues');
@@ -1058,7 +1065,7 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 	if (message){ addBadge('#mainModal .warning-holder', message) }
 
 	//Add input fields
-	form.issue.forEach((element) => { addFormElement('#mainModal form', element) })
+	form[properties.formReference].forEach((element) => { addFormElement('#mainModal form', element) })
 
 	//Add buttons
 	defaultButtons([
@@ -1068,36 +1075,20 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 		{type: 'close'},
 	])
 
-	if (!id_interface){ var id_interface = 1 };
-	if (!id_interfaceIssue){ var id_interfaceIssue = 0 };
+	//Check if adding a new entry
+	if (id_interface == -1){ //New entry
+		//Disable controls to prevent navigation
+		controlState(null, ['#dataExchangeSelect', '#mainModalAddNew', '#mainModalDelete' ])
+	} else { //Existing entry
+		//Populate interfaces select
+		await populateSelect('#interfaceSelect', {type: 'Interface'}, {attr: 'id_interface', value: id_interface})
+		//Event: Issue select changes
+		$('#interfaceSelect').unbind();
+		$('#interfaceSelect').change(() => {
+			updateIssuesModal($('#interfaceSelect option:selected').attr(`data-id_interface`))
+		})
 
-	//Load the list of interfaces
-	var postData = { type: 'Interface' }
-	$.post('select.json', postData, (result) => {
-		debug(2, 'Passed to select.json: ', postData);
-		debug(2, 'Response: ', result)
-
-		if (result.msg){
-			//An error was passed
-			updateIssuesModal(id_interface, null, {info: 'failure', msg: `There was an error. Check the console.`});
-		} else {
-			//Load the interface select
-			result.forEach((element) => {
-				$('#interfaceSelect').append(`<option data-id_interface="${element.id_interface}">${element.name}</option>`)
-				//If this is the interface that was provided, set this system as the selected option
-				if (id_interface == element.id_interface){ 
-					$(`#interfaceSelect option[data-id_interface="${element.id_interface}"]`).prop('selected', true); 
-				}
-			})
-			//Populate the form
-			updateFormElements();
-		}
-	})
-
-	//Load the data into the relevant fields
-	var updateFormElements = () => {
-		debug(1, 'In updateFormElements()');
-
+		//Populate existing issues select
 		//Empty all fields
 		$('#issueSelect').empty();
 		$('#issueTitle').empty();
@@ -1142,7 +1133,7 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 				if (result[1][0].id_interfaceIssue === null){ //No issues are currently associated with this interface
 
 					//Don't allow data entry until the user selects add new issue
-					controlState(null, ['#mainModalDelete', '#issueSelect', '#issueTitle', '#issueSeverity button', '#issueDescription', '#issueResolution'])
+					controlState(null, ['#mainModalDelete', '#issueSelect', '#issueTitle', '#issueSeverity', '#issueDescription', '#issueResolution'])
 
 					//Disable draggable systems
 					$('#unaffectedSystems span').prop('draggable', false);
@@ -1165,6 +1156,8 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 		}
 	}
 
+
+
 	//Populate fields
 	var populateFields = (interfaceIssue, affectedSystems) => {
 		debug(1, 'in popluateFields');
@@ -1182,7 +1175,16 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 		})
 	}
 
-	//Event: Save issue
+	//Events: Changes to controls
+	updateEvents(form[properties.formReference], lockControlsOnUpdate);
+
+	//Event: Change to exisitng interface issue select
+	$('#issueSelect').unbind();
+	$('#issueSelect').change(() => {
+		updateIssuesModal(id_interface, null, $('#issueSelect option:selected').attr(`data-id_interfaceIssue`))
+	})	
+
+	//Event: Save
 	$('#mainModalSubmit').unbind();
 	$('#mainModalSubmit').click(() => {
 		const postData = {
@@ -1203,23 +1205,23 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 			//Check the result
 			if (result.msg){
 				//An error was passed
-				updateIssuesModal(id_interface, id_interfaceIssue,{info: 'failure', msg: `There was an error. Check the console.`});
+				updateIssuesModal(id_interface,{info: 'failure', msg: `There was an error. Check the console.`}, id_interfaceIssue);
 			} else {
 				//Check if entry was a new entry
 				if (result[1].insertId == 0){
 					//Submission was an update
 					$('#mainModal').modal('hide');
-					updateIssuesModal(id_interface, id_interfaceIssue, {info: 'success', msg: `The '${postData.name}' record was successfully updated.`});
+					updateIssuesModal(id_interface, {info: 'success', msg: `The '${postData.name}' record was successfully updated.`}, id_interfaceIssue);
 					
 				} else {
-					//Submission was a new interface
-					updateIssuesModal(id_interface, result[1].insertId, {info: 'success', msg: `The '${postData.name}' record was successfully added.`});
+					//Submission was a new issue
+					updateIssuesModal(id_interface, {info: 'success', msg: `The '${postData.name}' record was successfully added.`}, result[1].insertId);
 				}
 			}
 		})
 	});
 
-	//Event: Delete issue
+	//Event: Delete
 	$('#mainModalDelete').unbind();
 	$('#mainModalDelete').click(() => {
 
@@ -1240,14 +1242,14 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 			//Check the result																												//Working here, having trouble adding a new system
 			if (result.msg){
 				//An error was passed
-				updateIssuesModal(id_interface, id_interfaceIssue,{info: 'failure', msg: `There was an error. Check the console.`});
+				updateIssuesModal(id_interface, {info: 'failure', msg: `There was an error. Check the console.`}, id_interfaceIssue,);
 			} else {
 				
 				//Check if entry was a new entry
 				if (true){
 					//Delete was successful
 					$('#mainModal').modal('hide');
-					updateIssuesModal(id_interface, 0, {info: 'success', msg: `The record was successfully deleted.`});
+					updateIssuesModal(id_interface, {info: 'success', msg: `The record was successfully deleted.`}, 0);
 				}
 				
 			}
@@ -1255,17 +1257,17 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 		
 	});
 
-	//Event: Interface select changes
-	$('#interfaceSelect').unbind();
-	$('#interfaceSelect').change(() => {
-		updateIssuesModal($('#interfaceSelect option:selected').attr(`data-id_interface`), 0)
-	})
+	//Event: Add
+	$('#mainModalAddNew').unbind();
+	$('#mainModalAddNew').click((event) => {
+		$('#mainModal').modal('hide');
+		updateIssuesModal(id_interface, null, -1);
+		controlState(null, ['#interfaceSelect','#issueSelect', '#mainModalAddNew', '#mainModalDelete' ])
+	})	
 
+	/*
 	//Event: Issue select changes
-	$('#issueSelect').unbind();
-	$('#issueSelect').change(() => {
-		updateIssuesModal(id_interface, $('#issueSelect option:selected').attr(`data-id_interfaceIssue`))
-	})
+
 
 	//Event: Issue select changes
 	$('#affectedSystems, #unaffectedSystems').unbind();
@@ -1278,28 +1280,7 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
 	$('#issueTitle, #issueDescription, #issueResolution').on('input',() => {
 		preventNavigationDuringUpdate();
 	})
-
-	//Event: Traffic light button clicked
-	$('#issueSeverity button').unbind();
-	$('#issueSeverity button').click((event) => {
-		$('#issueSeverity button').removeClass('btn-primary')
-		$(event.currentTarget)
-			.removeClass('btn-light')
-			.addClass('btn-primary')
-		preventNavigationDuringUpdate();
-	});
-
-	//Event: Add New Issue button clicked
-	$('#mainModalAddNew').unbind();
-	$('#mainModalAddNew').click((event) => {
-		$('#mainModal').modal('hide');
-		updateIssuesModal(id_interface, -1);
-		controlState(null, ['#interfaceSelect','#issueSelect', '#mainModalAddNew', '#mainModalDelete' ])
-	})
-
-	var preventNavigationDuringUpdate = () => {
-		controlState(['#mainModalSubmit'], ['#interfaceSelect','#issueSelect', '#mainModalAddNew', '#mainModalDelete'])
-	}
+	*/
 }
 
 /**
@@ -1403,7 +1384,6 @@ function updateIssuesModal(id_interface, id_interfaceIssue, message){
  */
 function settingsModal(message){
 
-
 	//Prepare the modal
 	prepareModal('Settings');
 
@@ -1448,7 +1428,7 @@ function settingsModal(message){
  * @param {} message
  */
 async function updateInterfaceModal(id_interface = 1, message){
-	debug(`In updateInterfaceModal()`)
+	debug(1, `In updateInterfaceModal() with id_interface = ` + id_interface)
 	
 	var properties = {
 		postType: 'Interface',
@@ -1568,8 +1548,8 @@ async function updateInterfaceModal(id_interface = 1, message){
 
 	//Add buttons
 	defaultButtons([
-		{type: 'new', label: 'Add New Network'},
-		{type: 'delete', label: 'Delete Network'},
+		{type: 'new', label: 'Add New Link'},
+		{type: 'delete', label: 'Delete Link'},
 		{type: 'submit', label: 'Update'},
 		{type: 'close'},
 	])

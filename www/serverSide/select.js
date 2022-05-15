@@ -2,7 +2,7 @@ const { format } = require('./db');
 const sql = require('./db');
 
 
-let debugLevel = 2;
+let debugLevel = 3;
 
 //Debug function local to the methods in this file
 function debug(level, msg){
@@ -44,7 +44,11 @@ exports.switch = (req,res) => {
 		//Build the query
 		if (req.body.id_system){ //id_system has been provided
 			//Get system details
-			queryString = sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])			
+			queryString = sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])
+			if (!req.body.noTags){
+				queryString += sql.format(`SELECT * FROM tags WHERE id_system = ?;`,[req.body.id_system])
+			}
+		
 		} else { //No id_system provided
 			queryString = sql.format(`SELECT * FROM systems ORDER BY name;`)
 		}
@@ -56,7 +60,9 @@ exports.switch = (req,res) => {
 		//Build the query
 		if (req.body.id_system){ //id_system has been provided
 			//Get system details
-			//queryString = sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])
+			queryString = sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])
+		} else { //No id_system provided
+			queryString = sql.format(`SELECT * FROM systems ORDER BY name;`)
 		}
 	}
 
@@ -124,7 +130,7 @@ exports.switch = (req,res) => {
 		debug(1, '************************************************* Select.json SystemInterface was called. Value to be determined.')
 		queryString = sql.format(`
 			SELECT systems.id_system, systems.name AS systemName, systems.image AS systemImage, SIMap.id_SIMap, SIMap.isProposed, SIMap.description,
-				interfaces.id_interface, interfaces.name AS interfaceName, interfaces.image AS interfaceImage, interfaces.features
+				interfaces.id_interface, interfaces.name AS interfaceName, interfaces.image AS interfaceImage 
 			FROM systems
 			INNER JOIN SIMap ON systems.id_system = SIMap.id_system
 			INNER JOIN interfaces ON SIMap.id_interface = interfaces.id_interface
@@ -290,29 +296,78 @@ exports.switch = (req,res) => {
 
 	if (req.body.type == 'Issues'){
 		//Build the query
-		switch (req.body.subtype){
-			case 'SystemInterface':
-				queryString = sql.format(`SELECT systems.name AS systemName, issues.severity, interfaces.name AS interfaceName, issues.name AS issueName, issues.issue, issues.resolution, interfaces.description, issues.id_issue, systems.id_system, SIMap.id_SIMap
-				FROM issues
-				LEFT JOIN SIMap
-				ON issues.id_type = SIMap.id_SIMap
-				LEFT JOIN interfaces
-				ON SIMap.id_interface = interfaces.id_interface
-				LEFT JOIN systems
-				ON SIMap.id_system = systems.id_system
-				WHERE issues.type = 'SystemInterface' AND id_issue IN (?)
-				ORDER BY systems.name;`, [req.body.id_issueArr])
-			break;
-			case 'Interface':
-				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Interface' AND id_type = ?;`, [req.body.id_interface])
-			break;
-			case 'Feature':
-				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Feature' AND id_type = ?;`, [req.body.id_feature])
-			break;
-			case 'Network':
-				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Network' AND id_type = ?;`, [req.body.id_network])
-			break;
+		queryString = sql.format(`
+		SET @inputYear = ?;
+		SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
+
+		DROP TABLE IF EXISTS systemsResult, t2, t3;
+
+		#Get the systems present in the provided year
+		CREATE TEMPORARY TABLE systemsResult AS
+			SELECT DISTINCT a.id_system, name, image, a.quantity 
+			FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
+			LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
+			ON a.id_system = b.id_system AND a.year < b.year
+			LEFT JOIN systems
+			ON a.id_system = systems.id_system`, req.body.year);
+
+		//Handle included and excluded tags
+		switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
+			case 3:
+				//Both included and excluded tags have been provided
+				queryString += sql.format(`
+				LEFT JOIN tags
+				ON tags.id_system = a.id_system
+				WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?) AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [includedTags, excludedTags]);
+				break;
+			case 2:
+				//Only included tags have been provided
+				queryString += sql.format(`
+				LEFT JOIN tags
+				ON tags.id_system = a.id_system
+				WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?);`, [includedTags]);
+				break;
+			case 1:
+				//Only excluded tags have been provided
+				queryString += sql.format(`
+				WHERE b.year IS NULL AND a.quantity > 0 AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [excludedTags]);
+				break;
+			case 0:
+				//No tags have been provided
+				queryString += sql.format(`
+				WHERE b.id_system IS NULL AND a.quantity != 0;`)
+			default:
 		}
+
+		queryString += sql.format(`
+		#Get the issues mapped against their impacted systems
+		CREATE TEMPORARY TABLE t2 AS
+			(SELECT interfaces.id_interface, interfaces.name AS interfaceName, interfaceIssues.id_interfaceIssue, interfaceIssues.name AS issueName, interfaceIssues.issue, interfaceIssues.resolution, interfaceIssues.severity,
+				issuesToSystemsMap.id_system
+			FROM interfaces
+			LEFT JOIN interfaceIssues
+			ON interfaces.id_interface = interfaceIssues.id_interface
+			LEFT JOIN issuesToSystemsMap
+			ON interfaceIssues.id_interfaceIssue = issuesToSystemsMap.id_interfaceIssue);
+
+		#Get the interfaces which are represented in the systems available in this particular year
+		CREATE TEMPORARY TABLE t3 AS
+			(SELECT DISTINCT SIMap.id_interface
+			FROM systemsResult
+			LEFT JOIN SIMap
+			ON systemsResult.id_system = SIMap.id_system);
+
+		SELECT DISTINCT t2.id_interface, t2.interfaceName, t2.id_interfaceIssue, t2.issueName, t2.issue, t2.resolution, t2.severity, systemsResult.id_system, systemsResult.name as systemName, systemsResult.quantity
+		FROM t3
+		LEFT JOIN t2
+		ON t3.id_interface = t2.id_interface
+		LEFT JOIN systemsResult
+		ON t2.id_system = systemsResult.id_system
+		WHERE t2.id_interface IS NOT NULL
+		ORDER BY t2.id_interface, t2.id_interfaceIssue;`)
+
+		
+		
 	}
 
 	//******************Other**************** */
@@ -355,8 +410,19 @@ exports.switch = (req,res) => {
 
 	var execute = executeQuery(queryString)
 
-		.then((result) => { 
-			res.json(result) 
+		.then((result) => {
+			switch (req.body.type){
+				case 'InterfaceQuantitiesInYear':
+					res.json(result[4])
+				break;
+				case 'Issues':
+					res.json(result[6])
+				break;
+				default:
+					res.json(result) 
+			}
+
+			
 		})
 		.catch((err) => {
 			debug(3,err);

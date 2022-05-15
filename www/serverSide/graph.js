@@ -34,7 +34,6 @@ exports.switch = (req,res) => {
 
 	DROP TABLE IF EXISTS systemsResult, SIResult, SINResult;
 	
-	#Get the systems present in the provided year
 	CREATE TEMPORARY TABLE systemsResult AS
 		(SELECT DISTINCT a.id_system, name, image, a.quantity
 		FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
@@ -69,6 +68,8 @@ exports.switch = (req,res) => {
 			break;
 		case 0:
 			//No tags have been provided
+			queryString += sql.format(`
+			WHERE b.id_system IS NULL AND a.quantity != 0`)
 		default:
 	}
 
@@ -103,10 +104,19 @@ exports.switch = (req,res) => {
 	ON systemsResult.id_system = SIResult.id_system
 	GROUP BY id_interface, SIResult.id_system
 	ORDER BY id_interface;
+
+	#Networks and the quantity of their connections
+	(SELECT SINResult.id_network, networks.*, COUNT(SINResult.id_network) AS qtyConnections
+	FROM SINResult
+	LEFT JOIN networks
+	ON SINResult.id_network = networks.id_network
+	GROUP BY SINResult.id_network);
+
 	`);
 
 	executeQuery(queryString).then((result) => { 
-		res.json([result[4], result[6], result[8], result[9]]) 
+		//res.json(result);
+		res.json([result[4], result[6], result[8], result[9], result[10]]) 
 	}).catch((err) => {
 		debug(3,err);
 		if (debugLevel == 7){

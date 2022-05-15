@@ -58,8 +58,9 @@ function view_summary(){
 function view_issues(){
 	pageSwitch('issues');
 }
-function view_issues2(){
-	pageSwitch('issues2');
+
+function view_charts(){
+	pageSwitch('charts')
 }
 
 /**
@@ -199,6 +200,10 @@ function hideNode(id, idNo, type){
 	}
 }
 
+function edgeSelected(eventTarget){
+	debug(1,'Edge clicked');
+}
+
 
 //************************************************************ Page Buttons ******************************************************/
 
@@ -209,9 +214,10 @@ function hideNode(id, idNo, type){
 function editNodeButton(){
 	debug(1,'In editNode()');
 	debug(3, 'selectedNode is',selectedNode)
+
 	switch (selectedNode.type){
 		case 'System':
-			updateSystemModal({id_system: selectedNode.id_system})
+			updateSystemsModal(selectedNode.id_system)
 			break;
 		case 'SystemInterface':
 			debug(2,selectedNode)

@@ -191,6 +191,7 @@ function getFormElement($selector, properties){
 		case 'year':		
 		case 'textarea':
 		case 'text':
+		case 'slider':
 			return $($selector).val()
 		break;
 
@@ -220,6 +221,8 @@ function getFormElement($selector, properties){
 	}
 }
 
+
+
 /**
  * @description Sets the value of the form element provided at selector
  * 
@@ -246,8 +249,6 @@ function setFormElement($selector, properties, value){
 			//Assumes select has been filled previously
 			//debug(1, 'in setForElement for a select: ' + properties.id, properties, value)
 			$(`#${properties.id} option[data-${properties.dataAttr}="${value}"]`).prop('selected', true);
-
-
 			if (value == '')
 			$($selector).empty();
 			break;
@@ -256,6 +257,11 @@ function setFormElement($selector, properties, value){
 		break;
 		case 'heading':
 			$($selector).text(value)
+		break;
+		case 'slider':
+			$($selector).val(value)
+			debug(1, properties, value)
+			updateSlider($selector, value)			
 		break;
 		case 'textarea':
 		case 'text':
@@ -313,13 +319,13 @@ function setFormElement($selector, properties, value){
  * 
  * @param  {type, id, label, value, options{} } properties
  */
-function addFormElement(selector, properties){
+function addFormElement($selector, properties){
 
 	var formElement = '';
 
 	switch (properties.type){
 		case 'slider':
-			formElement += `<div><label for="volume">Severity</label><input type="range" id="volume" name="volume" min="0" max="6"></div>`
+			formElement += `<div><label for="${properties.id}">Severity</label><br/><input type="range" id="${properties.id}" name="${properties.id}" min="0" max="${properties.max}"><span id="${properties.id}_desc" class="mx-3"></span></div>`
 		break;
 		case 'droppable':
 			formElement += `<h5 class="my-2">${properties.label}</h5>
@@ -349,9 +355,9 @@ function addFormElement(selector, properties){
 		case 'option':
 			//Load options into the select identified by selector
 			if (properties.data){
-				$(selector).append(`<option data-${properties.data.name}="${properties.data.value}">${properties.label}</option>`)
+				$($selector).append(`<option data-${properties.data.name}="${properties.data.value}">${properties.label}</option>`)
 			} else {
-				$(selector).append(`<option>${properties.label}</option>`)
+				$($selector).append(`<option>${properties.label}</option>`)
 			}
 			
 		break;
@@ -475,7 +481,7 @@ function addFormElement(selector, properties){
 	}
 
 	//Insert the element into the DOM
-	$(selector).append(formElement);
+	$($selector).append(formElement);
 }
 
 
@@ -581,6 +587,15 @@ function swapSelectOptions(buttonSelector, sourceSelector, destinationSelector){
 	}
 }
 
+function addMultipleBadges($selector, badge, json){
+	debug(1, json)
+	var arr = JSON.parse(json)
+	debug(1,arr)
+	arr.forEach((element) => {
+		addBadge($selector, {msg: element, info: badge.info});
+	})
+}
+
 /**
  * @description Add dragable badges to the DOM at $selector
  * 
@@ -603,36 +618,7 @@ function addDragableBadge2($selector, properties){
 }
 
 
-/**
- * @description  
- * 
- */
-async function populateSelect(selector, postData, dataAttributeName, callback){
 
-	await $.post('select.json', postData, async (result) => {
-		debug('Passed to select.json: ', postData);
-		debug('Response: ', result)
-
-		//Check the result
-		if (result.msg){
-			//An error was passed
-
-		} else {
-			
-			result.forEach((element) => {
-				if (dataAttributeName.length > 0){
-					addFormElement(selector, {type: 'option', label: element.name, data: { name: dataAttributeName, value: element[dataAttributeName]}})
-				} else {
-					addFormElement(selector, {type: 'option', label: element.name})
-				}
-			})
-
-
-			if (callback) { callback() };
-			
-		}
-	})
-}
 
 /**
  * @description Returns the URL to enable the user to quickly bring up related documents. Can
@@ -690,10 +676,10 @@ function breadcrumbs($selector, details){
 		case 'Network':
 			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
 			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_SIMap', value: details.id_SIMap }]})
-			breadcrumbArr.push({ name: 'Map Network', active: true, data: []})
+			breadcrumbArr.push({ name: 'Map Links', active: true, data: []})
 		break;
 		case 'UpdateNetwork':
-			breadcrumbArr.push({ name: 'Network', active: true, data: []})
+			breadcrumbArr.push({ name: 'Links', active: true, data: []})
 		break;
 		case 'IssuesSystemInterface':
 			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
@@ -780,7 +766,7 @@ function prepareModal(title, empty = true){
 async function populatePrimarySelect(callback, properties){
 
 	let subjectSelectExists = false;
-	debug(1, form[properties.formReference][0].type)
+	//debug(1, form[properties.formReference][0].type)
 	//Only process a select if it appears as the first entry in the form's definition
 	if (form[properties.formReference][0].type == "select"){
 		var subjectSelect = `#${form[properties.formReference][0].id}`
@@ -840,6 +826,40 @@ async function populatePrimarySelect(callback, properties){
 			}
 		}
 	})		
+}
+
+/**
+ * @description  
+ * 
+ */
+ async function populateSelect($selector, postData, data, callback){
+	 debug(1,data)
+
+	await $.post('select.json', postData, async (result) => {
+		debug('Passed to select.json: ', postData);
+		debug('Response: ', result)
+
+		//Check the result
+		if (result.msg){
+			//An error was passed
+
+		} else {
+			
+			result.forEach((element) => {
+				if (data){
+					debug(1, element)
+					addFormElement($selector, {type: 'option', label: element.name, data: {name: data, value: element[data] }})
+				} else {
+					addFormElement($selector, {type: 'option', label: element.name})
+				}
+			})
+
+			if (data) {	$(`${$selector} option[data-${data.attr}="${data.value}"]`).prop('selected', true) }
+
+			if (callback) { callback() };
+			
+		}
+	})
 }
 
 function deleteEntry(callback, properties){
@@ -947,6 +967,7 @@ function lockControlsOnUpdate(formDetails, lock = true){
 			default:
 				if (element.onUpdate == 'lock'){
 					$(`#${element.id}`).prop('disabled', lock);
+					debug(1, 'update fired')
 				}				
 		}
 	})
@@ -954,6 +975,7 @@ function lockControlsOnUpdate(formDetails, lock = true){
 
 
 function updateEvents(formDetails, callback){
+	
 	formDetails.forEach((element) => {
 		switch (element.type){
 			case 'text':
@@ -961,7 +983,14 @@ function updateEvents(formDetails, callback){
 				$('#' + element.id).on('input',() => {
 					callback(formDetails)
 					controlState(['#mainModalSubmit'],['#mainModalAddNew','#mainModalDelete'])
-				})
+				})		
+			break;
+			case 'slider':
+				$('#' + element.id).on('input',() => {
+					callback(formDetails)
+					controlState(['#mainModalSubmit'],['#mainModalAddNew','#mainModalDelete'])
+					updateSlider('#'+element.id, $('#'+element.id).val())
+				})		
 			break;
 			case 'droppable':
 				$('#' + element.id).on('drop', () => {
@@ -971,6 +1000,12 @@ function updateEvents(formDetails, callback){
 				})
 			break;
 			case 'select':
+				if (!element.primary){
+					$('#' + element.id).on('change',() => {
+						callback(formDetails)
+						controlState(['#mainModalSubmit'],['#mainModalAddNew','#mainModalDelete'])
+					})							
+				}
 			break;
 			default:
 		}
@@ -1034,4 +1069,43 @@ function placeInterfaceButtons($selector, row, id_system, id_SIMap, callback){
 		//Populate the additional details
 		callback(id_system, null, row.id_SIMap)
 	});
+}
+
+/*
+function rnd(min, max) {
+	return Math.floor(Math.random() * (max - min) ) + min;
+}
+*/
+
+function getColor(index){
+	var i = index % colors.length
+	return colors[i];
+}
+
+function systemButton(id_system, name){
+	return `<a href="#" class='btn btn-sm btn-outline-dark my-1 mx-1' onclick="updateSystemsModal(${id_system});">${name}</a>`
+}
+
+function displayTags($selector){
+		//Setup the page
+		if (localStorage.getItem('includedFilterTag') == '[]'){
+			$($selector).append(`<p id="tagsIncluded">No included tags</p>`);
+		} else {
+			$($selector).append(`<p id="tagsIncluded">Tags included: </p>`);
+			addMultipleBadges('#tagsIncluded', {info: 'success'}, localStorage.getItem('includedFilterTag'))
+		}
+
+		if (localStorage.getItem('excludedFilterTag') == '[]'){
+			$($selector).append(`<p id="tagsExcluded">No excluded tags</p>`);
+		} else {
+			$($selector).append(`<p id="tagsExcluded">Tags excluded: </p>`);
+			addMultipleBadges('#tagsExcluded', {info: 'success'}, localStorage.getItem('excludedFilterTag'))
+		}
+}
+
+function updateSlider($selector, value){
+	$($selector + '_desc').empty()
+	if (value != undefined){
+		$($selector + '_desc').html(`<strong>${labels.severity[value].label}</strong> ${labels.severity[value].description}`)
+	}
 }
