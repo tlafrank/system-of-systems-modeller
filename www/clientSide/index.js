@@ -38,7 +38,8 @@ function pageSwitch(page){
 		case 'graph':
 			sessionStorage.setItem('currentPage', 'graph');
 			$('#mainPaneContainer').empty();
-			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`);
+			//Works: $('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`);
+			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1 w-100"></div></div></div>`);
 			$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
 			getGraphData(newCy);
 		break;
