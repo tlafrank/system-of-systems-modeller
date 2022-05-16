@@ -1,6 +1,8 @@
 //Systems modal doesnt save icon appropriately when changing (form isnt locked out until update is selected)
-
-
+//Update link technology isnt locking out the buttons as expected
+//Update link isnt locking out new link buttons as expected
+//Clicking on edit node button when an interface is selected fails to correctly load that interface
+//Update links choose icon button is broken
 
 
 
