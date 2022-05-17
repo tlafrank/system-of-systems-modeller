@@ -8,6 +8,15 @@ function manageTags(){
 	manageTagsModal();
 }
 
+function graphZoomIn(){
+	debug(1,'firing');
+	cy.zoom(cy.zoom() + parseFloat(localStorage.getItem('zoomSensitivity')))
+}
+
+function graphZoomOut(){
+	cy.zoom(cy.zoom() - parseFloat(localStorage.getItem('zoomSensitivity')))
+}
+
 
 /**
  * @description Update the systems by choosing a system from a list

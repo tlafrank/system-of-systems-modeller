@@ -15,7 +15,17 @@ const imagePath = './images/'
 var hideNodes = false; //Tracks whether a click on a node should remove it from the graph
 
 $(document).ready(function(){
-	graphSettings = new GraphSettings();
+	//graphSettings = new GraphSettings();
+
+	//Load graph settings, if none exist
+	settings.forEach((element) => {
+		if (element.type != 'heading'){
+			if (!localStorage.getItem(element.id)) { localStorage.setItem(element.id, element.default)}
+		}
+	})
+
+	debug(1, localStorage)
+
 	pageSwitch();
   	selectedNode = new Node();
 })
@@ -453,11 +463,18 @@ function newCy(){
 	debug(1,'In newCy()')
 
 	//Setup the graph 
-	cy = cytoscape({ 
+	var cyInitialisation = {
 		container: $("#cy"),
 		style: cyStyle,
-		//wheelSensitivity: 0.4, //Required for scroll wheel on laptop to work. Reason unknown.
-	});
+		wheelSensitivity: localStorage.getItem('zoomSensitivity') //Required for scroll wheel on laptop to work. Reason unknown.
+	}
+
+
+	cy = cytoscape(cyInitialisation)	
+		
+		
+
+
 
 	$('#nodeDetailsTable').empty();
 
@@ -465,7 +482,6 @@ function newCy(){
 
 	if (localStorage.getItem('showInterfaces') == 1){ var showInterfaces = true	} else { var showInterfaces = false }
 	var showNetworkNodes = true;
-
 
 	//Pruning
 	if (localStorage.getItem('pruneEdgeLinks') == 1){
@@ -621,7 +637,12 @@ function newCy(){
 	cy.add(networkNodes);
 
 	//Draw the graph
-	cy.layout(graphSettings.getGraphLayout()).run();
+	const graphSettings = {
+		name: localStorage.getItem('graphLayoutName'),
+		rows: localStorage.getItem('graphLayoutRows'),
+		animate: localStorage.getItem('graphLayoutAnimate'),
+	}
+	cy.layout(graphSettings).run();
 
 	selectedNode = new Node();
 
@@ -656,13 +677,15 @@ function getGraphData(callback, year = parseInt(localStorage.getItem('activeYear
 	const postData = {
 		type: 'GraphNodes',
 		year: year,
-		showInterfaces: localStorage.getItem('showInterfaces'),
-		showIssues: localStorage.getItem('showIssues')
+		showInterfaces: parseInt(localStorage.getItem('showInterfaces')),
+		showIssues: parseInt(localStorage.getItem('showIssues'))
 	}
 
 	//Tag filters
-	if (localStorage.getItem('includedFilterTag').length > 0){ postData.includedFilterTag = localStorage.getItem('includedFilterTag') }
-	if (localStorage.getItem('excludedFilterTag').length > 0){ postData.excludedFilterTag = localStorage.getItem('excludedFilterTag') }
+	postData.includedFilterTag = localStorage.getItem('includedFilterTag')
+	postData.excludedFilterTag = localStorage.getItem('excludedFilterTag')
+
+	debug(1, postData)
 
 	$.post('/graph.json', postData, (result) => {
 		debug(3,'Passed to graph.json:', postData);

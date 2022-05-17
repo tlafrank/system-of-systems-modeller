@@ -216,6 +216,10 @@ function getFormElement($selector, properties){
 
 
 		break;
+		case 'null':
+		case 'heading':
+			//No action required
+		break;
 		default:
 			debug(`Switch default, shouldn't make it here in helpers.getFormElement() due to ${properties.type}`)
 	}
@@ -231,6 +235,7 @@ function getFormElement($selector, properties){
  * @param  {} value
  */
 function setFormElement($selector, properties, value){
+	debug(1, `setting: value of ${value} to:`, properties)
 	switch (properties.type){
 		case 'droppable':
 			var sourceElements = document.querySelectorAll(properties.$source + ' span');
@@ -252,11 +257,10 @@ function setFormElement($selector, properties, value){
 			if (value == '')
 			$($selector).empty();
 			break;
-		case 'number':
-
-		break;
 		case 'heading':
-			$($selector).text(value)
+			if (!properties.noUpdate){
+				$($selector).text(value)
+			}
 		break;
 		case 'slider':
 			$($selector).val(value)
@@ -265,6 +269,7 @@ function setFormElement($selector, properties, value){
 		break;
 		case 'textarea':
 		case 'text':
+		case 'number':
 			$($selector).val(value)
 			break;
 		case 'year':
@@ -307,6 +312,9 @@ function setFormElement($selector, properties, value){
 					debug('setFormElement switch default trafficLightRadio should not make it here due to value of ' + value)
 			}
 
+		break;
+		case 'null':
+			//No action required
 		break;
 
 		default:
@@ -474,6 +482,9 @@ function addFormElement($selector, properties){
 		break;
 		case 'container':
 			formElement += `<div id="${properties.id}"></div>`;
+		break;
+		case 'null':
+			//No action required
 		break;
 		default:
 			debug(`Switch default, shouldn't make it here in helpers.addFormElement() with ${properties.type}`)
@@ -1088,14 +1099,14 @@ function systemButton(id_system, name){
 
 function displayTags($selector){
 		//Setup the page
-		if (localStorage.getItem('includedFilterTag') == '[]'){
+		if (localStorage.getItem('includedFilterTag') == ''){
 			$($selector).append(`<p id="tagsIncluded">No included tags</p>`);
 		} else {
 			$($selector).append(`<p id="tagsIncluded">Tags included: </p>`);
 			addMultipleBadges('#tagsIncluded', {info: 'success'}, localStorage.getItem('includedFilterTag'))
 		}
 
-		if (localStorage.getItem('excludedFilterTag') == '[]'){
+		if (localStorage.getItem('excludedFilterTag') == ''){
 			$($selector).append(`<p id="tagsExcluded">No excluded tags</p>`);
 		} else {
 			$($selector).append(`<p id="tagsExcluded">Tags excluded: </p>`);

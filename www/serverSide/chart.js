@@ -15,6 +15,13 @@ exports.switch = (req,res) => {
 	debug(1, `chart.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 
 	var queryString;
+	var includedTags = ''
+	var excludedTags = '';
+
+	if (!typeof req.body.includedFilterTag === 'undefined') {includedTags = JSON.parse(req.body.includedFilterTag) }
+	if (!typeof req.body.excludedFilterTag === 'undefined') {excludedTags = JSON.parse(req.body.excludedFilterTag) }
+
+	//debug(1, 'includedtags', includedTags)
 
 	if (req.body.type == 'InterfaceQuantitiesInYear'){
 		//Build the query
@@ -34,8 +41,11 @@ exports.switch = (req,res) => {
 			ON a.id_system = systems.id_system`, [req.body.year])
 
 
-			includedTags = JSON.parse(req.body.includedFilterTag);
-			excludedTags = JSON.parse(req.body.excludedFilterTag);		
+			//includedTags = JSON.parse(req.body.includedFilterTag);
+			//excludedTags = JSON.parse(req.body.excludedFilterTag);
+			//debug(1, req.body.includedFilterTag)
+			//if (req.body.includedFilterTag.length > 0) {includedTags = JSON.parse(req.body.includedFilterTag) }
+			//if (req.body.excludedFilterTag.length > 0) {excludedTags = JSON.parse(req.body.excludedFilterTag) }
 		
 			//Handle included and excluded tags
 			switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){

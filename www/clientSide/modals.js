@@ -1385,6 +1385,7 @@ async function updateIssuesModal(id_interface = 1, message, id_interfaceIssue = 
  * @param {} message
  */
 function settingsModal(message){
+	debug(1, 'In settingsModal()')
 
 	//Prepare the modal
 	prepareModal('Settings');
@@ -1402,8 +1403,9 @@ function settingsModal(message){
 	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
 
 	//Add the form controls
-	graphSettings.getFormControls().forEach((element) => {
+	settings.forEach((element) => {
 		addFormElement('#mainModal form', element);
+		setFormElement('#' + element.id, element, localStorage.getItem(element.id))
 	})
 
 	//Event: Update button clicked
@@ -1414,9 +1416,16 @@ function settingsModal(message){
 
 		const settingsArr = [];
 
-		graphSettings.getFormControls().forEach((element) => {
-			localStorage.setItem(element.id, getFormElement('#' + element.id, element))
+		settings.forEach((element) => {
+			
+			if (element.type != 'null' && element.type != 'heading'){
+				debug(1, getFormElement('#' + element.id, element))
+				localStorage.setItem(element.id, getFormElement('#' + element.id, element))
+			}
+			
 		})
+		debug(1, localStorage)
+
 
 		pageSwitch(sessionStorage.getItem('currentPage'));
 		$('#mainModal').modal('hide');

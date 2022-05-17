@@ -20,7 +20,6 @@
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.0/cytoscape.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-
 		-->
 
 
@@ -38,7 +37,6 @@
 
 		<!-- Page scripts -->
 		<script src="./clientSide/Node.js" type="text/javascript" defer></script>
-		<!--<script src="./clientSide/NodeModal.js" type="text/javascript" defer></script> -->
 		<script src="./clientSide/GraphSettings.js" type="text/javascript" defer></script>
 		<script src="./clientSide/constants.js" type="text/javascript" defer></script>
 		<script src="./clientSide/helpers.js" type="text/javascript" defer></script>
@@ -116,6 +114,14 @@
 						</div>
 						<div class="col">
 							<button type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="incrementYearButton()">Increment Year</button>
+						</div>
+					</div>	
+					<div class="row">
+						<div class="col">
+							<button type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="graphZoomIn()">Zoom In</button>
+						</div>
+						<div class="col">
+							<button type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="graphZoomOut()">Zoom Out</button>
 						</div>
 					</div>	
 					<button id="hideNodeToggleButton" type="button" class="btn btn-secondary btn-sm btn-block my-1" onclick="hideNodesButton()">Hide Node Toggle</button>

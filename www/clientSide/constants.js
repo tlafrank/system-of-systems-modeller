@@ -279,3 +279,32 @@ const colors = [
 	'#8f480c',
 	'#0a730a',
 ]
+
+const graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random']; //Investigate 'cose-bilkent'
+const defaultLandingPageOptions = ['graph', 'summary', 'issues'];
+
+const settings = [
+	{ type: 'heading', id: 'generalHeading', align: 'left', text: 'General Settings', noUpdate: true },
+	{ type: 'select', id: 'defaultLandingPage', label: 'Default Landing Page', default: 'graph', options: defaultLandingPageOptions },
+	{ type: 'checkbox', id: 'refreshOnUpdate', label: 'Redraw the graph on update', default: 0 },
+	{ type: 'number', id: 'yearMin', label: 'Minimum Year', default: 2020},
+	{ type: 'number', id: 'yearMax', label: 'Minimum Year', default: 2030},
+
+	{ type: 'heading', align: 'left', text: 'Graph Settings', noUpdate: true },
+	{ type: 'select', id: 'graphLayoutName', label: 'Graph Layout', default: 'cose', options: graphLayoutNames },
+	{ type: 'checkbox', id: 'showInterfaces', label: 'Display Interface Nodes', default: 1 },
+	{ type: 'checkbox', id: 'showIssues', label: 'Display issues on graph', default: 1 },
+	{ type: 'checkbox', id: 'pruneEdgeLinks', label: 'Prune links with only one interface', default: 0 },
+	{ type: 'checkbox', id: 'displaySubsystems', label: 'Display subsystems', default: 0 },
+	{ type: 'number', id: 'zoomSensitivity', label: 'Scroll Wheel Zoom Sensitivity', default: 1},
+	
+	{ type: 'heading', align: 'left', text: 'Issue Settings', noUpdate: true},
+	{ type: 'number', id: 'severityLevel', label: 'Minimum Severity to display', default: 0 },
+	{ type: 'null', id: 'graphLayoutRows', default: 5 },
+	{ type: 'null', id: 'graphLayoutAnimate', default: 0 },
+	{ type: 'null', id: 'includedFilterTag', default: '' },
+	{ type: 'null', id: 'excludedFilterTag', default: '' },
+	{ type: 'null', id: 'activeYear', default: 2022 },
+	{ type: 'null', id: 'linksAsNodes', default: 0 },
+]
+

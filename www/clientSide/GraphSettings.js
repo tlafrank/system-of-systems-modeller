@@ -10,12 +10,13 @@ class GraphSettings{
 		//debug(1, 'In GraphSettings Class');
 
 		//Constants
-		this.graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random'];
-		this.defaultLandingPageOptions = ['graph', 'summary', 'issues'];
+		//this.graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random'];
+		//this.defaultLandingPageOptions = ['graph', 'summary', 'issues'];
 
-		//localStorage.clear();
+		localStorage.clear();
 
 		//Set default values client-side if they don't already exist
+		/*
 		if(!localStorage.getItem('activeYear')) { localStorage.setItem('activeYear', 2022); }
 		if(!localStorage.getItem('refreshOnUpdate')) { localStorage.setItem('refreshOnUpdate', 0); }
 		if(!localStorage.getItem('ignoreYears')) { localStorage.setItem('ignoreYears', 0); }
@@ -39,6 +40,7 @@ class GraphSettings{
 		if(!localStorage.getItem('severityLevel')) { localStorage.setItem('severityLevel', 0) }
 		
 		//debug(3,localStorage)
+		*/
 	}
 	
 	/**
@@ -46,6 +48,7 @@ class GraphSettings{
 	 * 
 	 * @returns 
 	 */
+	/*
 	 getGraphLayout(){
 
 		var layout = {
@@ -56,6 +59,7 @@ class GraphSettings{
 		return layout;
 	 }
 
+	 */
 	/**
 	 * @description 
 	 * 
@@ -64,6 +68,8 @@ class GraphSettings{
 	 */
 	
 	getFormControls(){
+		debugLevel(1, 'in GraphSettings={, and shouldnt be')
+		/*
 		return [
 			{ type: 'heading', id: 'generalHeading', align: 'left', text: 'General Settings' },
 			{ type: 'select', id: 'defaultLandingPage', label: 'Default Landing Page', value: localStorage.getItem('defaultLandingPage'), options: this.defaultLandingPageOptions },
@@ -89,6 +95,7 @@ class GraphSettings{
 			{ type: 'checkbox', id: 'linksAsNodes', label: 'Consolidate Links as Nodes', value: localStorage.getItem('linksAsNodes') },
 			{ type: 'checkbox', id: 'displaySubsystems', label: 'Display Subsystems', value: localStorage.getItem('displaySubsystems') },
 		];
+		*/
 	}
 	
 
@@ -98,6 +105,7 @@ class GraphSettings{
 	 * 
 	 * @returns	The array of settings containing {key, value} pairs for posting to the server
 	 */
+	/*
 	export(){
 
 		//Iterate through the settingsArr and update the values
@@ -113,6 +121,7 @@ class GraphSettings{
 
 
 //Cy layout object
+/*
 var cyLayout = {
 	//name: 'breadthfirst',
 	name: 'cose',
@@ -330,5 +339,6 @@ var cyLayout = {
 	name: 'cose',
 	rows: 5,
 	animate: false,
+	*/
 }
-*/
+

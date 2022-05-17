@@ -12,6 +12,7 @@ function debug(level, msg){
 
 exports.switch = (req,res) => {
 	debug(1, `graph.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
+	debug(1, req.body)
 
 /*
 	//Get the systems which are available in the given year
@@ -25,6 +26,12 @@ exports.switch = (req,res) => {
 
 
 */
+	var includedTags = ''
+	var excludedTags = '';
+	//if (req.body.includedFilterTag.length > 0) {includedTags = JSON.parse(req.body.includedFilterTag) }
+	//if (req.body.excludedFilterTag.length > 0) {excludedTags = JSON.parse(req.body.excludedFilterTag) }
+	if (!typeof req.body.includedFilterTag === 'undefined') {includedTags = JSON.parse(req.body.includedFilterTag) }
+	if (!typeof req.body.excludedFilterTag === 'undefined') {excludedTags = JSON.parse(req.body.excludedFilterTag) }
 
 
     var queryString = sql.format(`
@@ -41,8 +48,7 @@ exports.switch = (req,res) => {
 		LEFT JOIN systems
 		ON a.id_system = systems.id_system `,req.body.year);
 
-	includedTags = JSON.parse(req.body.includedFilterTag);
-	excludedTags = JSON.parse(req.body.excludedFilterTag);		
+
 
 	//Handle included and excluded tags
 	switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){

@@ -13,8 +13,14 @@ function debug(level, msg){
 
 exports.switch = (req,res) => {
 	debug(1, `select.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
+	debug(1, req.body)
 
 	var queryString;
+	var includedTags = []
+	var excludedTags = [];
+	if (!typeof req.body.includedFilterTag === 'undefined') {includedTags = JSON.parse(req.body.includedFilterTag) }
+	if (!typeof req.body.excludedFilterTag === 'undefined') {excludedTags = JSON.parse(req.body.excludedFilterTag) }
+
 
 	//Get all subsystems
 	if (req.body.type == 'Subsystems'){
