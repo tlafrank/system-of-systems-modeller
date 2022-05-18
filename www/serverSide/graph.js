@@ -14,25 +14,10 @@ exports.switch = (req,res) => {
 	debug(1, `graph.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 	debug(1, req.body)
 
-/*
-	//Get the systems which are available in the given year
-	queryString = sql.format(`SELECT a.id_system, name, image, tags, a.quantity
-	FROM (SELECT * FROM quantities WHERE year <= ?) AS a
-	LEFT JOIN (SELECT * FROM quantities WHERE year <= ?) AS b
-	ON a.id_system = b.id_system AND a.year < b.year
-	LEFT JOIN systems
-	ON a.id_system = systems.id_system
-	WHERE b.year IS NULL AND a.quantity > 0`, [req.body.year,req.body.year]);
-
-
-*/
-	var includedTags = ''
-	var excludedTags = '';
-	//if (req.body.includedFilterTag.length > 0) {includedTags = JSON.parse(req.body.includedFilterTag) }
-	//if (req.body.excludedFilterTag.length > 0) {excludedTags = JSON.parse(req.body.excludedFilterTag) }
-	if (!typeof req.body.includedFilterTag === 'undefined') {includedTags = JSON.parse(req.body.includedFilterTag) }
-	if (!typeof req.body.excludedFilterTag === 'undefined') {excludedTags = JSON.parse(req.body.excludedFilterTag) }
-
+	var includedTags = []
+	var excludedTags = [];
+	if (!(typeof req.body.includedFilterTag === 'undefined')) {includedTags = req.body.includedFilterTag }
+	if (!(typeof req.body.excludedFilterTag === 'undefined')) {excludedTags = req.body.excludedFilterTag }
 
     var queryString = sql.format(`
 	SET @inputYear = ?;

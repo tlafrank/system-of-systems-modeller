@@ -15,11 +15,10 @@ exports.switch = (req,res) => {
 	debug(1, `chart.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 
 	var queryString;
-	var includedTags = ''
-	var excludedTags = '';
-
-	if (!typeof req.body.includedFilterTag === 'undefined') {includedTags = JSON.parse(req.body.includedFilterTag) }
-	if (!typeof req.body.excludedFilterTag === 'undefined') {excludedTags = JSON.parse(req.body.excludedFilterTag) }
+	var includedTags = []
+	var excludedTags = [];
+	if (!(typeof req.body.includedFilterTag === 'undefined')) {includedTags = req.body.includedFilterTag }
+	if (!(typeof req.body.excludedFilterTag === 'undefined')) {excludedTags = JSON.parse(req.body.excludedFilterTag) }
 
 	//debug(1, 'includedtags', includedTags)
 

@@ -18,8 +18,8 @@ exports.switch = (req,res) => {
 	var queryString;
 	var includedTags = []
 	var excludedTags = [];
-	if (!typeof req.body.includedFilterTag === 'undefined') {includedTags = JSON.parse(req.body.includedFilterTag) }
-	if (!typeof req.body.excludedFilterTag === 'undefined') {excludedTags = JSON.parse(req.body.excludedFilterTag) }
+	if (!(typeof req.body.includedFilterTag === 'undefined')) {includedTags = req.body.includedFilterTag }
+	if (!(typeof req.body.excludedFilterTag === 'undefined')) {excludedTags = req.body.excludedFilterTag }
 
 
 	//Get all subsystems
@@ -243,37 +243,6 @@ exports.switch = (req,res) => {
 		}
 
 		//Need to handle all issues
-	}
-
-   
-
-	if (req.body.type == 'Issue'){
-		//Build the query
-		//queryString = sql.format(`SELECT * FROM issues WHERE id_issue = ?;`, [req.body.id_issue])
-
-
-		switch (req.body.subtype){
-			case 'SystemInterface':
-				queryString = sql.format(`SELECT issues.*, interfaces.image AS interfaceImage, interfaces.name AS interfaceName, systems.name AS systemName, systems.image AS systemImage, systems.id_system
-				FROM issues
-				LEFT JOIN SIMap
-				ON issues.id_type = SIMap.id_SIMap
-				LEFT JOIN interfaces
-				ON SIMap.id_interface = interfaces.id_interface
-				LEFT JOIN systems
-				ON SIMap.id_system = systems.id_system
-				WHERE id_issue = ?;`, [req.body.id_issue])
-			break;
-			case 'Interface':
-				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Interface' AND id_type = ?;`, [req.body.id_interface])
-			break;
-			case 'Feature':
-				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Feature' AND id_type = ?;`, [req.body.id_feature])
-			break;
-			case 'Network':
-				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Network' AND id_type = ?;`, [req.body.id_network])
-			break;
-		}
 	}
 
 	if (req.body.type == 'IssueImages'){

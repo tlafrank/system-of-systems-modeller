@@ -152,6 +152,10 @@ async function processIssues(){
 		type: 'Issues',
 		year: parseInt(localStorage.getItem('activeYear')),
 	}
+	//Tag filters
+	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
+	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
+
 
 	await $.post('select.json', postData, (result) => {
 		//debug(3,'Passed to select.json: ', postData);
@@ -319,9 +323,11 @@ async function charts(){
 		postData = {
 			type: 'InterfaceQuantitiesInYear',
 			year: i,
-			includedFilterTag: localStorage.getItem('includedFilterTag'),
-			excludedFilterTag: localStorage.getItem('excludedFilterTag')
 		}
+
+		postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
+		postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
+
 		await $.post("chart.json", postData, (result) => {
 			//debug('Passed to chart.json: ', postData);
 			//debug('Response: ', result)
@@ -682,8 +688,8 @@ function getGraphData(callback, year = parseInt(localStorage.getItem('activeYear
 	}
 
 	//Tag filters
-	postData.includedFilterTag = localStorage.getItem('includedFilterTag')
-	postData.excludedFilterTag = localStorage.getItem('excludedFilterTag')
+	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
+	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
 
 	debug(1, postData)
 

@@ -302,8 +302,8 @@ const settings = [
 	{ type: 'number', id: 'severityLevel', label: 'Minimum Severity to display', default: 0 },
 	{ type: 'null', id: 'graphLayoutRows', default: 5 },
 	{ type: 'null', id: 'graphLayoutAnimate', default: 0 },
-	{ type: 'null', id: 'includedFilterTag', default: '' },
-	{ type: 'null', id: 'excludedFilterTag', default: '' },
+	{ type: 'null', id: 'includedFilterTag', default: [] },
+	{ type: 'null', id: 'excludedFilterTag', default: [] },
 	{ type: 'null', id: 'activeYear', default: 2022 },
 	{ type: 'null', id: 'linksAsNodes', default: 0 },
 ]
