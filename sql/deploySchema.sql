@@ -9,7 +9,7 @@ SET autocommit = 0;
 -- -----------------------------------------------------
 -- Schema db_sosm
 -- -----------------------------------------------------
-DROP SCHEMA IF EXISTS `db_sosm` ;
+DROP SCHEMA IF EXISTS `db_sosm`;
 
 -- -----------------------------------------------------
 -- Schema db_sosm

@@ -9,6 +9,7 @@ let modal; //Holds the object to provide modal setup information and the Node ob
 let graphSettings; //Holds the object to track graph settings between sessions
 let sosmSystemData, sosmSystemInterfaceData, sosmNetworkData, sosmStats, sosmNetworkStats, sosmQuantities;
 let issuesData = [];
+let breadcrumbTracker = [];
 
 
 const imagePath = './images/'
@@ -16,6 +17,10 @@ var hideNodes = false; //Tracks whether a click on a node should remove it from 
 
 $(document).ready(function(){
 	//graphSettings = new GraphSettings();
+
+	//Load private constants, if they exist
+	//if(typeof privateSeverityLabels !== 'undefined'){ const severityLabels = privateSeverityLabels}
+	//if(typeof privateTechnologyCategory !== 'undefined'){ technologyCategory = privateTechnologyCategory}
 
 	//Load graph settings, if none exist
 	settings.forEach((element) => {
@@ -25,6 +30,7 @@ $(document).ready(function(){
 	})
 
 	debug(1, localStorage)
+	
 
 	pageSwitch();
   	selectedNode = new Node();
@@ -41,8 +47,6 @@ function pageSwitch(page){
 			page = sessionStorage.getItem('currentPage');
 		}
 	}
-	
-	//await getGraphData();
 
 	switch (page){
 		case 'graph':
@@ -52,6 +56,14 @@ function pageSwitch(page){
 			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1 w-100"></div></div></div>`);
 			$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
 			getGraphData(newCy);
+		break;
+		case 'compoundGraph':
+			sessionStorage.setItem('currentPage', 'compoundGraph');
+			$('#mainPaneContainer').empty();
+			//Works: $('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`);
+			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1 w-100"></div></div></div>`);
+			
+			getCompoundGraphData(compoundCy);
 		break;
 		case 'summary':
 			sessionStorage.setItem('currentPage', 'summary');
@@ -126,7 +138,7 @@ function listSummary(){
 	
 	processInterfaceStats().forEach((element) => {
 		table += `<tr>
-			<td scope="row"><a href="#" onclick="updateInterfaceModal(${element.id_interface});">${element.name}</a></td>
+			<td scope="row"><a href="#" onclick="commonModal({modal: 'interfaces', id_interface: ${element.id_interface}});">${element.name}</a></td>
 			<td class="">${element.totalInterfaces}</td>
 			<td>${element.systemsCount}</td><td>`
 		element.systems.forEach((element2) => {
@@ -156,10 +168,9 @@ async function processIssues(){
 	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
 	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
 
-
+	debug(1, `Sending '${postData.type}' to the server (select.json):`)
 	await $.post('select.json', postData, (result) => {
-		//debug(3,'Passed to select.json: ', postData);
-		//debug(3,'Result: ', result)
+		debug(1, postData, result);
 
 		//Check the result
 		if (result.msg){
@@ -187,6 +198,7 @@ async function processIssues(){
 
 					reorganisedData[j].issues.push({
 						id_interfaceIssue: result[i].id_interfaceIssue,
+						id_interface: result[i].id_interface,
 						name: result[i].issueName,
 						issue: result[i].issue,
 						resolution: result[i].resolution,
@@ -224,7 +236,7 @@ async function listIssues(){
 
 	var severityText = '<h3>Severity Details</h3><ul>'
 
-	labels.severity.forEach((element) => {
+	severityLabels.forEach((element) => {
 		severityText += `<li>${element.index} <strong>${element.label}</strong> ${element.description}</li>`
 	})
 	severityText += '</ul>'
@@ -251,16 +263,17 @@ async function listIssues(){
 		var rowspan = element.issues.length;
 		if (rowspan == 0){ rowspan = 1 }
 
-		table += `<tr><td rowspan="${rowspan}" class="align-middle"><a href="#" onclick="updateInterfaceModal(${element.id_interface})">${element.name}</a></td>`
+		table += `<tr><td rowspan="${rowspan}" class="align-middle"><a href="#" onclick="commonModal({modal: 'interfaces', id_interface: '${element.id_interface}'})">${element.name}</a></td>`
 
 		//Handle no issues
 		if (element.issues.length == 0){
-			table += `<td colspan="6" class="text-center align-middle"><a href="#" onclick="updateIssuesModal(${element.id_interface})">No issues recorded</a></td>`
+			table += `<td colspan="6" class="text-center align-middle"><a href="#" onclick="commonModal({modal: 'interfaceIssues', id_interface: '${element.id_interface}'})">No issues recorded</a></td>`
 		} else {
 			element.issues.forEach((element2) => {
+				//debug(1, element2)
 				if (element2.severity >= parseInt(localStorage.getItem('severityLevel'))){
 					table += `<td class="text-center">${element2.severity}</td>`
-					table += `<td><a href="#" onclick="updateIssuesModal(${element.id_interface},null,${element2.id_interfaceIssue})">${element2.name}</td>`
+					table += `<td><a href="#" onclick="commonModal({modal: 'interfaceIssues', id_interface: ${element2.id_interface}, id_interfaceIssue: '${element2.id_interfaceIssue}'})">${element2.name}</td>`
 					table += `<td>${element2.issue}</td>`
 					table += `<td>${element2.resolution}</td>`
 					if (element2.quantityAffected == 0) {
@@ -275,7 +288,7 @@ async function listIssues(){
 					})	
 					table += `</td></tr>`
 				} else {
-					table += `<td colspan="6" class="text-center align-middle"><a href="#" onclick="updateIssuesModal(${element.id_interface})">Issue below the set severity threshold</a></td></tr>`
+					table += `<td colspan="6" class="text-center align-middle"><a href="#" onclick="commonModal({modal: 'interfaceIssues', id_interface: '${element.id_interface}'})">Issue below the set severity threshold</a></td></tr>`
 				}
 			})
 			table += `</tr>`
@@ -328,9 +341,9 @@ async function charts(){
 		postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
 		postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
 
+		debug(1, `Sending '${postData.type}' to the server (chart.json):`)
 		await $.post("chart.json", postData, (result) => {
-			//debug('Passed to chart.json: ', postData);
-			//debug('Response: ', result)
+			//debug(1, postData, result);
 
 			if (result.msg){
 				//An error was passed
@@ -348,7 +361,9 @@ async function charts(){
 	}
 
 	//Prune excess results from interfacesSeen
+	
 	interfacesSeen.sort();
+	
 	debug(1, 'interfacesSeen before', interfacesSeen)
 	var tempArr = [interfacesSeen[0]];
 	for (var i=0; i<interfacesSeen.length; i++){
@@ -358,20 +373,21 @@ async function charts(){
 	}
 	interfacesSeen = tempArr;
 	
+	
 
 	//Produce the interface chart
-	postData2 = {
-		type: 'Interface',
+	var postData2 = {
+		type: 'AllInterfaces',
 	}
+	debug(1, `Sending '${postData2.type}' to the server (select.json):`)
 	$.post("select.json", postData2, (result) => {
-		//debug('Passed to select.json: ', postData2);
-		//debug('Response: ', result)
+		debug(1, 'interface chart', postData2, result);
 
 		if (result.msg){
 			//An error was passed
 			debug(1, 'error', result.msg)
 		} else {
-			
+			debug(1, 'fafddsf')
 			result.forEach((element) => {
 				if (interfacesSeen.includes(element.id_interface)){
 					datasets.push({
@@ -540,6 +556,277 @@ function newCy(){
 					name: element.name,
 					filename: './images/' + element.image,
 				},
+				classes: 'interface'																				//Put classes here
+			})
+
+			interfaceNodes.push({ //S-SI edge
+				group: 'edges',
+				data: {
+					id: 'edge_s_si_' + element.id_SIMap,
+					idNo: element.id_SIMap,
+					source: 'node_s_' + element.id_system,
+					target: 'node_si_' + element.id_SIMap,
+					lineColor: 'black'
+				},
+				classes: ''																				//Put classes here
+			})
+		})
+	}
+	
+	//Prepare and add network data to the graph
+	var networkNodes = [];
+
+	if(showNetworkNodes){addNetworkNodes()}
+
+	sosmNetworkData.forEach((element) => {
+		//debug(1,element)
+		if((localStorage.getItem('showPrimaryLinks') == 1 && element.linkCategory == 'primary') || 
+			(localStorage.getItem('showAlternateLinks') == 1 && element.linkCategory == 'alternate')){
+			var newNode = {
+				group: 'edges',
+				data: 
+				{
+					idNo: element.id_network,
+					id_network: element.id_network,
+					target: 'node_n_' + element.id_network,
+					//name: element.designation,
+				},
+			}
+
+			if(showInterfaces){//Show Interface nodes
+				newNode.data.id = 'edge_si_' + element.id_SIMap + '_n_' + element.id_network
+				newNode.data.source = 'node_si_' + element.id_SIMap
+			} else { //No interface nodes
+				newNode.data.id = 'edge_s_' + element.id_SIMap + '_n_' + element.id_network
+				newNode.data.source = 'node_s_' + element.id_system
+			}
+
+			//Handle colours
+			newNode.data.lineColor = 'black'
+			if (element.technologyCategory !== null){
+				newNode.data.lineColor = technologyCategory.find(x => x.value === element.technologyCategory).color
+			}
+
+			//Handle link category
+			switch (element.linkCategory){
+				case 'primary':
+					break;
+				case 'alternate':
+				case 'incapable':			//Shouldnt be returned, precautionary
+				default:
+					newNode.classes += ' dashed';					
+			}
+
+			//Handle classes
+			if(element.designation){
+				newNode.data.name = element.designation
+				if(element.designation.substring(1,2) == 'J'){
+					newNode.classes += ' class3';
+				}
+			}
+
+			networkNodes.push(newNode)
+		}
+
+
+
+	})
+
+	function addNetworkNodes(){
+		//Add network nodes to the graph
+		sosmNetworkData.forEach((element) => {
+			networkNodes.push({
+				group: 'nodes',
+				data: {
+					id: 'node_n_' + element.id_network,
+					id_network: element.id_network,
+					nodeType: 'Link',
+					name: element.name,
+					filename: './images/' + element.image,
+				},
+				classes: 'network'																			//Put classes here
+			})
+		})		
+	}
+
+	//Add all components
+	//debug(1,systemNodes,interfaceNodes,networkNodes)
+	cy.add(systemNodes);
+	cy.add(interfaceNodes);
+	cy.add(networkNodes);
+
+	//Draw the graph
+	const graphSettings = {
+		name: localStorage.getItem('graphLayoutName'),
+		rows: localStorage.getItem('graphLayoutRows'),
+		animate: localStorage.getItem('graphLayoutAnimate'),
+	}
+	cy.layout(graphSettings).run();
+
+	selectedNode = new Node();
+
+	//Event: Node in graph selected
+	cy.on('tap', 'node', (evt) => { nodeSelected(evt.target); })
+
+	//Event: Node in graph selected
+	cy.on('tap', 'edge', (evt) => { edgeSelected(evt.target); })
+}
+
+//Reset the Cy object
+function resetCy(){
+	debug(1,'In resetCy()');
+	cy = cytoscape({
+		container: $("#cy"),
+		style: cyStyle,
+		layout: JSON.parse(localStorage.getItem('graphLayout')),
+		wheelSensitivity: 0.4, //Required for scroll wheel on laptop to work. Reason unknown.
+	});
+}
+
+
+/**
+ * Get SOSM data
+ * 
+ * @param callback
+ */
+function getGraphData(callback, year = parseInt(localStorage.getItem('activeYear'))){
+	debug(1,'In getGraphData()');
+
+	const postData = {
+		type: 'Normal',
+		year: year,
+		showInterfaces: parseInt(localStorage.getItem('showInterfaces')),
+		showIssues: parseInt(localStorage.getItem('showIssues'))
+	}
+
+	//Tag filters
+	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
+	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
+
+
+	debug(1, `Getting '${postData.type}' from the server (graph.json):`)
+
+	$.post('/graph.json', postData, (result) => {
+		debug(2, postData, result);
+
+		sosmSystemData = result[0];
+		sosmSystemInterfaceData = result[1];
+		sosmNetworkData = result[2];
+		sosmStats = result[3];
+		sosmNetworkStats = result[4];
+		//sosmQuantities = result[5];
+
+		if (callback) { callback() };
+	})
+}
+
+
+
+
+/**
+ * Get SOSM data (Compound graph test)
+ * 
+ * @param callback
+ */
+ function getCompoundGraphData(callback, year = parseInt(localStorage.getItem('activeYear'))){
+	debug(1,'In getGraphData()');
+
+	const postData = {
+		type: 'Compound',
+		year: year,
+		showInterfaces: parseInt(localStorage.getItem('showInterfaces')),
+		showIssues: parseInt(localStorage.getItem('showIssues'))
+	}
+
+	//Tag filters
+	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
+	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
+
+	debug(1, `Getting '${postData.type}' from the server (graph.json):`)
+
+	$.post('/graph.json', postData, (result) => {
+		debug(2, postData, result);
+
+	
+
+		if (callback) { callback(result) };
+	})
+}
+
+/**
+ * @description Builds a new compound CY graph
+ * 
+ */
+ function compoundCy(result){
+	debug(1,'In newCy()')
+
+	//Setup the graph 
+	var cyInitialisation = {
+		container: $("#cy"),
+		style: cyStyle,
+		wheelSensitivity: localStorage.getItem('zoomSensitivity') //Required for scroll wheel on laptop to work. Reason unknown.
+	}
+
+
+	cy = cytoscape(cyInitialisation)	
+		
+		
+	$('#nodeDetailsTable').empty();
+
+	$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))} Compound Graph`)
+
+	//if (localStorage.getItem('showInterfaces') == 1){ var showInterfaces = true	} else { var showInterfaces = false }
+	//var showNetworkNodes = true;
+
+	//Prepare and add system data to the graph
+	var systemNodes = [];
+	result.forEach((element) => {
+
+		//Define a unique ID
+		if (element.id_SMap == null){
+			var id = element.id_system;
+		} else {
+			var id = element.id_system + '_' + element.id_SMap;
+		}
+
+		var obj = {
+			group: 'nodes',
+			data: {
+				id: 'node_s_' + id,
+				idNo: element.id_system,
+				id_system: element.id_system,
+				nodeType: 'System',
+				name: element.name,
+				filename: './images/' + element.image
+			}, 
+			classes: ''
+		}
+
+		if (element.parent > 0){
+			obj.data.parent = 'node_s_' + element.parent
+		}
+
+		systemNodes.push(obj)
+	})
+
+	cy.add(systemNodes);
+
+	//Prepare and add interface data to the graph
+	/*
+	var interfaceNodes = [];
+	if (showInterfaces){ //Display interfaces on the graph
+		sosmSystemInterfaceData.forEach((element) => {
+			interfaceNodes.push({ //Interface node
+				group: 'nodes',
+				data: {
+					id: 'node_si_' + element.id_SIMap,
+					idNo: element.id_SIMap,
+					id_system: element.id_system,
+					id_SIMap: element.id_SIMap,
+					nodeType: 'SystemInterface',
+					name: element.name,
+					filename: './images/' + element.image,
+				},
 				classes: ''																				//Put classes here
 			})
 
@@ -635,12 +922,13 @@ function newCy(){
 			})
 		})		
 	}
+	*/
 
 	//Add all components
 	//debug(1,systemNodes,interfaceNodes,networkNodes)
-	cy.add(systemNodes);
-	cy.add(interfaceNodes);
-	cy.add(networkNodes);
+	//cy.add(systemNodes);
+	//cy.add(interfaceNodes);
+	//cy.add(networkNodes);
 
 	//Draw the graph
 	const graphSettings = {
@@ -648,6 +936,9 @@ function newCy(){
 		rows: localStorage.getItem('graphLayoutRows'),
 		animate: localStorage.getItem('graphLayoutAnimate'),
 	}
+
+	
+
 	cy.layout(graphSettings).run();
 
 	selectedNode = new Node();
@@ -658,56 +949,3 @@ function newCy(){
 	//Event: Node in graph selected
 	cy.on('tap', 'edge', (evt) => { edgeSelected(evt.target); })
 }
-
-//Reset the Cy object
-function resetCy(){
-	debug(1,'In resetCy()');
-	cy = cytoscape({
-		container: $("#cy"),
-		style: cyStyle,
-		layout: JSON.parse(localStorage.getItem('graphLayout')),
-		wheelSensitivity: 0.4, //Required for scroll wheel on laptop to work. Reason unknown.
-	});
-}
-
-
-/**
- * Get SOSM data
- * 
- * @param callback
- */
-function getGraphData(callback, year = parseInt(localStorage.getItem('activeYear'))){
-	debug(1,'In getGraphData()');
-
-	//Year of graph
-	const postData = {
-		type: 'GraphNodes',
-		year: year,
-		showInterfaces: parseInt(localStorage.getItem('showInterfaces')),
-		showIssues: parseInt(localStorage.getItem('showIssues'))
-	}
-
-	//Tag filters
-	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
-	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
-
-	debug(1, postData)
-
-	$.post('/graph.json', postData, (result) => {
-		debug(3,'Passed to graph.json:', postData);
-		debug(3,'Response:', result)
-
-		sosmSystemData = result[0];
-		sosmSystemInterfaceData = result[1];
-		sosmNetworkData = result[2];
-		sosmStats = result[3];
-		sosmNetworkStats = result[4];
-		//sosmQuantities = result[5];
-
-		if (callback) { callback() };
-	})
-}
-
-
-
-

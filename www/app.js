@@ -24,6 +24,8 @@ app.get('/', (req, res) => {
 app.use('/favicon.ico', express.static('favicon.ico'));
 app.use('/images', express.static('images'));
 app.use('/assets', express.static('assets'));
+app.use('/src', express.static('src'));
+
 
 app.use('/css', express.static('css'));
 app.use('/clientSide', express.static('clientSide'));

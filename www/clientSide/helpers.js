@@ -138,10 +138,16 @@ function addButton($selector, button){
 		case 'close':
 			$($selector).append(`<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>`);
 			break;
+		case 'cancel':
+			$($selector).append(`<button id="${button.id}" type="button" class="btn btn-secondary">${button.label}</button>`);
+			break;
 		case 'info':
 			$($selector).append(`<button id="${button.id}" type="button" class="btn btn-info">${button.label}</button>`);
 			break;
   	}
+	if (button.initialState == 'lock'){
+		$('#' + button.id).prop('disabled', true)
+	}
 }
 
 /**
@@ -152,9 +158,21 @@ function addButton($selector, button){
  */
 function getFormElement($selector, properties){
 	switch (properties.type){
+		case 'qtyYears':
+			var qtyArr = []
+			for (var i = 0; i < $($selector + ' [id^=formYears]').length; i++){
+				qtyArr.push({year: $(`#formYears_${i}`).val(), quantity: $(`#formQuantity_${i}`).val()})
+			}
+			return qtyArr
+		break;
+		case 'selectedButton':
+			var test = $($selector + ` button.btn-primary`).data(properties.attrName)
+			debug(1, 'test' + test);
+			return test
+		break;
 		case 'droppable':
 			//Gets the list of indexes stored in the data attribute in columnName for each badge contained in the droppable div.
-			//Update localStorage with includedTags
+
 			var droppable = document.querySelectorAll(`${$selector} span`);
 			var dataArr = [];
 			
@@ -176,17 +194,24 @@ function getFormElement($selector, properties){
 			//Trim
 			if (dataString.length > 0){ dataString = dataString.substring(0,dataString.length - 1);	}
 			return dataString;
-		break
+			break;
+		case 'dropTargetContents':
+			//Gets an array of all the dataAttr attributes associated with the elements contained within $selector
+			var droppableElements = document.querySelectorAll($selector + ' span');
+			var data = []
+
+			droppableElements.forEach((element) => {
+				data.push($(element).data(properties.dataAttr));
+			})
+			return data;
+			break;
 		case 'select':
 			if (properties.dataAttr){
 				return $($selector + ' option:selected').attr(`data-${properties.dataAttr}`)
 			} else {
 				return $($selector + ' option:selected').val();
 			}
-
-			
-			break;
-
+		break;
 		case 'number':
 		case 'year':		
 		case 'textarea':
@@ -203,9 +228,15 @@ function getFormElement($selector, properties){
 			}
 		break;
 		case 'img':
+		case 'image':
 			var path = $($selector).attr('src');
 			return path.substr(path.lastIndexOf('/') + 1)
-		break;
+			break;
+		case 'selectedImage':
+			var path = $($selector + ' button.btn-primary').data('image');
+			debug(1, path)
+			return path
+			break;
 		case 'radio':
 			//debug(`${$selector} [name=${properties.id}]:checked`);
 			return $(`${$selector} [name=${properties.id}]:checked`).attr(`data-${properties.columnName}`);
@@ -235,10 +266,83 @@ function getFormElement($selector, properties){
  * @param  {} value
  */
 function setFormElement($selector, properties, value){
-	debug(1, `setting: value of ${value} to:`, properties)
+	//debug(1, `setting: value of ${value} to:`, properties)
 	switch (properties.type){
+		case 'qtyYears':
+			if (value.length > 0){ //Entries exist
+				for (var i = 0; i < value.length; i++){
+					addQuantityFormControl($selector, i, {year: value[i].year, quantity: value[i].quantity}, false)
+				}
+			} else {
+				//addQuantityFormControl($selector, 0, {year: 2020, quantity: 1}, false)
+			}
+			break;
+		case 'droppableElements':
+			if (value == ''){
+				$($selector + ' div.card-body').empty();
+			} else {
+				value.forEach((element) => {
+					//$($selector + ' div.card-body').append(`<span id="draggable_${element[properties.attr.name]}" data-${properties.attr.name}="${element[properties.attr.columnName]}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${element[properties.columnName]}</span>`);
+					$($selector + ' div.card-body').append(`<span id="draggable_${element[properties.attr.name]}" data-${properties.attr.name}="${element[properties.attr.columnName]}" class="badge mx-1 bg-success text-white" draggable="true" ondragstart="dragStart(event)">${element[properties.columnName]}</span>`);
+				})
+			}
+			break;
+		case 'moveDroppableElements':
+			var sourceElements = document.querySelectorAll('#' + properties.sourceId + ' span');
+			//debug(1, 'moveDroppableElements', properties, 'val: ', value)
+			if (value) {
+				value.forEach((element) => {
+					//debug(1, 'element', element)
+					//Iterate through each source element and move to the target selector's .card-body
+					sourceElements.forEach((element2) => {
+						//debug(1, element2)
+
+						if (element2.dataset[properties.attr.name] == element[properties.attr.columnName]){
+							$($selector + ' .card-body').append(element2);
+						}
+					})
+				})
+			}
+			break;
+		case 'iconButtonSelected':
+			//debug(1, 'in iconButtonSelected', properties, 'value ' + value)
+
+			$($selector + ` button[data-${properties.attrName}="${value}"]`).addClass('btn-primary').removeClass('btn-secondary')
+			break;
+		case 'iconButtonChooser': //For the icon chooser modal
+
+			value.forEach((element) => {
+				var domElement = document.createElement('button');
+				$(domElement).addClass('btn btn-secondary m-2');
+				$(domElement).attr('data-image', element);
+				$(domElement).html(`<img src="${imagePath + element}" width="100" height="100"><br>${element}`);
+				$($selector).append(domElement);				
+			})
+
+			break;
+		case 'chosenIconBySrc':
+			//debug(1, 'Selecting current icon: ' + value)
+			$($selector + ` img[src="${imagePath + value}"]`).parent().addClass('btn-primary').removeClass('btn-secondary')
+			break;
+		case 'iconButton':
+			//debug(1, 'iconButton', properties, value)
+
+			var formElement = '';
+
+			value.forEach((element) => {
+				if (properties.attr) { formElement = `<button class="btn btn-secondary m-2" data-${properties.attr.name}="${element[properties.attr.name]}">`}
+				if (element.image !== undefined){
+					formElement += `<img src="./images/${element.image}" width="100" height="100"><br>${element.name}`
+				}
+				formElement += '</button>'
+				
+				$($selector).append(formElement);
+			})
+
+			break;
+		case 'moveDroppableElements':
 		case 'droppable':
-			var sourceElements = document.querySelectorAll(properties.$source + ' span');
+			var sourceElements = document.querySelectorAll('#' + properties.source + ' span');
 			if (value) {
 				value.forEach((element) => {
 					//Iterate through each source element and move to the target selector's .card-body
@@ -249,31 +353,48 @@ function setFormElement($selector, properties, value){
 					})
 				})				
 			}
-		break;
-		case 'select':
-			//Assumes select has been filled previously
-			//debug(1, 'in setForElement for a select: ' + properties.id, properties, value)
-			$(`#${properties.id} option[data-${properties.dataAttr}="${value}"]`).prop('selected', true);
-			if (value == '')
-			$($selector).empty();
+			break;
+		case 'select': //Assumes select has been filled previously and sets the value based on the passed attribute
+			//debug(1, 'in select', properties, value)
+			$($selector + ` option[data-${properties.dataAttr}="${value}"]`).prop('selected', true);
+			if (value == ''){$($selector).empty();}
+			break;
+		case 'selectOptions': //Fills a select
+			if(properties.attr){
+				value.forEach((element) => {
+					$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName]}</option>`)
+				})
+			} else {
+				value.forEach((element) => {
+					$($selector).append(`<option>${element}</option>`)
+				})
+			}
 			break;
 		case 'heading':
 			if (!properties.noUpdate){
 				$($selector).text(value)
 			}
-		break;
+			break;
 		case 'slider':
+			if(value == ''){ value = 0 }
 			$($selector).val(value)
-			debug(1, properties, value)
-			updateSlider($selector, value)			
-		break;
+			updateSlider($selector, value)
+			break;
+		case 'sliderDescription':
+			updateSlider($selector, $($selector).val())
+			break;
 		case 'textarea':
 		case 'text':
 		case 'number':
 			$($selector).val(value)
 			break;
+		case 'textList': //Comma separated list
+			var text = '';
+			//debug(1, 'in textList', value);
+			value.forEach((element) => {text += element[properties.columnName] + ','})
+			$($selector).val(text.substring(0, text.length - 1))
+			break;
 		case 'year':
-
 			break;
 		case 'checkbox':
 			if (value == 1){
@@ -283,9 +404,10 @@ function setFormElement($selector, properties, value){
 			}
 			break;
 		case 'img':
+		case 'image':
 			if (value == '') { value = 'tba.svg'}
 			$($selector).attr('src', imagePath + value)
-		break;
+			break;
 		case 'trafficLightRadio':
 			//Set focus to the current severity level
 			$($selector + ' button')
@@ -311,11 +433,36 @@ function setFormElement($selector, properties, value){
 				default:
 					debug('setFormElement switch default trafficLightRadio should not make it here due to value of ' + value)
 			}
+			break;
+		case 'orgPath':
+			var html = '';
 
-		break;
+			if (value.length == 0){
+				html = 'Not Applicable'
+			} else {
+				value.forEach((element) => {
+					//html = `<button href="#" onclick="commonModal({modal: '${properties.modal}', id_organisation: ${element.id_organisation}})" class="badge">${element.name}</button><span>&#8594;</span>` + html
+					html = `<button href="#" data-id_organisation="${element.id_organisation}" class="badge">${element.name}</button><span>&#8594;</span>` + html
+				})
+			}
+			$('#' + properties.id).html(html)
+
+			break;
+		case 'organisation':
+			var html = '';
+
+			if (value.length == 0){
+				html = 'Not Applicable'
+			} else {
+				value.forEach((element) => {
+					html += `<button href="#" data-id_organisation="${element.id_organisation}" class="badge mx-1">${element.name}</button>`;
+				})				
+			}
+			$('#' + properties.id).html(html)
+			break;
 		case 'null':
 			//No action required
-		break;
+			break;
 
 		default:
 			debug(1, `Switch default, shouldn't make it here in helpers.setFormElement() due to:`, properties)
@@ -330,17 +477,130 @@ function setFormElement($selector, properties, value){
 function addFormElement($selector, properties){
 
 	var formElement = '';
-
 	switch (properties.type){
-		case 'slider':
-			formElement += `<div><label for="${properties.id}">Severity</label><br/><input type="range" id="${properties.id}" name="${properties.id}" min="0" max="${properties.max}"><span id="${properties.id}_desc" class="mx-3"></span></div>`
-		break;
+		
+		case 'button':
+			//formElement += `<div class="form-group">`;
+			formElement += `<button id="${properties.id}" class="btn btn-info">${properties.label}</button>`
+			//formElement += `</div>`;
+			break;
+		
+		case 'buttons':
+			formElement += `<div class="row justify-content-left">`;
+			properties.buttons.forEach((element) => {
+
+				formElement += `<div class="col-6 my-2"><button id="${element.id}" class="btn btn-info btn-block">${element.label}</button></div>`
+			})
+			formElement += `</div>`;
+			break;		
+		
+		case 'checkbox':
+			formElement += `<div class="form-group">`;
+			formElement += `<div class="form-check">`;
+			if (properties.value == 1){
+				formElement += `<input id="${properties.id}" type="checkbox" class="form-check-input" checked>`;
+			} else {
+				formElement += `<input id="${properties.id}" type="checkbox" class="form-check-input">`;
+			}
+			formElement += `<label for="${properties.id}" class="form-check-label">${properties.label}</label>`;
+			formElement += `</div></div>`;
+			break;
+
+		case 'container':
+			formElement += `<div id="${properties.id}"></div>`;
+			break;
+		case 'div_links':
+			formElement += `<span id="${properties.id}"></span>`
+			break;
 		case 'droppable':
 			formElement += `<h5 class="my-2">${properties.label}</h5>
 			<div id="${properties.id}" class="card bg-light border-secondary">
 				<div class="card-body" ondrop="dragDrop(event, this)" ondragover="dragOver(event)"></div>
 			</div>`
-		break;
+
+			break;
+		case 'droppable2':																					//To replace droppable
+			formElement += `<h5 id="${properties.id}_heading" class="my-2">${properties.label}</h5>
+			<div id="${properties.id}" class="card bg-light border-secondary">
+				<div class="card-body"></div>
+			</div>`
+			break;
+		case 'heading':
+			formElement += `<h5`;
+			if (properties.id){	formElement += ` id="${properties.id}"` }
+			if (properties.align){	formElement += ` class="text-${properties.align}"` }
+			formElement += `>`;
+			if (properties.text){ formElement += properties.text }
+			formElement += `</h5>`;
+			break;			
+		case 'img':
+			formElement += `<div class="text-center">`;
+			formElement += `<img id="${properties.id}" src="${imagePath}tba.svg" width="200px" height="200px">`;
+			//formElement += `<button id="${properties.id}Button" type="button" class="btn btn-primary mx-2">Assign Icon</button>`;			//Need to work on this to make it more generic
+			formElement += `</div>`
+			break;
+		case 'note':
+			if (properties.inline){
+				formElement += `<p>${properties.text}<span id="${properties.inline.id}"></span></p>`;
+			} else {
+				formElement += `<p>${properties.text}</p>`;
+			}
+			break;
+		case 'null':
+			//No action required
+			break;
+		case 'number':
+			formElement += `<div class="form-group">`;
+			formElement += `<label for="${properties.id}">${properties.label}</label>`;
+			if (properties.value){
+				formElement += `<input id="${properties.id}" type="number" class="form-control" value="${properties.value}">`;
+			} else {
+				formElement += `<input id="${properties.id}" type="number" class="form-control" value="">`;
+			}
+			
+			formElement += `</div>`;
+			break;
+		case 'organisation':
+			formElement += `<p>${properties.text}<span id="${properties.id}"></span></p>`;
+			break;		
+		case 'option':
+			//Load options into the select identified by selector
+			if (properties.data){
+				$($selector).append(`<option data-${properties.data.name}="${properties.data.value}">${properties.label}</option>`)
+			} else {
+				$($selector).append(`<option>${properties.label}</option>`)
+			}
+			
+			break;
+		case 'qtyYears':	
+			var nextIndex = $($selector + ' [id^=formYears]').length;
+			if (nextIndex == 0){
+				var year = 2020
+			} else {
+				var year = parseInt($($selector + ' [id^=formYears]').last().val()) + 1;
+			}
+			addQuantityFormControl($selector, nextIndex, {year: year, quantity: 0}, false)
+			break;
+		case 'radio':
+			formElement += `<div id="${properties.id}" class="btn-group">`;
+
+			formElement += `<button class="btn btn-light mx-2" data-severity="critical"><img src="./assets/critical.png" width="30px"><br>Critical</button>`
+			formElement += `<button class="btn btn-light mx-2" data-severity="warning"><img src="./assets/warning.png" width="30px"><br>Warning</button>`
+			formElement += `<button class="btn btn-light mx-2" data-severity="notice"><img src="./assets/notice.png" width="30px"><br>Notice</button>`
+
+			formElement += `</div>`;
+			break;
+		case 'radioOld':
+			formElement += `<div id="${properties.id}" class="form-group">`;
+
+			properties.options.forEach((element) => {
+				formElement += `<div class="form-check form-check-inline">`;
+				formElement += `<input class="form-check-input" type="radio" name="${properties.id}" id="${properties.id}_${element}" value="${element}" data-severity="${element.toLowerCase()}">`;
+				formElement += `<label class="form-check-label" for="${properties.id}_${element}">${element}</label>`;
+				formElement += `</div>`;
+			})
+			formElement += `</div>`;
+			break;
 		case 'select':
 			formElement += `<div class="form-group"><label for="${properties.id}">${properties.label}</label>`;
 			if (properties.multiple){
@@ -359,27 +619,10 @@ function addFormElement($selector, properties){
 				})
 			}
 			formElement += `</select></div>`;
-		break;
-		case 'option':
-			//Load options into the select identified by selector
-			if (properties.data){
-				$($selector).append(`<option data-${properties.data.name}="${properties.data.value}">${properties.label}</option>`)
-			} else {
-				$($selector).append(`<option>${properties.label}</option>`)
-			}
-			
-		break;
-		case 'number':
-			formElement += `<div class="form-group">`;
-			formElement += `<label for="${properties.id}">${properties.label}</label>`;
-			if (properties.value){
-				formElement += `<input id="${properties.id}" type="number" class="form-control" value="${properties.value}">`;
-			} else {
-				formElement += `<input id="${properties.id}" type="number" class="form-control" value="">`;
-			}
-			
-			formElement += `</div>`;
-		break;
+			break;
+		case 'slider':
+			formElement += `<div><label for="${properties.id}">Severity</label><br/><input type="range" id="${properties.id}" name="${properties.id}" min="0" max="${properties.max}"><span id="${properties.id}_desc" class="mx-3"></span></div>`
+			break;			
 		case 'text':
 			formElement += `<label for="${properties.id}">${properties.label}</label>`;
 			formElement += `<div class="input-group mb-3">`;
@@ -403,89 +646,19 @@ function addFormElement($selector, properties){
 			//Append any inputs to the text box
 
 			formElement += `</div>`;
-		break;
-		case 'year':
-			formElement += `<div class="form-group">`;
-			formElement += `<label for="${properties.id}">${properties.label}</label>`;
-			formElement += `<input id="${properties.id}" type="number" class="form-control" min="2000" max="2099" value="">`;
-			formElement += `</div>`;
-		break;
-		case 'checkbox':
-			formElement += `<div class="form-group">`;
-			formElement += `<div class="form-check">`;
-			if (properties.value == 1){
-				formElement += `<input id="${properties.id}" type="checkbox" class="form-check-input" checked>`;
-			} else {
-				formElement += `<input id="${properties.id}" type="checkbox" class="form-check-input">`;
-			}
-			formElement += `<label for="${properties.id}" class="form-check-label">${properties.label}</label>`;
-			formElement += `</div></div>`;
-		break;
-		case 'button':
-			//formElement += `<div class="form-group">`;
-			formElement += `<button id="${properties.id}" class="btn btn-info">${properties.label}</button>`
-			//formElement += `</div>`;
-		break;
-		case 'img':
-			formElement += `<div class="text-center">`;
-			formElement += `<img id="${properties.id}" src="${imagePath}tba.svg" width="200px" height="200px">`;
-			//formElement += `<button id="${properties.id}Button" type="button" class="btn btn-primary mx-2">Assign Icon</button>`;			//Need to work on this to make it more generic
-			formElement += `</div>`
-		break;
+			break;
 		case 'textarea':
 			formElement += `<div class="form-group">`;
 			formElement += `<label for="${properties.id}">${properties.label}</label>`;
 			formElement += `<textarea id="${properties.id}" class="form-control" rows="4"></textarea>`;
 			formElement += `</div>`
-		break;
-		case 'radioOld':
-			formElement += `<div id="${properties.id}" class="form-group">`;
-
-			properties.options.forEach((element) => {
-				formElement += `<div class="form-check form-check-inline">`;
-				formElement += `<input class="form-check-input" type="radio" name="${properties.id}" id="${properties.id}_${element}" value="${element}" data-severity="${element.toLowerCase()}">`;
-				formElement += `<label class="form-check-label" for="${properties.id}_${element}">${element}</label>`;
-				formElement += `</div>`;
-			})
+			break;
+		case 'year':
+			formElement += `<div class="form-group">`;
+			formElement += `<label for="${properties.id}">${properties.label}</label>`;
+			formElement += `<input id="${properties.id}" type="number" class="form-control" min="2000" max="2099" value="">`;
 			formElement += `</div>`;
-		break;
-		case 'radio':
-		case 'trafficLightRadio':
-			formElement += `<div id="${properties.id}" class="btn-group">`;
-
-			formElement += `<button class="btn btn-light mx-2" data-severity="critical"><img src="./assets/critical.png" width="30px"><br>Critical</button>`
-			formElement += `<button class="btn btn-light mx-2" data-severity="warning"><img src="./assets/warning.png" width="30px"><br>Warning</button>`
-			formElement += `<button class="btn btn-light mx-2" data-severity="notice"><img src="./assets/notice.png" width="30px"><br>Notice</button>`
-
-			formElement += `</div>`;
-		break;
-
-		case 'buttons':
-			formElement += `<div class="row justify-content-left">`;
-			properties.buttons.forEach((element) => {
-
-				formElement += `<div class="col-6 my-2"><button id="${element.id}" class="btn btn-info btn-block">${element.label}</button></div>`
-			})
-			formElement += `</div>`;
-		break;
-
-		case 'note':
-			formElement += `<p>${properties.text}</p>`;
-		break;
-		case 'heading':
-			formElement += `<h5`;
-			if (properties.id){	formElement += ` id="${properties.id}"` }
-			if (properties.align){	formElement += ` class="text-${properties.align}"` }
-			formElement += `>`;
-			if (properties.text){ formElement += properties.text }
-			formElement += `</h5>`;
-		break;
-		case 'container':
-			formElement += `<div id="${properties.id}"></div>`;
-		break;
-		case 'null':
-			//No action required
-		break;
+			break;
 		default:
 			debug(`Switch default, shouldn't make it here in helpers.addFormElement() with ${properties.type}`)
 
@@ -493,6 +666,39 @@ function addFormElement($selector, properties){
 
 	//Insert the element into the DOM
 	$($selector).append(formElement);
+}
+
+
+/**
+ * @description Inserts form elements into the DOM.
+ * 
+ * @param  {type, id, label, value, options{} } properties
+ */
+ function deleteFormElement($selector, properties){
+
+	var formElement = '';
+
+	switch (properties.type){
+		case 'qtyYears':
+			
+			$($selector + ' > div').last().remove()
+
+			/*
+			var html = `<div id="inputDiv_${index}" class="form-row my-2">
+							<div class="col">
+								<input id="formYears_${index}" type="number" class="form-control" value="${details.year}">
+							</div>
+							<div class="col">
+								<input id="formQuantity_${index}" type="number" class="form-control" value="${details.quantity}">
+							</div>
+						</div>`
+			*/
+
+			break;
+		default:
+			debug(`Switch default, shouldn't make it here in helpers.deleteFormElement() with ${properties.type}`)
+
+	}
 }
 
 
@@ -537,19 +743,19 @@ function validate(selector, properties){
  * @description  
  * 
  */
-function addQuantityFormControl(selector, index, details, after){
+function addQuantityFormControl($selector, index, details, after = false){
 	var html = `<div id="inputDiv_${index}" class="form-row my-2">
-		<div class="col">
-			<input id="formYears_${index}" type="number" class="form-control" value="${details.year}">
-		</div>
-		<div class="col">
-			<input id="formQuantity_${index}" type="number" class="form-control" value="${details.quantity}">
-		</div>
-	</div>`
+					<div class="col">
+						<input id="formYears_${index}" type="number" class="form-control" value="${details.year}">
+					</div>
+					<div class="col">
+						<input id="formQuantity_${index}" type="number" class="form-control" value="${details.quantity}">
+					</div>
+				</div>`
 	if (after) {
-		$(html).insertAfter(selector);
+		$(html).insertAfter($selector);
 	} else {
-		$(selector).append(html);
+		$($selector).append(html);
 	}
 }
 
@@ -649,7 +855,8 @@ function getReferenceURL(reference){
  */
 function dragStart(ev){
 	 // Add the target element's id to the data transfer object
-	 //debug(1, ev)
+	 //debug(1, 'in dragstart', ev)
+	 //ev.dataTransfer.setData("draggableElement", ev.target.id);
 	 ev.dataTransfer.setData("draggableElement", ev.target.id);
 }
 
@@ -986,7 +1193,7 @@ function lockControlsOnUpdate(formDetails, lock = true){
 
 
 function updateEvents(formDetails, callback){
-	
+	debug(1, 'In updateEvents XXX DONT MORE updateSlider')
 	formDetails.forEach((element) => {
 		switch (element.type){
 			case 'text':
@@ -1093,9 +1300,11 @@ function getColor(index){
 	return colors[i];
 }
 
+
 function systemButton(id_system, name){
-	return `<a href="#" class='btn btn-sm btn-outline-dark my-1 mx-1' onclick="updateSystemsModal(${id_system});">${name}</a>`
+	return `<a href="#" class='btn btn-sm btn-outline-dark my-1 mx-1' onclick="commonModal({modal: 'systems', id_system: ${id_system}});">${name}</a>`
 }
+
 
 function displayTags($selector){
 		//Setup the page
@@ -1117,6 +1326,6 @@ function displayTags($selector){
 function updateSlider($selector, value){
 	$($selector + '_desc').empty()
 	if (value != undefined){
-		$($selector + '_desc').html(`<strong>${labels.severity[value].label}</strong> ${labels.severity[value].description}`)
+		$($selector + '_desc').html(`<strong>${severityLabels[value].label}</strong> ${severityLabels[value].description}`)
 	}
 }

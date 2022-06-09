@@ -114,7 +114,7 @@ class Node {
 			
 		}
 
-		if (node.type == 'Network'){
+		if (node.type == 'Link'){
 			standardSet();
 			this.id_network = node.id_network;
 			this.idNo = node.id_network;
@@ -193,7 +193,7 @@ class Node {
 			)
 		}
 
-		if (this.type == "Network"){
+		if (this.type == "Link"){
 			data.push(
 				//{ label: 'Node ID', value: this.id_network },
 				{ label: 'Network Name', value: this.name },

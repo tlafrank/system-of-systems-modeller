@@ -1,5 +1,7 @@
 const { format } = require('./db');
 const sql = require('./db');
+const path = require('path');
+const fs = require('fs');
 
 
 let debugLevel = 3;
@@ -15,17 +17,172 @@ exports.switch = (req,res) => {
 	debug(1, `select.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 	debug(1, req.body)
 
-	var queryString;
+	var queryString = '';
 	var includedTags = []
 	var excludedTags = [];
 	if (!(typeof req.body.includedFilterTag === 'undefined')) {includedTags = req.body.includedFilterTag }
 	if (!(typeof req.body.excludedFilterTag === 'undefined')) {excludedTags = req.body.excludedFilterTag }
 
 
-	//Get all subsystems
-	if (req.body.type == 'Subsystems'){
-		queryString = sql.format(`SELECT * FROM subsystems ORDER BY name;`)
+	switch (req.body.type){
+		case 'SystemsAssignedToOrgDetail':
+			queryString += sql.format('SELECT * FROM OSMap WHERE id_OSMap = ?;', req.body.id_OSMap)
+			break;
+		case 'PrimarySystems': //Those systems which are not children of other systems
+			queryString += sql.format(`
+			SELECT *
+			FROM systems
+			LEFT JOIN SMap
+			ON SMap.child = systems.id_system
+			WHERE SMap.child IS NULL ORDER BY name;`)
+			break;
+		case 'System':
+		case 'SingleSystem':
+			queryString += sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])
+			break;
+		case 'SingleSystem_WithTags':
+			queryString += sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])
+			queryString += sql.format(`SELECT * FROM tags WHERE id_system = ?;`,[req.body.id_system])
+			break;		
+		case 'AllSystems':
+			queryString = sql.format(`SELECT * FROM systems ORDER BY name;`)
+			break;
+		case 'SystemChildren':
+			queryString += sql.format('SELECT * FROM SMap LEFT JOIN systems ON SMap.parent = systems.id_system WHERE systems.id_system = ?;', req.body.id_system)
+			break;
+		case 'images':
+			const directoryPath = path.join(__dirname, '../images/');
+			debug(1, 'Image folder path is: ' + directoryPath);
+		
+			fs.readdir(directoryPath, (err,files) => {
+				if (err) { 
+					return;
+				}
+				debug(1, 'Files in directory:');
+				debug(1, files);
+		
+				//Respond to client
+				res.json(files);
+			});			
+			break;
+		case 'AllInterfaces': //Get all interfaces, or a specific one
+			queryString += sql.format(`SELECT * FROM interfaces ORDER BY name;`);
+			break;
+		case 'SingleInterface':
+			queryString += sql.format(`SELECT * FROM interfaces WHERE id_interface = ?`,[req.body.id_interface])
+			break;
+		case 'SystemInterfaces'://Get the list of all interfaces attached to a supplied id_system
+			queryString += sql.format(`
+				SELECT SIMap.id_SIMap AS id_SIMap, SIMap.id_interface, interfaces.name, interfaces.image, SIMap.name AS SIName, SIMap.description
+				FROM SIMap
+				LEFT JOIN interfaces
+				ON SIMap.id_interface = interfaces.id_interface
+				WHERE SIMap.id_system = ?;`,[req.body.id_system])
+			break;
+		case 'SpecificSystemInterface'://Get the list of all interfaces attached to a supplied id_system
+			queryString += sql.format(`SELECT * FROM SIMap WHERE SIMap.id_SIMap = ?;`,[req.body.id_SIMap])
+			break;
+		case 'AllTechnologies': //Get all technologies in alphabertical order
+			queryString += sql.format(`SELECT * FROM technologies ORDER BY name;`)
+			break;
+		case 'SingleTechnology':
+			queryString += sql.format(`SELECT * FROM technologies WHERE id_technology = ?;`, req.body.id_technology)
+			break;
+		case 'AssignedTechnologies'://Get all technologies implemented by a given interface
+			queryString += sql.format(`SELECT * 
+			FROM technologies
+			LEFT JOIN TIMap
+			ON TIMap.id_technology = technologies.id_technology
+			WHERE TIMap.id_interface = ?
+			ORDER BY name;`, req.body.id_interface)
+			break;
+		case 'QtyYears':
+			queryString += sql.format(`SELECT *
+				FROM quantities
+				WHERE quantities.id_system = ?
+				ORDER BY quantities.year;`, [req.body.id_system])
+			break;
+		case 'AllLinks':
+			queryString += sql.format(`SELECT networks.*, technologies.name AS technologyName FROM networks LEFT JOIN technologies ON networks.id_technology = technologies.id_technology ORDER BY networks.name;`)
+		break;
+		case 'Link':
+			queryString += sql.format('SELECT networks.*, technologies.name AS technologyName FROM networks LEFT JOIN technologies ON networks.id_technology = technologies.id_technology WHERE networks.id_network = ?',[req.body.id_network])
+			break;
+		case 'SpecificSystemInterfaceAndLinks':
+			queryString += sql.format(`SELECT * FROM SIMap WHERE SIMap.id_SIMap = ?;`,[req.body.id_SIMap])
+			queryString += sql.format(`
+			SELECT *
+			FROM networks
+			WHERE id_technology IN	
+				(SELECT id_technology
+				FROM SIMap
+				LEFT JOIN interfaces
+				ON SIMap.id_interface = interfaces.id_interface
+				LEFT JOIN TIMap
+				ON interfaces.id_interface = TIMap.id_interface
+				WHERE id_SIMap = ?);`, req.body.id_SIMap)
+	
+			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND (category='primary' OR category IS NULL);`, [req.body.id_SIMap])
+			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND category='alternate';`, [req.body.id_SIMap])
+			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND category='incapable';`, [req.body.id_SIMap])
+
+			break;
+		case 'AllInterfaceIssues':
+			queryString += sql.format(`
+				SELECT interfaceIssues.*
+				FROM interfaceIssues
+				LEFT JOIN interfaces
+				ON interfaceIssues.id_interface = interfaces.id_interface
+				WHERE interfaces.id_interface = ?;`, req.body.id_interface);
+
+
+
+		/*
+			queryString = sql.format(`SET @id_interface = ?;`, req.body.id_interface)
+	
+
+				queryString += sql.format(`SELECT @id_interfaceIssue:= MIN(id_interfaceIssue) AS id_interfaceIssue FROM interfaceIssues WHERE  id_interface = @id_interface;`)
+			} else {
+				queryString += sql.format(`SELECT @id_interfaceIssue:= ? AS id_interfaceIssue;`, req.body.id_interfaceIssue)
+			}
+				queryString += sql.format(`
+				SELECT interfaceIssues.*, interfaceIssues.name
+				FROM interfaceIssues
+				LEFT JOIN interfaces
+				ON interfaceIssues.id_interface = interfaces.id_interface
+				WHERE interfaces.id_interface = @id_interface;
+				SELECT id_system, id_interfaceIssue
+				FROM issuesToSystemsMap
+				WHERE id_interfaceIssue = @id_interfaceIssue;`);
+
+		
+		
+			
+		*/
+
+			break;
+		case 'SpecificInterfaceIssue':
+			queryString += sql.format(`SET @id_interfaceIssue = ?;`, req.body.id_interfaceIssue)
+			queryString += sql.format(`
+				SELECT interfaceIssues.*
+				FROM interfaceIssues
+				LEFT JOIN interfaces
+				ON interfaceIssues.id_interface = interfaces.id_interface
+				WHERE interfaceIssues.id_interfaceIssue = @id_interfaceIssue;
+				SELECT * 
+				FROM issuesToSystemsMap
+				WHERE issuesToSystemsMap.id_interfaceIssue = @id_interfaceIssue`);
+			
+
+			break;
+		case '':
+
+			break;
+		case '':
+
+			break;
 	}
+
 
 	//Get the mapping of subsystems to systems
 	if (req.body.type == 'SubsystemMap'){
@@ -45,20 +202,6 @@ exports.switch = (req,res) => {
 
 	//******************************** System ****************************************
 
-	//Get all systems, or a specific one
-	if (req.body.type == 'System'){
-		//Build the query
-		if (req.body.id_system){ //id_system has been provided
-			//Get system details
-			queryString = sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])
-			if (!req.body.noTags){
-				queryString += sql.format(`SELECT * FROM tags WHERE id_system = ?;`,[req.body.id_system])
-			}
-		
-		} else { //No id_system provided
-			queryString = sql.format(`SELECT * FROM systems ORDER BY name;`)
-		}
-	}
 
 	//Get a specific system without tags																							//Copy of 'System'
 	if (req.body.type == 'SystemNoTags'){
@@ -90,23 +233,10 @@ exports.switch = (req,res) => {
 
 	//******************************** Technologies ****************************************
 
-	//Get all technologies in alphabertical order
-	if (req.body.type == 'Technologies'){
-		//Build the query
-		queryString = sql.format(`SELECT * FROM technologies ORDER BY name;`)
-	}
 
 
-	//Get all technologies implemented by a given interface
-	if (req.body.type == 'AssignedTechnologies'){
-		//Build the query
-		queryString = sql.format(`SELECT * 
-		FROM technologies
-		LEFT JOIN TIMap
-		ON TIMap.id_technology = technologies.id_technology
-		WHERE TIMap.id_interface = ?
-		ORDER BY name;`, req.body.id_interface)
-	}
+
+
 
 	
 	if (req.body.type == 'CompatibleFeatures'){																	//CFD
@@ -122,13 +252,7 @@ exports.switch = (req,res) => {
 
 
 
-	//Get all interfaces, or a specific one
-	if (req.body.type == 'Interface'){
-		//Build the query
-		queryString = sql.format(`SELECT * FROM interfaces`)
-		if (req.body.id_interface) { queryString += sql.format(' WHERE id_interface = ?',[req.body.id_interface])}
-		queryString += ' ORDER BY name;';
-	}
+
 
 	//
 	if (req.body.type == 'SystemInterface'){ 
@@ -144,46 +268,14 @@ exports.switch = (req,res) => {
 
 	}
 
-	//Get the list of all interfaces attached to a supplied id_system
-	if (req.body.type == 'SystemInterfaces'){ 
-		//Build the query
-		queryString = sql.format(`
-			SELECT SIMap.id_SIMap AS id_SIMap, SIMap.id_interface, interfaces.name, interfaces.image
-			FROM SIMap
-			LEFT JOIN interfaces
-			ON SIMap.id_interface = interfaces.id_interface
-			WHERE SIMap.id_system = ?;`,[req.body.id_system])
-	}
+
 
 	//******************************** Network ****************************************
 
-	//Get all networks, or a specific one
-	if (req.body.type == 'Network'){
-		if (req.body.id_network) { 
-			queryString = sql.format('SELECT networks.*, technologies.name AS technologyName FROM networks LEFT JOIN technologies ON networks.id_technology = technologies.id_technology WHERE networks.id_network = ?',[req.body.id_network])
-		} else { //No id_network provided
-			queryString = sql.format(`SELECT networks.*, technologies.name AS technologyName FROM networks LEFT JOIN technologies ON networks.id_technology = technologies.id_technology ORDER BY networks.name;`)
-		}
-	}
+
 
 	//Returns the list of networks which are matched to the technologies implemented by a given system interface (id_SIMap)
-	if (req.body.type == 'CompatibleNetworks'){
-		queryString = sql.format(`
-		SELECT *
-		FROM networks
-		WHERE id_technology IN	
-			(SELECT id_technology
-			FROM SIMap
-			LEFT JOIN interfaces
-			ON SIMap.id_interface = interfaces.id_interface
-			LEFT JOIN TIMap
-			ON interfaces.id_interface = TIMap.id_interface
-			WHERE id_SIMap = ?);`, [req.body.id_SIMap])
 
-		queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND (category='primary' OR category IS NULL);`, [req.body.id_SIMap])
-		queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND category='alternate';`, [req.body.id_SIMap])
-		queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND category='incapable';`, [req.body.id_SIMap])
-	}
 
 	//Returns networks which are already assigned to the System Interface
 	if (req.body.type == 'AssignedNetworks'){
@@ -203,27 +295,6 @@ exports.switch = (req,res) => {
 	//******************************** Issues ****************************************
 
 
-	if (req.body.type == 'InterfaceIssues'){
-		queryString = sql.format(`SET @id_interface = ?;`, req.body.id_interface)
-
-		if (req.body.id_interfaceIssue == 0){
-			queryString += sql.format(`SELECT @id_interfaceIssue:= MIN(id_interfaceIssue) AS id_interfaceIssue FROM interfaceIssues WHERE  id_interface = @id_interface;`)
-		} else {
-			queryString += sql.format(`SELECT @id_interfaceIssue:= ? AS id_interfaceIssue;`, req.body.id_interfaceIssue)
-		}
-
-		queryString += sql.format(`
-			SELECT interfaceIssues.*, interfaceIssues.name
-			FROM interfaceIssues
-			LEFT JOIN interfaces
-			ON interfaceIssues.id_interface = interfaces.id_interface
-			WHERE interfaces.id_interface = @id_interface;
-			SELECT id_system, id_interfaceIssue
-			FROM issuesToSystemsMap
-			WHERE id_interfaceIssue = @id_interfaceIssue;`);
-
-
-	}
 
 	if (req.body.type == 'BasicIssues'){
 		//Build the query
@@ -366,29 +437,86 @@ exports.switch = (req,res) => {
 
 	}
 
-	if (req.body.type == 'QtyYears'){
+
+
+	if (req.body.type == 'Organisation'){
 		//Build the query
-		queryString = sql.format(`SELECT *
-		FROM quantities
-		WHERE quantities.id_system = ?
-		ORDER BY quantities.year;`, [req.body.id_system])
+
+		if (typeof req.body.id_organisation === 'undefined'){
+			queryString = sql.format(`SET @org = 1;`)
+		} else {
+			queryString = sql.format(`SET @org = ?;`, [req.body.id_organisation])
+		}	
+
+		queryString += sql.format(`
+		#Nodes above
+		WITH RECURSIVE cte AS
+			(SELECT a.parent, a.child FROM OMap AS a WHERE a.child = @org
+			UNION ALL
+			SELECT b.parent, b.child FROM cte, OMap AS b WHERE cte.parent = b.child)
+		SELECT organisation.* FROM cte LEFT JOIN organisation ON organisation.id_organisation = cte.parent;
+			
+		#This node
+		SELECT * FROM organisation WHERE organisation.id_organisation = @org;
+
+		#Nodes below
+		WITH RECURSIVE cte AS
+			(SELECT a.id_OMap, a.parent, a.child, 1 as depth FROM OMap AS a WHERE a.parent = @org
+			UNION ALL
+			SELECT b.id_OMap, b.parent, b.child, cte.depth + 1 FROM cte, OMap AS b WHERE b.parent = cte.child AND cte.depth < 1)
+		SELECT organisation.* FROM cte LEFT JOIN organisation ON cte.child = organisation.id_organisation ORDER BY organisation.name;`)
+
 	}
 
-	if (!queryString){ res.json({msg: 'There was an error executing the query (select.json)', err: 'No queryString was developed.'}) }
+	if (req.body.type == 'SystemsAssignedToOrg'){
+		//Build the query
+		queryString = sql.format(`
+		SELECT * FROM OSMap
+		LEFT JOIN systems
+		ON systems.id_system = OSMap.id_system
+		WHERE OSMap.id_organisation = ?;`, [req.body.id_organisation])
+	}
 
-	queryString = queryString.trim();
-	let re = /\n\s\s+/gi;
-	queryString = queryString.replace(re,'\n\t')
 
-	debug(2,'Query:  ' + queryString);
-	execute;
+	if (queryString == ''){ 
+		//res.json({msg: 'There was an error executing the query (select.json)', err: 'No queryString was developed.'}) 
+	} else {
+		queryString = queryString.trim();
+		let re = /\n\s\s+/gi;
+		queryString = queryString.replace(re,'\n\t')
 
-	var execute = executeQuery(queryString)
+		debug(2,'Query:  ' + queryString);
+		execute;
+
+		var execute = executeQuery(queryString)
 
 		.then((result) => {
 			switch (req.body.type){
+				case 'SystemsAssignedToOrgDetail':
+				case 'SpecificSystemInterface':
+				case 'SingleInterface':
+				case 'SingleSystem':
+				case 'Link':
+				case 'SingleTechnology':
+				case 'System':
+				case 'SystemInterface':
+					res.json(result[0])
+					break;
+				case 'SpecificInterfaceIssue':
+					res.json([result[1], result[2]]);
+					break;
+				case 'SingleSystem_WithTags':
+					res.json([result[0][0], result[1]])
+					break;
+				case 'SpecificSystemInterfaceAndLinks':
+					res.json([result[0][0], result[1], result[2], result[3], result[4]])
+					break;
 				case 'InterfaceQuantitiesInYear':
 					res.json(result[4])
+				break;
+				case 'Organisation':
+					//res.json(result)
+					res.json([result[1],result[2],result[3]])
 				break;
 				case 'Issues':
 					res.json(result[6])
@@ -397,9 +525,8 @@ exports.switch = (req,res) => {
 					res.json(result) 
 			}
 
-			
-		})
-		.catch((err) => {
+				
+		}).catch((err) => {
 			debug(3,err);
 			if (debugLevel == 7){
 				res.json({msg: 'There was an error executing the query (select.json)', err: err})
@@ -407,6 +534,7 @@ exports.switch = (req,res) => {
 				res.json({msg: 'There was an error executing the query (select.json)'})
 			}
 		});
+	}
 }
 
 

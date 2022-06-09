@@ -14,11 +14,9 @@ function debug(level, msg){
 
 const tableList = [
 	'systems',
-	'subsystems',
 	'technologies',
 	'interfaces',
 	'networks',
-	'SSMap',
 	'SIMap',
 	'SINMap',
 	'TIMap',
@@ -28,7 +26,10 @@ const tableList = [
 	'classes',
 	'systemClassMap',
 	'tags',
-	'dataExchanges'
+	'dataExchanges',
+	'organisation',
+	'OMap',
+	'OSMap'
 ];
 
 exports.run = (req,res) => {

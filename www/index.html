@@ -20,25 +20,33 @@
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.0/cytoscape.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+		<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+		<script src="https://unpkg.com/layout-base/layout-base.js"></script>
+		<script src="https://unpkg.com/cose-base/cose-base.js"></script>
+		<script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
 		-->
 
+	
 
 		<!-- Locally Sourced -->
-		<link rel="stylesheet" type="text/css" href="./assets/bootstrap.min.css">
-		<script src="./assets/jquery-3.5.1.min.js"></script>
-		<script src="./assets/popper.min.js"></script>
-		<script src="./assets/bootstrap.min.js"></script>
-		<script src="./assets/cytoscape.min.js"></script>
-		<script src="./assets/chart.min.js"></script>
-			
+		<link rel="stylesheet" type="text/css" href="./src/bootstrap.min.css">
+		<script src="./src/jquery-3.5.1.min.js"></script>
+		<script src="./src/popper.min.js"></script>
+		<script src="./src/bootstrap.min.js"></script>
+		<script src="./src/chart.min.js"></script>
+		<script src="./src/cytoscape.min.js"></script>
+		<script src="./src/layout-base.js"></script>
+		<script src="./src/cose-base.js"></script>
+		<script src="./src/cytoscape-fcose.js"></script>
 		
 
 		<link rel="stylesheet" href="./css/style.css">
 
 		<!-- Page scripts -->
 		<script src="./clientSide/Node.js" type="text/javascript" defer></script>
-		<script src="./clientSide/GraphSettings.js" type="text/javascript" defer></script>
+		
 		<script src="./clientSide/constants.js" type="text/javascript" defer></script>
+		<script src="./clientSide/privateConstants.js" type="text/javascript" defer></script>
 		<script src="./clientSide/helpers.js" type="text/javascript" defer></script>
 		<script src="./clientSide/modals.js" type="text/javascript" defer></script>
 		<script src="./clientSide/index.js" type="text/javascript" defer></script>
@@ -59,32 +67,46 @@
 			<ul class="navbar-nav mr-auto">
 
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Update</a>
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">System</a>
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-						<!--<a id="nodeConnections" class="dropdown-item" href="#">Node Connections</a> -->
-						<a class="dropdown-item" href="#" onclick="update_system()">Systems</a>
+						<!---->
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('systems')">Systems</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('mapSystems')">System Relationships</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('interfaces')">Interfaces</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('links')">Links</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('technologies')">Link Technologies</a></li>
 						<li><hr class="dropdown-divider"></li>
-						<li><a class="dropdown-item" href="#" onclick="update_subsystems()">Subsystems</a></li>
-						<li><a class="dropdown-item" href="#" onclick="update_interface()">Interfaces</a></li>
-						<li><a class="dropdown-item" href="#" onclick="update_network()">Links</a></li>
-						<li><a class="dropdown-item" href="#" onclick="update_technologies()">Link Technologies</a></li>
-						<li><a class="dropdown-item" href="#" onclick="data_exchanges()">Data Exchanges</a></li>
-						<li><a class="dropdown-item" href="#" onclick="update_systemLinks()">Map Links to Systems</a></li>
-						<li><a class="dropdown-item" href="#" onclick="update_issues()">Issues</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('interfaceIssues')">Issues</a></li>
 					</ul>
 				</li>
+
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Organisation</a>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('organisation')">Organisation</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('orgSystemMap')">Attach Systems to Organisational Nodes</a></li>
+					</ul>
+				</li>				
 
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">View</a>
 					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
 						<a class="dropdown-item" href="#" onclick="view_graph()">Graph</a>
+						<a class="dropdown-item" href="#" onclick="view_compoundGraph()">Compound Graph</a>
 						<a class="dropdown-item" href="#" onclick="view_summary()">System Summary</a>
 						<a class="dropdown-item" href="#" onclick="view_issues()">Issue Summary</a>
 						<a class="dropdown-item" href="#" onclick="view_charts()">Charts</a>
 					</div>
 				</li>
 
-
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Analysis</a>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<!--<a id="nodeConnections" class="dropdown-item" href="#">Node Connections</a> -->
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('parents')">Parents of Children</a></li>
+					</ul>
+				</li>			
+				
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Maintenance</a>
 					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -95,9 +117,6 @@
 				<li class="nav-item">
 					<a class="nav-link" href="#" onclick="settingsModal()">Settings</a>
 				</li>
-
-
-
 			</div>
 		</nav>
 		<h2 id="pageTitle" class="text-center">System Design</h2>
@@ -140,7 +159,7 @@
 
 					<div class="row">
 						<div class="col">
-							<button id="manageTags" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="manageTags()">Manage Tags</button>
+							<button id="manageTags" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="commonModal({modal: 'tags'})">Manage Tags</button>
 						</div>
 						<div class="col">
 							
@@ -176,114 +195,6 @@
 			</div>
 		</div>
 
-		<!-- Modals -->
-		<!-- Add / Edit Node -->
-		<div class="modal" tabindex="-1" role="dialog" id="nodeModal">
-			<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-				<h5 id="nodeModalTitle" class="modal-title">Modal title</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				</div>
-				<div class="modal-body">
-				<p id="nodeModalNodeDescription"></p>
-				<form id="formNodeModal">
-				</form>
-				</div>
-				<div class="modal-footer">
-				<span id="nodeModalWarning" class="badge rounded-pill bg-danger text-white" hidden>Test</span>
-				<button id="nodeModalDeleteButton" type="button" class="btn btn-danger">Delete</button>
-				<button id="nodeModalSubmit" type="button" class="btn btn-primary">Save changes</button>
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-				</div>
-			</div>
-			</div>
-		</div>
-
-		<!-- Add Icon -->
-		<div class="modal" tabindex="-1" role="dialog" id="iconModal">
-			<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-				<h5 id="attachIconModalTitle" class="modal-title">Assign Icon</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				</div>
-				<div class="modal-body">
-				<div id="iconContainer"></div>
-				</div>
-				<div class="modal-footer">
-				<button id="iconModalSave" type="button" class="btn btn-primary">Save changes</button>
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-				</div>
-			</div>
-			</div>
-		</div>
-
-		<!-- Edit Interface -->
-		<div class="modal" tabindex="-1" role="dialog" id="editInterfaceModal">
-			<div class="modal-dialog modal-lg" role="document">
-				<div class="modal-content">
-				<div class="modal-header">
-					<h5 id="editInterfaceModalTitle" class="modal-title">Select Interface</h5>
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-					</button>
-				</div>
-				<div class="modal-body">
-					
-				</div>
-				<div class="modal-footer">
-					<button id="editInterfaceNext" type="button" class="btn btn-primary">Next</button>
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-				</div>
-				</div>
-			</div>
-		</div>
-			
-
-		<!-- Interfaces to System Modal -->
-		<div class="modal" tabindex="-1" role="dialog" id="mappingModal">
-			<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-				<h5 class="modal-title">Assign Interfaces to Systems</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				</div>
-				<div class="modal-body">
-				<div class="text-center">
-					<div id="mappingModalImageContainer" class="container">
-					<h5 id="mappingModalTitle1">CL</h5>
-					<img id="mappingModalImage" src="" width="100px" height="100px">
-					</div>
-				</div>
-				<h5 id="mappingModalTitle2">Interfaces</h5>
-				<form>
-					<div class="form-group">
-					<!--<label id="mappingModalSelectLabel" for="mappingModalSelect"></label>-->
-					<select class="form-control" id="mappingModalSelect">
-					</select>
-					</div>
-				</form>
-				<button id="mappingModalAddButton" type="button" class="btn btn-primary btn-block my-1 text-center"></button>
-				<h5 id="mappingModalTitle3">Installed Interfaces</h5>
-				<div id="mappingModalContainer"></div>
-				</div>
-				<div class="modal-footer">
-				<span id="mappingModalWarning" class="badge rounded-pill bg-danger d-none text-white"></span>
-				<button id="mappingModalDeleteButton" type="button" class="btn btn-danger" disabled>Delete</button>
-				<!--<button type="button" class="btn btn-primary">Save changes</button>-->
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-				</div>
-			</div>
-			</div>
-		</div>
-
 		<!-- Main Modal Interface -->
 		<div class="modal" tabindex="-1" role="dialog" id="mainModal">
 			<div class="modal-dialog modal-lg" role="document">
@@ -296,44 +207,6 @@
 				</div>
 				<div class="modal-body">
 					
-				</div>
-				<div class="modal-footer">
-					<div class="warning-holder"></div>
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">SHOULDNT SEE</button>
-				</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Support Modal Interface -->
-		<div class="modal" tabindex="-1" role="dialog" id="supportModal">
-			<div class="modal-dialog modal-lg" role="document">
-				<div class="modal-content">
-				<div class="modal-header">
-					<h5 id="supportModalTitle" class="modal-title">Main Modal</h5>
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-					</button>
-				</div>
-				<div class="modal-body">
-					<p>Test</p>
-					<form>
-						<div class="form-row">
-							<div class="col">
-								<input type="number" class="form-control" value="2020">
-							</div>
-							<div class="col">
-								<input type="number" class="form-control">
-							</div>
-							
-						</div>
-						<div class="row justify-content-end my-2">
-							<div class="col-auto">
-								<button class="btn btn-primary">Add New Fields</button>
-								<button class="btn btn-primary">Remove Last Field</button>
-							</div>
-						</div>
-					</form>
 				</div>
 				<div class="modal-footer">
 					<div class="warning-holder"></div>

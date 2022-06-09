@@ -17,6 +17,27 @@ function graphZoomOut(){
 	cy.zoom(cy.zoom() - parseFloat(localStorage.getItem('zoomSensitivity')))
 }
 
+function viewCommonModal(modal, customData = false){
+
+	var definition = {
+		modal: modal,
+		//mode: 'view',
+		//newModal: true,
+		continue: true,
+	}
+
+	if(customData) { definition.id_system = 1}
+
+
+
+	commonModal(definition)
+
+}
+
+
+function view_compoundGraph(){
+	pageSwitch('compoundGraph');
+}
 
 /**
  * @description Update the systems by choosing a system from a list
@@ -179,7 +200,7 @@ function hideNode(id, idNo, type){
 			case 'SystemInterface':
 				postData.id_SIMap = eventTarget.data('id_SIMap');
 				break;
-			case 'Network':
+			case 'Link':
 				postData.id_network = eventTarget.data('id_network');			
 				break;
 			default:
@@ -187,9 +208,9 @@ function hideNode(id, idNo, type){
 		}
 		
 		//Get node details from the server
+		debug(1, `Sending '${postData.type}' to the server (select.json):`)
 		$.post('./select.json', postData, (result) => {
-			debug(3,'Passed to select.json:', postData);
-			debug(3,'Response:', result)
+			debug(3, postData, result)
 
 			//Check the result
 			if (result.msg){
@@ -197,14 +218,14 @@ function hideNode(id, idNo, type){
 
 			} else {
 				//Set the selected node object
-				result[0].type = postData.type;
-				selectedNode.update(result[0], eventTarget.data('id'));				
+				result.type = postData.type;
+				selectedNode.update(result, eventTarget.data('id'));				
 
 				debug(3,'selectedNode:', selectedNode)
 			}
 			//Populate the table
 			//$('#nodeDetailsTable').replaceWith(nodeDetailsTable());
-			nodeTable('#nodeDetailsTable', result[0])
+			nodeTable('#nodeDetailsTable', result)
 		})
 	}
 }
@@ -221,19 +242,20 @@ function edgeSelected(eventTarget){
  * 
  */
 function editNodeButton(){
-	debug(1,'In editNode()');
+	debug(1,'In editNodeButton()');
 	debug(3, 'selectedNode is',selectedNode)
+
+
 
 	switch (selectedNode.type){
 		case 'System':
-			updateSystemsModal(selectedNode.id_system)
+			commonModal({modal: 'systems', continue: true, id_system: selectedNode.id_system})
 			break;
 		case 'SystemInterface':
-			debug(2,selectedNode)
-			updateSystemInterfacesModal({ id_system: selectedNode.id_system, id_SIMap: selectedNode.id_SIMap })
+			commonModal({modal: 'interfacesToSystems', continue: true, id_system: selectedNode.id_system, id_SIMap: selectedNode.id_SIMap})
 			break;
-		case 'Network':
-			updateNetworkModal({ id_network: selectedNode.id_network });
+		case 'Link':
+			commonModal({modal: 'links', continue: true, id_network: selectedNode.id_network})
 			break;
 	}
 }
