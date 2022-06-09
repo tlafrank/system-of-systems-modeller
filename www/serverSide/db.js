@@ -5,7 +5,7 @@ const mysql = require('mysql2');
 var connection = mysql.createConnection({
 	host: 'localhost',
 	user: process.env.LCS_USER,
-	password: process.env.LCS_USER,
+	password: process.env.LCS_PASS,
 	database: process.env.LCS_DB,
 	multipleStatements: true
 });
