@@ -2,39 +2,24 @@ const mysql = require('mysql2');
 
 
 //Database connection details
-
 var connection = mysql.createConnection({
 	host: 'localhost',
-	user: 'sosmUser',
-	password: 'dnRk384!djrLdo}836w:',
-	database: 'db_sosm',
+	user: process.env.LCS_USER,
+	password: process.env.LCS_USER,
+	database: process.env.LCS_DB,
 	multipleStatements: true
-})
+});
+
+connection.connect(function(error){
+  if ( error )
+  {
+    console.log(error);
+  }
+});
+
+connection.query('select * from networks', function(error,results,fields){
+  if ( error ) throw error;
+  console.log("good connection");
+});
 
 module.exports = connection;
-
-
-// Database test
-
-
-/*
-var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'sosmUser',
-  password : 'dnRk384!djrLdo}836w:',
-  database : 'db_sosm'
-});
- 
-connection.connect();
- 
-connection.query('SELECT 1 + 1 AS solution;', function (error, results, fields) {
-  if (error) {
-	  throw error;
-	} else {
-
-	console.log('The solution is: ', results[0].solution);
-	};
-});
- 
-connection.end();
-*/
