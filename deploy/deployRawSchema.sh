@@ -16,6 +16,7 @@ echo ""
 if [[ $continue =~ [yY] ]]; then
     #Deploy the database
     mysql < ../sql/deploySchema.sql
+    mysql < ../sql/schemaUpdates.sql
     if [[ $? == 0 ]]; then
         echo "Schema deployed successfully"
     else
