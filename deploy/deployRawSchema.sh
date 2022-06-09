@@ -1,4 +1,15 @@
 #!/bin/bash
+# Move to directory so relative references all work.
+cd $(dirname $(readlink -f $0))
+
+# Check the user is going to be able to execute mysql to the server.
+if ! `mysql >/dev/null 2>&1 <<EOF
+exit
+EOF`;
+then
+    echo Need to operate as user who can connect to the DB, e.g. sudo this script.
+    exit 1
+fi
 
 read -n 1 -p "Do you wish to deploy the database schema and create users (y/Y): " continue
 echo ""
@@ -10,6 +21,8 @@ if [[ $continue =~ [yY] ]]; then
     else
         echo "There may have been a problem deploying the schema"
     fi
+
+    return
 
     #Create users
     ## Creates users with appropriate privileges based on ./sql/users.sql
