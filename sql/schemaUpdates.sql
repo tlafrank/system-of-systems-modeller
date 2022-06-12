@@ -84,3 +84,30 @@ ALTER TABLE interfaces ADD COLUMN updateTime BIGINT;
 ALTER TABLE systems ADD COLUMN isSubsystem BOOLEAN;
 ALTER TABLE systems ADD COLUMN isSubsystem BOOLEAN AFTER image;
 ALTER TABLE systems ADD COLUMN distributedSubsystem BOOLEAN AFTER isSubsystem;
+
+-- V1.0.3 (See package.json)
+DROP TABLE systemClassMap;
+DROP TABLE classes;
+
+ALTER TABLE quantities DROP CONSTRAINT `fk_quantities_system`;
+ALTER TABLE quantities ADD CONSTRAINT `fk_quantities_system`
+  FOREIGN KEY (`id_system`)
+  REFERENCES `db_sosm`.`systems` (`id_system`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION;
+
+ALTER TABLE tags DROP CONSTRAINT `fk_tags_systems`;
+ALTER TABLE tags ADD CONSTRAINT `fk_tags_systems`
+  FOREIGN KEY (`id_system`)
+  REFERENCES `db_sosm`.`systems` (`id_system`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION;
+
+ALTER TABLE OSMap DROP CONSTRAINT `fk_OSMap_systems`;
+ALTER TABLE OSMap ADD CONSTRAINT `fk_OSMap_systems`
+  FOREIGN KEY (`id_system`)
+  REFERENCES `db_sosm`.`systems` (`id_system`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION;
+
+

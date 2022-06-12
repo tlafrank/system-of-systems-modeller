@@ -24,6 +24,48 @@ exports.switch = (req,res) => {
 
 
 	switch (req.body.type){
+		case 'Systems_WithOrganisation':
+			var arrString = req.body.id_organisation_arr.toString()
+			queryString += sql.format(`
+			SELECT systems.id_system, systems.name AS systemName, systems.image, OSMap.quantity, OSMap.id_OSMap, organisation.id_organisation, organisation.name AS orgName
+			FROM OSMap
+			LEFT JOIN systems
+			ON OSMap.id_system = systems.id_system
+			LEFT JOIN organisation
+			ON organisation.id_organisation = OSMap.id_organisation
+			WHERE OSMap.id_organisation IN (${arrString});`)
+
+			//Handle included and excluded tags
+			/*
+			switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
+				case 3:
+					//Both included and excluded tags have been provided
+					queryString += sql.format(`
+					LEFT JOIN tags
+					ON tags.id_system = a.id_system
+					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?) AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [includedTags, excludedTags]);
+					break;
+				case 2:
+					//Only included tags have been provided
+					queryString += sql.format(`
+					LEFT JOIN tags
+					ON tags.id_system = a.id_system
+					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?);`, [includedTags]);
+					break;
+				case 1:
+					//Only excluded tags have been provided
+					queryString += sql.format(`
+					WHERE b.year IS NULL AND a.quantity > 0 AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [excludedTags]);
+					break;
+				case 0:
+					//No tags have been provided
+					queryString += sql.format(`
+					WHERE b.id_system IS NULL AND a.quantity != 0;`)
+				default:
+			}
+			*/
+
+			break;
 		case 'Systems':
 			queryString += sql.format(`SET @inputYear = ?;`, req.body.year)
 			queryString += sql.format(`
@@ -63,7 +105,6 @@ exports.switch = (req,res) => {
 			}
 
 			break;
-		
 		case 'Compound':
 			queryString += sql.format(`
 			SET @depthCount = 10;
@@ -204,6 +245,20 @@ exports.switch = (req,res) => {
 				SELECT * FROM cte LEFT JOIN systems ON cte.child = systems.id_system;`)
 			*/
 			break;
+		case 'ChildrenSystems_WithOrganisation':
+			var arrString_sys = req.body.id_system_arr.toString()
+			var arrString_org = req.body.id_organisation_arr.toString()
+
+			queryString += sql.format(`
+				SELECT SMap.id_SMap, OSMap.id_OSMap, OSMap.id_organisation, SMap.parent, systems.id_system, systems.name, systems.image
+				FROM OSMap
+				LEFT JOIN SMap
+				ON SMap.parent = OSMap.id_system
+				LEFT JOIN systems
+				ON systems.id_system = SMap.child
+				WHERE OSMap.id_system IN (${arrString_sys}) AND OSMap.id_organisation IN (${arrString_org});`)
+
+			break;
 		case 'AllDistributedSubsystems':
 			queryString += sql.format(`SELECT DISTINCT systems.* FROM SMap LEFT JOIN systems ON systems.id_system = SMap.child WHERE systems.distributedSubsystem = true;`)
 
@@ -273,7 +328,6 @@ exports.switch = (req,res) => {
 				GROUP BY id_interface
 				ORDER BY interfaces.id_interface;`)
 			break;
-
 		case 'Issues':
 			queryString = sql.format(`
 			SET @inputYear = ?;
@@ -365,13 +419,17 @@ exports.switch = (req,res) => {
 			ORDER BY interfaces.id_interface, systemName;`, req.body.year)
 
 		break;
-case '':
-
-
-break;
-
-
-
+		case 'GetAllOrganisationalNodesBelow': //Returns the id_organisations of the seed node (id_organisation) and all nodes below.
+			queryString += sql.format(`
+			WITH RECURSIVE cte (orgNode) AS
+			(
+				SELECT CAST(? AS SIGNED) AS test
+				UNION ALL
+				SELECT OMap.child FROM cte LEFT JOIN OMap on OMap.parent = cte.orgNode WHERE OMap.child IS NOT NULL
+				LIMIT 500
+			)
+			SELECT organisation.*, OMap.parent FROM cte LEFT JOIN organisation ON cte.orgNode = organisation.id_organisation LEFT JOIN OMap ON OMap.child = organisation.id_organisation;`, [req.body.id_organisation])
+			break;
 	}
 
 
@@ -426,3 +484,48 @@ var executeQuery = (queryString) => new Promise((resolve,reject) => {
 		resolve(res);
 	})    
 }) 
+
+
+/*
+Backup before organisation integration
+
+		case 'Systems':
+			queryString += sql.format(`SET @inputYear = ?;`, req.body.year)
+			queryString += sql.format(`
+				SELECT a.id_system, name, image, a.quantity
+				FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
+				LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
+				ON a.id_system = b.id_system AND a.year < b.year
+				LEFT JOIN systems
+				ON a.id_system = systems.id_system `);
+
+			//Handle included and excluded tags
+			switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
+				case 3:
+					//Both included and excluded tags have been provided
+					queryString += sql.format(`
+					LEFT JOIN tags
+					ON tags.id_system = a.id_system
+					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?) AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [includedTags, excludedTags]);
+					break;
+				case 2:
+					//Only included tags have been provided
+					queryString += sql.format(`
+					LEFT JOIN tags
+					ON tags.id_system = a.id_system
+					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?);`, [includedTags]);
+					break;
+				case 1:
+					//Only excluded tags have been provided
+					queryString += sql.format(`
+					WHERE b.year IS NULL AND a.quantity > 0 AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [excludedTags]);
+					break;
+				case 0:
+					//No tags have been provided
+					queryString += sql.format(`
+					WHERE b.id_system IS NULL AND a.quantity != 0;`)
+				default:
+			}
+
+			break;
+*/

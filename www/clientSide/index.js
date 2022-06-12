@@ -49,16 +49,18 @@ async function pageSwitch(page){
 
 	switch (page){
 		case 'standard':
-			sessionStorage.setItem('currentPage', 'standard');
+			sessionStorage.setItem('currentPage', page);
 			$('#mainPaneContainer').empty();
+			displayTags('#mainPaneContainer');
 			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1 w-100"></div></div></div>`);
-			commonGraph({graph: 'standard'})
-		break;
+			commonGraph({graph: page})
+			break;	
 		case 'subsystems':
-			sessionStorage.setItem('currentPage', 'subsystems');
+		case 'standardOrganisation':
+			sessionStorage.setItem('currentPage', page);
 			$('#mainPaneContainer').empty();
 			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1 w-100"></div></div></div>`);
-			commonGraph({graph: 'subsystems'})
+			commonGraph({graph: page})
 		break;
 		case 'summary':
 			sessionStorage.setItem('currentPage', 'summary');

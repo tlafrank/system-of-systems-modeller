@@ -99,7 +99,7 @@ function view_charts(){
  */
 function reorgGraph(){
 	debug (1,'In reorgGraph()')
-	cy.layout(graphSettings).run();
+	cy.layout(cyLayout()).run();
 }
 
 /**
@@ -204,7 +204,7 @@ function hideNode(id, idNo, type){
 				postData.id_network = eventTarget.data('id_network');			
 				break;
 			default:
-				debug(1,'Error in nodeSelected with unexpected nodeType: ' + eventTarget.data('nodeType'))
+				debug(1,'Error in nodeSelected with unexpected nodeType: ' + eventTarget.data('nodeType'), eventTarget._private.data)
 		}
 		
 		//Get node details from the server

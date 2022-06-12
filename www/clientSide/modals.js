@@ -293,9 +293,10 @@ function commonModal_actions(definition, element, postData, result){
 		//case 'setDefinition_SingleValue_fromParamNoArray': //Populate key ID's if they were not supplied
 			//definition[element.definitionName] = result[element.columnName]
 			//break;
+		case 'setLocalStorage_fromDefinition':
+			localStorage.setItem(element.localStorageName, definition[element.definitionName])
 
-
-
+			break;
 		case 'removeElement':
 			$(`#${element.id}[data-${element.dataAttr}="${definition[element.definitionName]}"`).remove();
 			break;
@@ -362,13 +363,15 @@ function commonModal_actions(definition, element, postData, result){
 		case 'closeModal':
 			$('#mainModal').modal('hide');
 			break;
+		case 'reloadPage':
+			pageSwitch();
+			break;
 		case 'setDefinition_FromResultInsert':
 			if (result.insertId > 0){ definition[element.definitionName] = result.insertId }
 			break;
 		case 'deleteDefinition':
 			delete definition[element.definitionName]
 			break;
-
 		case 'setLocalStorage':
 
 			var resultArray = [];
@@ -379,13 +382,9 @@ function commonModal_actions(definition, element, postData, result){
 			localStorage.setItem(element.localStorageName, JSON.stringify(resultArray));
 
 			break;
-
-
 		case 'debug':
 			debug(1, element.message)
-			break;
-
-		
+			break;		
 		default:
 			debug(1, `Switch default. Shouldn't make it here in commonModal_action with ${element.action}`)
 	}

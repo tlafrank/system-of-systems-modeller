@@ -94,6 +94,7 @@
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">View</a>
 					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
 						<a class="dropdown-item" href="#" onclick="pageSwitch('standard')">System Graph</a>
+						<a class="dropdown-item" href="#" onclick="pageSwitch('standardOrganisation')">System Graph (Incl Organisation)</a>
 						<a class="dropdown-item" href="#" onclick="pageSwitch('subsystems')">Subsystem Graph</a>
 						<a class="dropdown-item" href="#" onclick="view_summary()">System Summary</a>
 						<a class="dropdown-item" href="#" onclick="view_issues()">Issue Summary</a>
@@ -164,6 +165,7 @@
 						</div>
 						<div class="col">
 							
+							<button id="manageTags" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="viewCommonModal('selectOrganisation')">Select Organisation</button>
 						</div>
 					</div>
 					

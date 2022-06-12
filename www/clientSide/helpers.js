@@ -356,7 +356,13 @@ function setFormElement($selector, properties, value){
 			break;
 		case 'select': //Assumes select has been filled previously and sets the value based on the passed attribute
 			//debug(1, 'in select', properties, value)
-			$($selector + ` option[data-${properties.dataAttr}="${value}"]`).prop('selected', true);
+			if(properties.dataAttr){
+				$($selector + ` option[data-${properties.dataAttr}="${value}"]`).prop('selected', true);
+			} else {
+				debug(1, 'in select correctly')
+				$($selector).val(value);
+			}
+			
 			if (value == ''){$($selector).empty();}
 			break;
 		case 'selectOptions': //Fills a select

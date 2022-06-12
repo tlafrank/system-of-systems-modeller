@@ -22,6 +22,7 @@ async function commonGraph(definition){
 							interfaces: [],
 							links: [],
 							edges: [],
+							test: [],
 						},
 						display: {
 							interfaces: false,
@@ -91,21 +92,38 @@ async function commonGraph(definition){
 		graph[definition.graph].iterations[i].afterServerInstructions.forEach((element) => {
 			switch (element.action){
 				case 'buildGraphObject_system': //Prepare and add system data to the graph
-					result.forEach((element2) => {
-						//debug(1,element2)
-						var tempNode = {}
-						tempNode.group = 'nodes'
-						tempNode.data = {
-							id: 'node_s_' + element2.id_system,
-							idNo: element2.id_system,
-							id_system: element2.id_system,
-							nodeType: 'System',
-							name: element2.name,
-							filename: './images/' + element2.image,
-						}
+					if ((typeof element.displayIf === 'undefined') || (sosm.display[element.displayIf])){
+						result.forEach((node) => {	
+							var tempNode = {}
+							tempNode.group = 'nodes'
+							tempNode.data = {}
+							tempNode.classes = ''
+							element.fields.forEach((field) => {
+								var str = '';
+								field.format.forEach((format) => {
+									if (node[format.columnName] !== null){
+										
+										if (format.leadingText){
+											str += format.leadingText
+										}
+										if (format.columnName){
+											str += node[format.columnName]
+										}
+									}
+								})
+								tempNode.data[field.nodeName] = str;
+							})
+							
+							//Handle classes
+							if (element.classes){
+								element.classes.forEach((className) => {
+									tempNode.classes += className + ' ';
+								})
+							}
+							sosm.nodes[element.sosmNodeName].push(tempNode)
+						})						
+					}
 
-						sosm.nodes.systems.push(tempNode)
-					})
 					break;
 				case 'buildGraphObject_interfaces':
 
@@ -141,9 +159,6 @@ async function commonGraph(definition){
 
 					break;
 				case 'buildGraphObject_links':
-				
-
-
 					result.forEach((element2) => {
 						//debug(1, sosm.display.primaryLinks, sosm.display.alternateLinks,element2.linkCategory == 'primary',element2.linkCategory == 'alternate')
 						if((sosm.display.primaryLinks && element2.linkCategory == 'primary') || (sosm.display.alternateLinks && element2.linkCategory == 'alternate')){	
@@ -210,33 +225,13 @@ async function commonGraph(definition){
 					})
 
 					break;
-				case 'buildGraphObject_childrenSystem':
-					if(sosm.display.compoundSystems){
-						result.forEach((element2) => {
-							//Elements
-							var tempNode = {}
-							tempNode.group = 'nodes'
-							tempNode.classes = 'class4'
-							tempNode.data = {
-								id: 'node_s_' + element2.id_SMap,
-								idNo: element2.id_system,
-								id_system: element2.id_system,
-								nodeType: 'System',
-								name: element2.name,
-								//filename: './images/' + element2.image,
-								parent: 'node_s_' + element2.parent
-							}
-							sosm.nodes.systems.push(tempNode)
-						})						
-					}
-					break;
 				case 'buildGraphObject_parents':
 					result.forEach((element2) => {
 			
 						//Elements
 						var tempNode = {}
 						tempNode.group = 'nodes'
-						tempNode.classes = 'subordinateSystem'
+						tempNode.classes = 'subordinateSystem small'
 						tempNode.data = {
 							id: 'node_p_' + element2.parent,
 							idNo: element2.id_SMap,
@@ -273,7 +268,10 @@ async function commonGraph(definition){
 				case 'getDataFromResult': //Get all the system ID's which are represented in sosm.nodes.systems
 					sosm[element.sosmName] = []
 					result.forEach((node) => {
-						sosm[element.sosmName].push(node[element.columnName])
+						if(!sosm[element.sosmName].includes(node[element.columnName])){
+							sosm[element.sosmName].push(node[element.columnName])
+						}
+						
 					})
 					//debug(1,'getSystemIds', sosm[element.sosmName])
 					break;
@@ -453,7 +451,7 @@ break;
 
 		//Draw the graph
 
-		cy.layout(graphSettings).run();
+		cy.layout(cyLayout()).run();
 		
 
 		selectedNode = new Node();
