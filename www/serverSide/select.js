@@ -29,12 +29,18 @@ exports.switch = (req,res) => {
 			queryString += sql.format('SELECT * FROM OSMap WHERE id_OSMap = ?;', req.body.id_OSMap)
 			break;
 		case 'PrimarySystems': //Those systems which are not children of other systems
+			debug(1, 'PrimarySystems is depricated')
+		case 'AllSystems':
+			
+			queryString += sql.format(`SELECT * FROM systems WHERE systems.isSubsystem = false ORDER BY name;`);
+			/*
 			queryString += sql.format(`
 			SELECT *
 			FROM systems
 			LEFT JOIN SMap
 			ON SMap.child = systems.id_system
 			WHERE SMap.child IS NULL ORDER BY name;`)
+			*/
 			break;
 		case 'System':
 		case 'SingleSystem':
@@ -44,8 +50,8 @@ exports.switch = (req,res) => {
 			queryString += sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])
 			queryString += sql.format(`SELECT * FROM tags WHERE id_system = ?;`,[req.body.id_system])
 			break;		
-		case 'AllSystems':
-			queryString = sql.format(`SELECT * FROM systems ORDER BY name;`)
+		case 'AllSubsystems':
+			queryString += sql.format(`SELECT * FROM systems WHERE systems.isSubsystem = true ORDER BY name;`)
 			break;
 		case 'SystemChildren':
 			queryString += sql.format('SELECT * FROM SMap LEFT JOIN systems ON SMap.parent = systems.id_system WHERE systems.id_system = ?;', req.body.id_system)
@@ -337,9 +343,13 @@ exports.switch = (req,res) => {
 			case 'Network':
 				queryString = sql.format(`SELECT * FROM issues WHERE type = 'Network' AND id_type = ?;`, [req.body.id_network])
 			break;
+
+
+
+
 		}
 	}
-
+/*
 	if (req.body.type == 'Issues'){
 		//Build the query
 		queryString = sql.format(`
@@ -415,7 +425,7 @@ exports.switch = (req,res) => {
 		
 		
 	}
-
+*/
 	//******************Other**************** */
 
 	if (req.body.type == 'Party'){
@@ -500,6 +510,7 @@ exports.switch = (req,res) => {
 				case 'SingleTechnology':
 				case 'System':
 				case 'SystemInterface':
+				//case 'AllSubsystems':
 					res.json(result[0])
 					break;
 				case 'SpecificInterfaceIssue':

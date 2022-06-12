@@ -77,3 +77,10 @@ ENGINE = InnoDB;
 ALTER TABLE SIMap ADD COLUMN name VARCHAR(45) AFTER isProposed;
 ALTER TABLE networks ADD COLUMN linkColor VARCHAR(45) AFTER image;
 ALTER TABLE technologies ADD COLUMN category VARCHAR(45) AFTER name;
+
+-- V1.0.2 (See package.json)
+ALTER TABLE systems ADD COLUMN updateTime BIGINT;
+ALTER TABLE interfaces ADD COLUMN updateTime BIGINT;
+ALTER TABLE systems ADD COLUMN isSubsystem BOOLEAN;
+ALTER TABLE systems ADD COLUMN isSubsystem BOOLEAN AFTER image;
+ALTER TABLE systems ADD COLUMN distributedSubsystem BOOLEAN AFTER isSubsystem;

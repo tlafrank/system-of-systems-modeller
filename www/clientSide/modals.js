@@ -213,7 +213,7 @@ function commonModal_actions(definition, element, postData, result){
 			break;
 		
 		case 'setControl_MultipleValues_fromConstant':
-			//debug(1, 'cn is ' + element.constantName, window)
+			debug(1, 'cn is ' + element.constantName, window)
 			setFormElement('#' + element.id, element, window[element.constantName])
 			break;
 		case 'setControl_SingleValue':
@@ -257,34 +257,6 @@ function commonModal_actions(definition, element, postData, result){
 			debug(1,value)
 
 
-			/*
-
-			var arr = JSON.parse(localStorage.getItem(element.localStorageName));
-			availableTags = document.querySelectorAll('#' + element.id + ' span');
-			arr.forEach((element) => {
-				//Iterate through availableTags until found
-				availableTags.forEach((element2) => {
-					if (element2.textContent == element) {
-						$('#' + element.sourceId + '.card-body').append(element2);
-					}
-				})
-			})
-
-
-		//Iterate through localStorage includedTags and move tags from availableTags to the includedTags div
-		//Convert to array
-		var includedTags = JSON.parse(localStorage.getItem('includedFilterTag'));
-		availableTags = document.querySelectorAll("#availableTags span");
-		includedTags.forEach((element) => {
-			//Iterate through availableTags until found
-			availableTags.forEach((element2) => {
-				if (element2.textContent == element) {
-					$('#includedTags .card-body').append(element2);
-				}
-			})
-		})
-		*/
-
 
 			break;
 		case 'setDefinition_SingleValue_ifDefintionNotAlreadySet':
@@ -309,11 +281,18 @@ function commonModal_actions(definition, element, postData, result){
 			break;
 		case 'setDefinition_SingleValue_AtSpecificArrayIndex': //Populate key ID's if they were not supplied
 		case 'setDefinition_SingleValue_AtSpecificArrayIndexFirstIndex':
-			if(result[element.arrayIndex][0]) { definition[element.id] = result[element.arrayIndex][0][element.columnName] }
-			break;
 		case 'setDefinition_SingleValue_fromParamNoArray': //Populate key ID's if they were not supplied
-			definition[element.definitionName] = result[element.columnName]
+		case 'setDefinition_SingleValue':
+			if(element.arrayIndex){
+				if(result[element.arrayIndex][0]) { definition[element.id] = result[element.arrayIndex][0][element.columnName] }
+			} else {
+				definition[element.definitionName] = result[element.columnName]
+			}
+			
 			break;
+		//case 'setDefinition_SingleValue_fromParamNoArray': //Populate key ID's if they were not supplied
+			//definition[element.definitionName] = result[element.columnName]
+			//break;
 
 
 

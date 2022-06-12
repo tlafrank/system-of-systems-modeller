@@ -6,7 +6,7 @@ var debugLevel = 4;
 var cy = cytoscape();
 let selectedNode; //Holds the Node object which is selected by the user
 let modal; //Holds the object to provide modal setup information and the Node object being built
-let graphSettings; //Holds the object to track graph settings between sessions
+//let graphSettings; //Holds the object to track graph settings between sessions
 let sosmSystemData, sosmSystemInterfaceData, sosmNetworkData, sosmStats, sosmNetworkStats, sosmQuantities;
 let issuesData = [];
 let breadcrumbTracker = [];
@@ -30,14 +30,13 @@ $(document).ready(function(){
 	})
 
 	debug(1, localStorage)
-	
 
 	pageSwitch();
   	selectedNode = new Node();
 })
 
 //Load the appropriate main pane data
-function pageSwitch(page){
+async function pageSwitch(page){
 	debug(1,'In pageSwitch()')
 
 	if (!page){
@@ -49,83 +48,45 @@ function pageSwitch(page){
 	}
 
 	switch (page){
-		case 'graph':
-			sessionStorage.setItem('currentPage', 'graph');
+		case 'standard':
+			sessionStorage.setItem('currentPage', 'standard');
 			$('#mainPaneContainer').empty();
-			//Works: $('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`);
 			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1 w-100"></div></div></div>`);
-			$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
-			getGraphData(newCy);
+			commonGraph({graph: 'standard'})
 		break;
-		case 'compoundGraph':
-			sessionStorage.setItem('currentPage', 'compoundGraph');
+		case 'subsystems':
+			sessionStorage.setItem('currentPage', 'subsystems');
 			$('#mainPaneContainer').empty();
-			//Works: $('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1"></div></div></div>`);
 			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1 w-100"></div></div></div>`);
-			
-			getCompoundGraphData(compoundCy);
+			commonGraph({graph: 'subsystems'})
 		break;
 		case 'summary':
 			sessionStorage.setItem('currentPage', 'summary');
 			$('#mainPaneContainer').empty();
 			$('#pageTitle').text(`SOS Model Summary ${parseInt(localStorage.getItem('activeYear'))}`)
-			getGraphData(listSummary);
+			listSummary();
 		break;
 		case 'issues':
 			sessionStorage.setItem('currentPage', 'issues');
 			$('#mainPaneContainer').empty();
 			$('#pageTitle').text(`SOS Model Issues ${parseInt(localStorage.getItem('activeYear'))}`)
-			getGraphData(listIssues);
+			listIssues();
 		break;
 		case 'charts':
 			sessionStorage.setItem('currentPage', 'charts');
 			$('#mainPaneContainer').empty();
 			$('#pageTitle').text(`Summary Charts`)
-			//getGraphData(charts);
 			charts();
 	}
 }
 
-function processInterfaceStats(){
-	var interfaceStats = [];
+async function listSummary(){
+	debug(1,'In listSummary()')
 
-	var lastInterfaceId = 0;
-	for (var i = 0; i < sosmStats.length; i++){
-		if (sosmStats[i].id_interface > lastInterfaceId) { //First occurrance of a new interface
-			lastInterfaceId = sosmStats[i].id_interface
-
-			//Add to the interfaceStats
-			interfaceStats.push({
-				id_interface: lastInterfaceId, 
-				name: sosmStats[i].interfaceName,
-				totalInterfaces: sosmStats[i].quantity * sosmStats[i].interfaceQtyPerIndividualSystem,
-				systemsCount: 1,
-				systems: [{
-					id_system: sosmStats[i].id_system,
-					name: sosmStats[i].systemName
-				}]
-			}); 
-		} else { //Additional occurrances of the same interface
-			//Update statsArr
-			interfaceStats[interfaceStats.length - 1].systemsCount ++;
-			interfaceStats[interfaceStats.length - 1].totalInterfaces += sosmStats[i].quantity * sosmStats[i].interfaceQtyPerIndividualSystem;
-			if (interfaceStats[interfaceStats.length - 1].systems[interfaceStats[interfaceStats.length - 1].systems.length - 1].id_system != sosmStats[i].id_system){
-				//Different system
-				interfaceStats[interfaceStats.length - 1].systems.push({id_system: sosmStats[i].id_system, name: sosmStats[i].systemName})
-			}
-		}
-	}
-
-	return interfaceStats;
-}
-
-function listSummary(){
-	debug(1,'listSummary()')
-
-	//Process the stats
+	//Display the current filter tags
 	displayTags('#mainPaneContainer');
 	
-	
+	//Prepare the page
 	var table = `<table class="table table-sm table-striped"><thead>
 	<tr>
 		<th scope="col">Interface Name</th>
@@ -135,8 +96,13 @@ function listSummary(){
 	</tr>
 	</thead>
 	<tbody>`
-	
-	processInterfaceStats().forEach((element) => {
+
+	await commonGraph({graph: 'standard', headless: true})
+	await commonGraph({graph: 'summary', headless: true})
+
+	debug(1, 'starting')
+
+	sosm.stats.interfaces.forEach((element) => {
 		table += `<tr>
 			<td scope="row"><a href="#" onclick="commonModal({modal: 'interfaces', id_interface: ${element.id_interface}});">${element.name}</a></td>
 			<td class="">${element.totalInterfaces}</td>
@@ -144,7 +110,7 @@ function listSummary(){
 		element.systems.forEach((element2) => {
 			table += systemButton(element2.id_system, element2.name)
 		})	
-		table += `</td></tr>`			
+		table += `</td></tr>`
 	})
 
 	table += `</tbody></table>`
@@ -152,87 +118,12 @@ function listSummary(){
 	$('#mainPaneContainer').append(table);
 }
 
-async function processIssues(){
-	var interfaceId = 0;
-	var issueId = 0;
-	var reorganisedData = [];
-	var issuesTracker = 0;
-	var issueId = 0;
-	var j = -1;
-
-	const postData = {
-		type: 'Issues',
-		year: parseInt(localStorage.getItem('activeYear')),
-	}
-	//Tag filters
-	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
-	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
-
-	debug(1, `Sending '${postData.type}' to the server (select.json):`)
-	await $.post('select.json', postData, (result) => {
-		debug(1, postData, result);
-
-		//Check the result
-		if (result.msg){
-			//An error was passed
-		} else {
-
-			//Reorganise the data to make table loading easier
-			for (var i = 0; i < result.length; i++){
-				if (result[i].id_interface > interfaceId){ //New interface entry
-					interfaceId = result[i].id_interface
-
-					reorganisedData.push({ 
-						id_interface: result[i].id_interface, 
-						name: result[i].interfaceName, 
-						issues: [] })
-				
-					//Reset counters
-					issueId = 0;
-					issuesTracker = -1;
-					j++;
-				}
-
-				if(result[i].id_interfaceIssue > issueId){ //Add new issue to interface
-					issueId = result[i].id_interfaceIssue;
-
-					reorganisedData[j].issues.push({
-						id_interfaceIssue: result[i].id_interfaceIssue,
-						id_interface: result[i].id_interface,
-						name: result[i].issueName,
-						issue: result[i].issue,
-						resolution: result[i].resolution,
-						severity: result[i].severity,
-						systems: [],
-						quantityAffected: 0
-					})
-
-					//Reset counters
-					issuesTracker++;
-				}
-
-				if (result[i].id_system != null){
-					reorganisedData[j].issues[issuesTracker].systems.push({id_system: result[i].id_system, name: result[i].systemName})
-					if (result[i].quantity > 0){
-						reorganisedData[j].issues[issuesTracker].quantityAffected += parseInt(result[i].quantity)	
-					}			
-				}
-			}
-
-		}
-		//debug(1, 'reorgd data', reorganisedData)
-	})
-
-	issuesData = reorganisedData;
-}
-
 async function listIssues(){
 	debug(2, 'In listIssues()')
 
 	displayTags('#mainPaneContainer');
 
-	await processIssues();
-
+	await commonGraph({graph: 'issues', headless: true})
 
 	var severityText = '<h3>Severity Details</h3><ul>'
 
@@ -257,7 +148,7 @@ async function listIssues(){
 	</thead>
 	<tbody>`
 
-	issuesData.forEach((element) => {
+	sosm.issues.forEach((element) => {
 
 		//Place the interface details into the table
 		var rowspan = element.issues.length;
@@ -304,20 +195,131 @@ async function charts(){
 
 	displayTags('#mainPaneContainer');
 
-	//Prepare the page
+	
 
+	//Prepare the page
 	$('#mainPaneContainer').append(`<h3 class="my-2">Total Interfaces Per Year (${parseInt(localStorage.getItem('yearMin'))} - ${parseInt(localStorage.getItem('yearMax'))})</h3>`);
 	$('#mainPaneContainer').append(`<div class="my-1"><canvas id="chartInterfaces" width="200" height="500"></canvas></div>`);
 
 	$('#mainPaneContainer').append(`<h3 class="my-5">Issues Map ${parseInt(localStorage.getItem('activeYear'))}</h3>`);
 	$('#mainPaneContainer').append(`<div><canvas id="chartIssues" width="200" height="500"></canvas></div>`);
 
-	//$('#mainPaneContainer').append(`<h3 class="my-5">Total Subsystems Per Year</h3>`);
-	//$('#mainPaneContainer').append(`<div><canvas id="chartSubsystems" width="200" height="500"></canvas></div>`);
+	startYear = localStorage.getItem('yearMin');
+	endYear = localStorage.getItem('yearMax');
+	endYear++;
+	//endYear = 2022
+	var data = {}
+	data.interfaces = []
+	
+	var labels = []
+	var datasets = [];
+	var colorIndex = 0;
+	var interfacesSeen = [];
 
-	//const cSubsystems = document.getElementById('chartSubsystems').getContext('2d');
+	await commonGraph({graph: 'reset', headless: true})
+
+	for (var i = startYear; i < endYear; i++){
+		await commonGraph({graph: 'chartInterfaces', headless: true, year: parseInt(i)})
+	}
+
+	await commonGraph({graph: 'chartInterfaces2', headless: true})
+
+	var chartInterfaces = {
+			type: 'line',
+			data: { labels: sosm.charts.labels,	datasets: sosm.charts.datasets }
+		}
+		chartInterfaces.options = {
+			maintainAspectRatio: false,
+			scales: { y: { beginAtZero: true } },
+			plugins: { legend: { position: 'bottom'}}
+		}
+
+	debug(1, 'chartInterface', chartInterfaces)
+
+	const myChinterfaceChart = new Chart(document.getElementById('chartInterfaces').getContext('2d'), chartInterfaces)
+	
+	
+	
+	
+	//Produce the issues chart
+	issuesChartData = [];
+	var issuesLabels = [];
+	var colorIndex = 0;
+	//issuesChartData = 
+
+	await commonGraph({graph: 'issues', headless: true})
+
+	sosm.issues.forEach((element) => { //Iterate through each interface
+		//debug(1, element)
+		issuesChartData.push({
+			label: element.name,
+			backgroundColor: getColor(colorIndex) + 'bb',
+			data: []
+		})
+
+		//Color
+		colorIndex++;
+
+		//Produce graph data
+		element.issues.forEach((element2) => { //Iterate through each issue within the interface
+			//debug(1, element2)
+			if (element2.severity > 0){
+				issuesChartData[issuesChartData.length - 1].data.push({
+					x: element2.quantityAffected,
+					y: element2.systems.length,
+					r: 20 * element2.severity,
+					//Severity: element2.severity
+				})						
+			}
+		})
+
+	})
+	
+	debug(1, 'issuesLabels', issuesLabels)
+	debug(1, 'data', issuesChartData)
+
+	var chartIssues = {
+		type: 'bubble',
+		//data: issuesChartData
+		data: { datasets: issuesChartData }
+	}
+	chartIssues.options = {
+		maintainAspectRatio: false,
+		//scales: { y: { beginAtZero: true } },
+		scales: { 
+			x: {title: {display: true, text: 'Quantity of Interfaces Affected'}},
+			y: {title: {display: true, text: 'Quantity of Systems Affected'}}},
+		plugins: { legend: { position: 'bottom'}}
+	}
+			
+			
+	const myIssueChart = new Chart(document.getElementById('chartIssues').getContext('2d'), chartIssues)
+	
+	
+	
+}
+
+
+
+/*
+
+
+async function charts(){
+	debug(2, 'In charts()')
+
+	displayTags('#mainPaneContainer');
+
 	
 
+	//Prepare the page
+	$('#mainPaneContainer').append(`<h3 class="my-2">Total Interfaces Per Year (${parseInt(localStorage.getItem('yearMin'))} - ${parseInt(localStorage.getItem('yearMax'))})</h3>`);
+	$('#mainPaneContainer').append(`<div class="my-1"><canvas id="chartInterfaces" width="200" height="500"></canvas></div>`);
+
+	$('#mainPaneContainer').append(`<h3 class="my-5">Issues Map ${parseInt(localStorage.getItem('activeYear'))}</h3>`);
+	$('#mainPaneContainer').append(`<div><canvas id="chartIssues" width="200" height="500"></canvas></div>`);
+
+	
+	
 	startYear = localStorage.getItem('yearMin');
 	endYear = localStorage.getItem('yearMax');
 	endYear++;
@@ -329,10 +331,16 @@ async function charts(){
 	var colorIndex = 0;
 	var interfacesSeen = [];
 
+
+	
+
 	//Get chart data for each year
 	for (var i = startYear; i < endYear; i++){
 		labels.push(i)
 		
+
+		//await commonGraph({graph: 'chartInterfaces', headless: true, year: i})
+
 		postData = {
 			type: 'InterfaceQuantitiesInYear',
 			year: i,
@@ -477,475 +485,5 @@ async function charts(){
 	
 }
 
-/**
- * @description Builds a new CY graph
- * 
- */
-function newCy(){
-	debug(1,'In newCy()')
 
-	//Setup the graph 
-	var cyInitialisation = {
-		container: $("#cy"),
-		style: cyStyle,
-		wheelSensitivity: localStorage.getItem('zoomSensitivity') //Required for scroll wheel on laptop to work. Reason unknown.
-	}
-
-
-	cy = cytoscape(cyInitialisation)	
-		
-		
-
-
-
-	$('#nodeDetailsTable').empty();
-
-	$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
-
-	if (localStorage.getItem('showInterfaces') == 1){ var showInterfaces = true	} else { var showInterfaces = false }
-	var showNetworkNodes = true;
-
-	//Pruning
-	if (localStorage.getItem('pruneEdgeLinks') == 1){
-		sosmNetworkStats.forEach((element) => {
-			if (element.qtyConnections == 1){
-				for (var i = 0; i<sosmNetworkData.length; i++){
-					
-					if (sosmNetworkData[i].id_network == element.id_network){
-						
-						//Remove the element from the array
-						debug(1, 'removing', element)
-						sosmNetworkData.splice(i,1);
-						i--;
-						
-					}
-				}	
-			}
-		})		
-	}
-
-	//Prepare and add system data to the graph
-	var systemNodes = [];
-	sosmSystemData.forEach((element) => {
-		systemNodes.push({
-			group: 'nodes',
-			data: {
-				id: 'node_s_' + element.id_system,
-				idNo: element.id_system,
-				id_system: element.id_system,
-				nodeType: 'System',
-				name: element.name,
-				filename: './images/' + element.image,
-			}, 
-			classes: ''																			//Put classes here
-		})
-	})
-
-	//Prepare and add interface data to the graph
-	var interfaceNodes = [];
-	if (showInterfaces){ //Display interfaces on the graph
-		sosmSystemInterfaceData.forEach((element) => {
-			interfaceNodes.push({ //Interface node
-				group: 'nodes',
-				data: {
-					id: 'node_si_' + element.id_SIMap,
-					idNo: element.id_SIMap,
-					id_system: element.id_system,
-					id_SIMap: element.id_SIMap,
-					nodeType: 'SystemInterface',
-					name: element.name,
-					filename: './images/' + element.image,
-				},
-				classes: 'interface'																				//Put classes here
-			})
-
-			interfaceNodes.push({ //S-SI edge
-				group: 'edges',
-				data: {
-					id: 'edge_s_si_' + element.id_SIMap,
-					idNo: element.id_SIMap,
-					source: 'node_s_' + element.id_system,
-					target: 'node_si_' + element.id_SIMap,
-					lineColor: 'black'
-				},
-				classes: ''																				//Put classes here
-			})
-		})
-	}
-	
-	//Prepare and add network data to the graph
-	var networkNodes = [];
-
-	if(showNetworkNodes){addNetworkNodes()}
-
-	sosmNetworkData.forEach((element) => {
-		//debug(1,element)
-		if((localStorage.getItem('showPrimaryLinks') == 1 && element.linkCategory == 'primary') || 
-			(localStorage.getItem('showAlternateLinks') == 1 && element.linkCategory == 'alternate')){
-			var newNode = {
-				group: 'edges',
-				data: 
-				{
-					idNo: element.id_network,
-					id_network: element.id_network,
-					target: 'node_n_' + element.id_network,
-					//name: element.designation,
-				},
-			}
-
-			if(showInterfaces){//Show Interface nodes
-				newNode.data.id = 'edge_si_' + element.id_SIMap + '_n_' + element.id_network
-				newNode.data.source = 'node_si_' + element.id_SIMap
-			} else { //No interface nodes
-				newNode.data.id = 'edge_s_' + element.id_SIMap + '_n_' + element.id_network
-				newNode.data.source = 'node_s_' + element.id_system
-			}
-
-			//Handle colours
-			newNode.data.lineColor = 'black'
-			if (element.technologyCategory !== null){
-				newNode.data.lineColor = technologyCategory.find(x => x.value === element.technologyCategory).color
-			}
-
-			//Handle link category
-			switch (element.linkCategory){
-				case 'primary':
-					break;
-				case 'alternate':
-				case 'incapable':			//Shouldnt be returned, precautionary
-				default:
-					newNode.classes += ' dashed';					
-			}
-
-			//Handle classes
-			if(element.designation){
-				newNode.data.name = element.designation
-				if(element.designation.substring(1,2) == 'J'){
-					newNode.classes += ' class3';
-				}
-			}
-
-			networkNodes.push(newNode)
-		}
-
-
-
-	})
-
-	function addNetworkNodes(){
-		//Add network nodes to the graph
-		sosmNetworkData.forEach((element) => {
-			networkNodes.push({
-				group: 'nodes',
-				data: {
-					id: 'node_n_' + element.id_network,
-					id_network: element.id_network,
-					nodeType: 'Link',
-					name: element.name,
-					filename: './images/' + element.image,
-				},
-				classes: 'network'																			//Put classes here
-			})
-		})		
-	}
-
-	//Add all components
-	//debug(1,systemNodes,interfaceNodes,networkNodes)
-	cy.add(systemNodes);
-	cy.add(interfaceNodes);
-	cy.add(networkNodes);
-
-	//Draw the graph
-	const graphSettings = {
-		name: localStorage.getItem('graphLayoutName'),
-		rows: localStorage.getItem('graphLayoutRows'),
-		animate: localStorage.getItem('graphLayoutAnimate'),
-	}
-	cy.layout(graphSettings).run();
-
-	selectedNode = new Node();
-
-	//Event: Node in graph selected
-	cy.on('tap', 'node', (evt) => { nodeSelected(evt.target); })
-
-	//Event: Node in graph selected
-	cy.on('tap', 'edge', (evt) => { edgeSelected(evt.target); })
-}
-
-//Reset the Cy object
-function resetCy(){
-	debug(1,'In resetCy()');
-	cy = cytoscape({
-		container: $("#cy"),
-		style: cyStyle,
-		layout: JSON.parse(localStorage.getItem('graphLayout')),
-		wheelSensitivity: 0.4, //Required for scroll wheel on laptop to work. Reason unknown.
-	});
-}
-
-
-/**
- * Get SOSM data
- * 
- * @param callback
- */
-function getGraphData(callback, year = parseInt(localStorage.getItem('activeYear'))){
-	debug(1,'In getGraphData()');
-
-	const postData = {
-		type: 'Normal',
-		year: year,
-		showInterfaces: parseInt(localStorage.getItem('showInterfaces')),
-		showIssues: parseInt(localStorage.getItem('showIssues'))
-	}
-
-	//Tag filters
-	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
-	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
-
-
-	debug(1, `Getting '${postData.type}' from the server (graph.json):`)
-
-	$.post('/graph.json', postData, (result) => {
-		debug(2, postData, result);
-
-		sosmSystemData = result[0];
-		sosmSystemInterfaceData = result[1];
-		sosmNetworkData = result[2];
-		sosmStats = result[3];
-		sosmNetworkStats = result[4];
-		//sosmQuantities = result[5];
-
-		if (callback) { callback() };
-	})
-}
-
-
-
-
-/**
- * Get SOSM data (Compound graph test)
- * 
- * @param callback
- */
- function getCompoundGraphData(callback, year = parseInt(localStorage.getItem('activeYear'))){
-	debug(1,'In getGraphData()');
-
-	const postData = {
-		type: 'Compound',
-		year: year,
-		showInterfaces: parseInt(localStorage.getItem('showInterfaces')),
-		showIssues: parseInt(localStorage.getItem('showIssues'))
-	}
-
-	//Tag filters
-	postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
-	postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
-
-	debug(1, `Getting '${postData.type}' from the server (graph.json):`)
-
-	$.post('/graph.json', postData, (result) => {
-		debug(2, postData, result);
-
-	
-
-		if (callback) { callback(result) };
-	})
-}
-
-/**
- * @description Builds a new compound CY graph
- * 
- */
- function compoundCy(result){
-	debug(1,'In newCy()')
-
-	//Setup the graph 
-	var cyInitialisation = {
-		container: $("#cy"),
-		style: cyStyle,
-		wheelSensitivity: localStorage.getItem('zoomSensitivity') //Required for scroll wheel on laptop to work. Reason unknown.
-	}
-
-
-	cy = cytoscape(cyInitialisation)	
-		
-		
-	$('#nodeDetailsTable').empty();
-
-	$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))} Compound Graph`)
-
-	//if (localStorage.getItem('showInterfaces') == 1){ var showInterfaces = true	} else { var showInterfaces = false }
-	//var showNetworkNodes = true;
-
-	//Prepare and add system data to the graph
-	var systemNodes = [];
-	result.forEach((element) => {
-
-		//Define a unique ID
-		if (element.id_SMap == null){
-			var id = element.id_system;
-		} else {
-			var id = element.id_system + '_' + element.id_SMap;
-		}
-
-		var obj = {
-			group: 'nodes',
-			data: {
-				id: 'node_s_' + id,
-				idNo: element.id_system,
-				id_system: element.id_system,
-				nodeType: 'System',
-				name: element.name,
-				filename: './images/' + element.image
-			}, 
-			classes: ''
-		}
-
-		if (element.parent > 0){
-			obj.data.parent = 'node_s_' + element.parent
-		}
-
-		systemNodes.push(obj)
-	})
-
-	cy.add(systemNodes);
-
-	//Prepare and add interface data to the graph
-	/*
-	var interfaceNodes = [];
-	if (showInterfaces){ //Display interfaces on the graph
-		sosmSystemInterfaceData.forEach((element) => {
-			interfaceNodes.push({ //Interface node
-				group: 'nodes',
-				data: {
-					id: 'node_si_' + element.id_SIMap,
-					idNo: element.id_SIMap,
-					id_system: element.id_system,
-					id_SIMap: element.id_SIMap,
-					nodeType: 'SystemInterface',
-					name: element.name,
-					filename: './images/' + element.image,
-				},
-				classes: ''																				//Put classes here
-			})
-
-			interfaceNodes.push({ //S-SI edge
-				group: 'edges',
-				data: {
-					id: 'edge_s_si_' + element.id_SIMap,
-					idNo: element.id_SIMap,
-					source: 'node_s_' + element.id_system,
-					target: 'node_si_' + element.id_SIMap,
-				},
-				classes: ''																				//Put classes here
-			})
-		})
-	}
-	
-	//Prepare and add network data to the graph
-	var networkNodes = [];
-
-	switch (2 * showInterfaces + 1 * showNetworkNodes){
-		case 0: //Connect systems directly to each other (no interfaces nor network nodes)
-
-		break;
-		case 1: //Connect systems to network nodes (no interface nodes)
-			addNetworkNodes();
-			sosmNetworkData.forEach((element) => {
-				networkNodes.push({
-					group: 'edges',
-					data: {
-						id: 'edge_s_' + element.id_SIMap + '_n_' + element.id_network,
-						idNo: element.id_network,
-						id_network: element.id_network,
-						source: 'node_s_' + element.id_system,
-						target: 'node_n_' + element.id_network,
-						//name: element.designation,
-					},
-					classes: 'blue'
-				})
-				
-				//Handle classes
-				if(element.designation){
-					networkNodes[networkNodes.length-1].data.name = element.designation
-					if(element.designation.substring(1,2) == 'J'){
-						networkNodes[networkNodes.length-1].classes += ' class3';
-					}
-				}
-			})
-		break;
-		case 2: //Connect interfaces directly to each other (no network nodes)
-
-		break;
-		case 3: //Connect interfaces to network nodes
-			addNetworkNodes();
-			sosmNetworkData.forEach((element) => {
-				networkNodes.push({
-					group: 'edges',
-					data: {
-						id: 'edge_si_' + element.id_SIMap + '_n_' + element.id_network,
-						idNo: element.id_network,
-						id_network: element.id_network,
-						source: 'node_si_' + element.id_SIMap,
-						target: 'node_n_' + element.id_network,
-						//name: 'IF001',
-					},
-					classes: 'blue'																				//Put classes here
-				})
-				//Handle classes
-				if(element.designation){
-					networkNodes[networkNodes.length-1].data.name = element.designation
-					if(element.designation.substring(1,2) == 'J'){
-						networkNodes[networkNodes.length-1].classes += ' class3';
-					}
-				}
-			})
-		break;
-		default:
-			debug(1, `newCy switch default. Shouldn't make it here.`)
-	}
-
-	function addNetworkNodes(){
-		//Add network nodes to the graph
-		sosmNetworkData.forEach((element) => {
-			networkNodes.push({
-				group: 'nodes',
-				data: {
-					id: 'node_n_' + element.id_network,
-					id_network: element.id_network,
-					nodeType: 'Network',
-					name: element.name,
-					filename: './images/' + element.image,
-				},
-				classes: 'network'																			//Put classes here
-			})
-		})		
-	}
-	*/
-
-	//Add all components
-	//debug(1,systemNodes,interfaceNodes,networkNodes)
-	//cy.add(systemNodes);
-	//cy.add(interfaceNodes);
-	//cy.add(networkNodes);
-
-	//Draw the graph
-	const graphSettings = {
-		name: localStorage.getItem('graphLayoutName'),
-		rows: localStorage.getItem('graphLayoutRows'),
-		animate: localStorage.getItem('graphLayoutAnimate'),
-	}
-
-	
-
-	cy.layout(graphSettings).run();
-
-	selectedNode = new Node();
-
-	//Event: Node in graph selected
-	cy.on('tap', 'node', (evt) => { nodeSelected(evt.target); })
-
-	//Event: Node in graph selected
-	cy.on('tap', 'edge', (evt) => { edgeSelected(evt.target); })
-}
+*/

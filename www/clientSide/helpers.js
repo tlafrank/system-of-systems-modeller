@@ -360,6 +360,7 @@ function setFormElement($selector, properties, value){
 			if (value == ''){$($selector).empty();}
 			break;
 		case 'selectOptions': //Fills a select
+		debug(1, value)
 			if(properties.attr){
 				value.forEach((element) => {
 					$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName]}</option>`)
@@ -805,9 +806,7 @@ function swapSelectOptions(buttonSelector, sourceSelector, destinationSelector){
 }
 
 function addMultipleBadges($selector, badge, json){
-	debug(1, json)
 	var arr = JSON.parse(json)
-	debug(1,arr)
 	arr.forEach((element) => {
 		addBadge($selector, {msg: element, info: badge.info});
 	})

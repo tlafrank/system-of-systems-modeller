@@ -99,7 +99,7 @@ function view_charts(){
  */
 function reorgGraph(){
 	debug (1,'In reorgGraph()')
-	cy.layout(cyLayout).run();
+	cy.layout(graphSettings).run();
 }
 
 /**

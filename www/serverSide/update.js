@@ -13,7 +13,7 @@ function debug(level, msg){
 exports.switch = (req,res) => {
 	debug(1, `update.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 	debug(7,req.body);
-
+	debug(1, Date.now())
 
 
 	var queryString = '';
@@ -96,9 +96,9 @@ exports.switch = (req,res) => {
 			break;
 		case 'UpdateInterface':
 			if (req.body.id_interface){
-				queryString += sql.format(`UPDATE interfaces SET name = ?, description = ? WHERE interfaces.id_interface = ?;`,[req.body.name, req.body.description, req.body.id_interface]);
+				queryString += sql.format(`UPDATE interfaces SET name = ?, description = ?, updateTime = ? WHERE interfaces.id_interface = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_interface]);
 			} else {
-				queryString += sql.format(`INSERT INTO interfaces (name, description, image) VALUES (?,?,"tba.svg");`,[req.body.name, req.body.description]);
+				queryString += sql.format(`INSERT INTO interfaces (name, description, image, updateTime) VALUES (?,?,"tba.svg",?);`,[req.body.name, req.body.description, Date.now()]);
 			}
 			break;
 		case 'UpdateSystem':
@@ -108,7 +108,7 @@ exports.switch = (req,res) => {
 				
 			if (req.body.id_system) { //Update existing system
 				//Update system details
-				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.id_system]);
+				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, updateTime = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description, req.body.reference, Date.now(), req.body.id_system]);
 	
 				//Delete existing tags
 				queryString += sql.format(`DELETE FROM tags WHERE id_system = ?;`, req.body.id_system)
@@ -120,7 +120,7 @@ exports.switch = (req,res) => {
 	
 			} else { //Add new system
 				
-				queryString += sql.format(`INSERT INTO systems (name, image, description, reference) VALUES (?,?,?,?);`, [req.body.name, req.body.image, req.body.description, req.body.reference]);
+				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, updateTime, isSubsystem) VALUES (?,?,?,?,?,0);`, [req.body.name, req.body.image, req.body.description, req.body.reference, Date.now()]);
 				queryString += sql.format(`SET @insertID = LAST_INSERT_ID();`)
 	
 				//Add new tags
@@ -177,6 +177,19 @@ exports.switch = (req,res) => {
 				queryString += sql.format(`INSERT INTO interfaceIssues (id_interface, name, severity, issue, resolution) VALUES (?,?,?,?,?);`, [req.body.id_interface, req.body.name, req.body.severity, req.body.issue, req.body.resolution]);
 			}
 			break;
+		case 'UpdateSubsystem':
+		
+				if (req.body.id_system) { //Update existing subsystem
+					//Update system details
+					queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?,  isSubsystem = 1, distributedSubsystem = ?, updateTime = ?  WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description, req.body.distributedSubsystem,Date.now(), req.body.id_system]);
+	
+				} else { //Add new system
+		
+					queryString += sql.format(`INSERT INTO systems (name, image, description, updateTime, distributedSubsystem, isSubsystem) VALUES (?,?,?,?,?,1);`, [req.body.name, req.body.image, req.body.description, Date.now(), req.body.distributedSubsystem]);
+					//queryString += sql.format(`SET @insertID = LAST_INSERT_ID();`)
+					//queryString += sql.format(`SELECT @insertID AS insertId;`)
+				}
+				break;
 
 		//Not yet organised:
 		case 'Organisation':
@@ -212,29 +225,6 @@ exports.switch = (req,res) => {
 
 
 
-
-
-
-
-
-
-	//Check if transaction works, probably change on delete action for relevant FKs
-	if (req.body.type == 'DeleteSystem'){
-		
-		queryString = sql.format('START TRANSACTION;')
-
-		//Delete existing qty to year mappings
-		queryString += sql.format(`DELETE FROM quantities WHERE id_system = ?;`, req.body.id_system)
-
-		//Delete existing years
-		queryString += sql.format(`DELETE FROM tags WHERE id_system = ?;`, req.body.id_system)
-
-		//Delete systems
-		queryString += sql.format(`DELETE FROM systems WHERE id_system = ?;`, req.body.id_system);
-
-		queryString += sql.format('COMMIT;')
-
-	}
 
 	//Check if transaction works, probably change on delete action for relevant FKs
 	if (req.body.type == 'Interface'){
