@@ -216,18 +216,14 @@ exports.switch = (req,res) => {
 			var arrString = req.body.id_SIMap_arr.toString()
 			queryString += sql.format(`
 				SELECT networks.*, SINMap.id_SINMap, SINMap.id_SIMap, SINMap.category AS linkCategory, technologies.category as technologyCategory, SIMap.id_system
-				FROM SINMap 
+				FROM SINMap
 				LEFT JOIN SIMap 
 				ON SIMap.id_SIMap = SINMap.id_SIMap 
 				LEFT JOIN networks 
 				ON networks.id_network = SINMap.id_network
-				LEFT JOIN TIMap
-				ON TIMap.id_interface = SIMap.id_interface
 				LEFT JOIN technologies
-				ON technologies.id_technology = TIMap.id_technology
-				WHERE SIMap.id_SIMap IN (${arrString});`)
-
-
+				ON technologies.id_technology = networks.id_technology
+				WHERE SIMap.id_SIMap IN (${arrString}) AND SINMap.category != 'incapable';`)
 			break;
 		case 'ChildrenSystems':
 			var arrString = req.body.id_system_arr.toString()
@@ -261,8 +257,6 @@ exports.switch = (req,res) => {
 			break;
 		case 'AllDistributedSubsystems':
 			queryString += sql.format(`SELECT DISTINCT systems.* FROM SMap LEFT JOIN systems ON systems.id_system = SMap.child WHERE systems.distributedSubsystem = true;`)
-
-
 			break;
 		case 'ParentsOfChildren':
 			var arrString = req.body.id_children_arr.toString()
@@ -271,6 +265,30 @@ exports.switch = (req,res) => {
 			LEFT JOIN systems 
 			ON systems.id_system = SMap.parent
 			WHERE SMap.child IN (${arrString});`)
+			break;
+		case 'ParentsOfChildren2':
+			
+			queryString += sql.format(`
+				WITH RECURSIVE cte (parent, child, depth) AS
+				(
+					SELECT a.parent, a.child, 0 FROM SMap AS a LEFT JOIN systems ON systems.id_system = a.child WHERE isSubsystem = TRUE
+					UNION ALL
+					SELECT cte.child, b.child, depth + 1 FROM cte LEFT JOIN SMap AS b ON b.parent = cte.child WHERE b.child IS NOT NULL
+					LIMIT 100
+				)
+				SELECT cte.parent, a.name AS parentName, a.image AS parentImage, cte.child, b.name AS childName, b.image AS childImage, cte.depth
+				FROM cte
+				LEFT JOIN systems AS a
+				ON a.id_system = cte.parent
+				LEFT JOIN systems AS b
+				ON b.id_system = cte.child
+				WHERE b.distributedSubsystem IS TRUE AND `)
+
+				if(req.body.deepSubsystems) {
+					queryString += sql.format(`depth > 0;`)
+				} else {
+					queryString += sql.format(`depth = 0;`)
+				}
 
 			break;
 		case 'InterfaceQuantitiesInYear':

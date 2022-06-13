@@ -17,6 +17,151 @@ const graph = {
 			},
 		],
 	},
+	standard: {
+		title: 'Standard Graph',
+		iterations: [
+			{
+				queryType: 'Systems',
+				beforeServerInstructions: [
+					{action: 'resetSosmObject'},
+					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
+					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
+					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
+					
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
+				],
+				afterServerInstructions:[
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems',
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{nodeName: 'id', format: [{ leadingText: 'node_s_', columnName: 'id_system'}]},
+							{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
+							{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
+							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
+							{nodeName: 'name', format: [{ columnName: 'name'}]},
+							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image'}]},	
+						],
+						classes: ['image'],
+						position: true,
+					},
+					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
+				]			
+			},
+			{
+				queryType: 'ChildrenSystems',
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
+				],
+				afterServerInstructions:[
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems',
+						conditions: [{type: 'checkLocalStorage', localStorageName: 'displaySubsystems'}],
+						fields: [
+							{nodeName: 'id', format: [{ leadingText: 'node_ss_', columnName: 'id_SMap'}]},
+							{nodeName: 'parent', format: [{ leadingText: 'node_s_', columnName: 'parent'}]},
+							{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
+							{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
+							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
+							{nodeName: 'name', format: [{ columnName: 'name'}]},
+						],
+						classes: ['square', 'centerLabel'],
+						position: true,
+					},
+				]		
+			},
+			{
+				queryType: 'Interfaces',
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
+				],
+				afterServerInstructions:[
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'interfaces',
+						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
+						fields: [
+							{nodeName: 'id', format: [{ leadingText: 'node_si_', columnName: 'id_SIMap'}]},
+							{nodeName: 'idNo', format: [{ columnName: 'id_SIMap'}]},
+							{nodeName: 'id_interface', format: [{ columnName: 'id_interface'}]},
+							{nodeName: 'id_SIMap', format: [{ columnName: 'id_SIMap'}]},
+							{nodeName: 'nodeType', format: [{ leadingText: 'SystemInterface'}]},
+							{nodeName: 'name', format: [{ columnName: 'name'}]},
+							{nodeName: 'proposed', format: [{ columnName: 'isProposed'}]},
+							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image' }]},
+						],
+						classes: ['small']
+					},
+					{action: 'buildGraphObject_edges', sosmNodeName: 'edges',
+						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
+						fields: [
+							{nodeName: 'id', format: [{ leadingText: 'edge_s_si_', columnName: 'id_SIMap' },]},
+							{nodeName: 'idNo', format: [{ columnName: 'id_SIMap'}]},
+							{nodeName: 'source', format: [{ leadingText: 'node_s_', columnName: 'id_system' }]},
+							{nodeName: 'target', format: [{ leadingText: 'node_si_', columnName: 'id_SIMap'}]},
+							{nodeName: 'lineColor', format: [{ leadingText: 'black'}]},
+						],
+						classes: []
+					},
+
+					{action: 'getDataFromResult', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap'}
+				]			
+			},
+			{
+				queryType: 'Links',
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap_arr'},
+				],
+				afterServerInstructions:[
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'links',
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{nodeName: 'id', format: [{ leadingText: 'node_n_', columnName: 'id_network'}]},
+							{nodeName: 'id_network', format: [{ columnName: 'id_network'}]},
+							{nodeName: 'nodeType', format: [{ leadingText: 'Link'}]},
+							{nodeName: 'name', format: [{ columnName: 'name'}]},
+							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image' }]},
+						],
+						classes: ['network'],
+						position: true,
+					},
+					{action: 'buildGraphObject_edges', sosmNodeName: 'edges', 
+						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
+						fields: [
+							{nodeName: 'id', format: [
+								{ leadingText: 'edge_si_', columnName: 'id_SIMap' },
+								{ leadingText: '_n_', columnName: 'id_network' },
+							]},
+							{nodeName: 'idNo', format: [{ columnName: 'id_network'}]},
+							{nodeName: 'id_network', format: [{ columnName: 'id_network'}]},
+							{nodeName: 'source', format: [{ leadingText: 'node_si_', columnName: 'id_SIMap' }]},
+							{nodeName: 'target', format: [{ leadingText: 'node_n_', columnName: 'id_network'}]},
+							{nodeName: 'linkCategory', format: [{ columnName: 'linkCategory'}]},
+							//{nodeName: 'lineColor', format: [{ leadingText: 'black'}]},
+						],
+						classes: ['']
+					},
+					{action: 'buildGraphObject_edges', sosmNodeName: 'edges', 
+						conditions: [{type: '!checkLocalStorage', localStorageName: 'showInterfaces'}],
+						fields: [
+							{nodeName: 'id', format: [
+								{ leadingText: 'edge_si_', columnName: 'id_SIMap' },
+								{ leadingText: '_n_', columnName: 'id_network' },
+							]},
+							{nodeName: 'idNo', format: [{ columnName: 'id_network'}]},
+							{nodeName: 'id_network', format: [{ columnName: 'id_network'}]},
+							{nodeName: 'source', format: [{ leadingText: 'node_s_', columnName: 'id_system' }]},
+							{nodeName: 'target', format: [{ leadingText: 'node_n_', columnName: 'id_network'}]},
+							{nodeName: 'lineColor', format: [
+								{ leadingText: 'black', columnName: 'technologyCategory' }
+							]},
+							{nodeName: 'linkCategory', format: [{ columnName: 'linkCategory'}]},
+						],
+						classes: ['']
+					},
+				],
+			},
+		]
+	},
 	standardOrganisation:{
 		title: 'Standard Graph by Organisation',
 		iterations: [
@@ -28,7 +173,8 @@ const graph = {
 				],
 				afterServerInstructions:[
 					{action: 'getDataFromResult', sosmName: 'id_organisation_arr', columnName: 'id_organisation'},
-					{action: 'buildGraphObject_system', sosmNodeName: 'systems', 
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', 
+						conditions: [{type: 'alwaysRun'}],
 						fields: [
 							{nodeName: 'id', format: [{leadingText: 'node_o_', columnName: 'id_organisation'}]},
 							{nodeName: 'parent', format: [{leadingText: 'node_o_', columnName: 'parent'}]},
@@ -37,7 +183,8 @@ const graph = {
 							{nodeName: 'nodeType', format: [{leadingText: 'Organisation'}]},
 							{nodeName: 'name', format: [{columnName: 'name'}]}
 						],
-						classes: ['square']
+						classes: ['square'],
+						position: true,
 					},
 				]
 			},
@@ -53,15 +200,20 @@ const graph = {
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
 				],
 				afterServerInstructions:[
-					{action: 'buildGraphObject_system', sosmNodeName: 'systems', fields: [
-						{nodeName: 'parent', format: [{leadingText: 'node_o_', columnName: 'id_organisation'}]},
-						{nodeName: 'id', format: [{leadingText: 'node_s_', columnName: 'id_OSMap'}]},
-						{nodeName: 'idNo', format: [{columnName: 'id_system'}]},
-						{nodeName: 'id_system', format: [{columnName: 'id_system'}]},
-						{nodeName: 'nodeType', format: [{leadingText: 'System'}]},
-						{nodeName: 'name', format: [{columnName: 'systemName'}]},
-						{nodeName: 'filename', format: [{leadingText: './images/', columnName: 'image'}]},	
-					]},
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', 
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{nodeName: 'parent', format: [{leadingText: 'node_o_', columnName: 'id_organisation'}]},
+							{nodeName: 'id', format: [{leadingText: 'node_os_', columnName: 'id_OSMap'}]},
+							{nodeName: 'idNo', format: [{columnName: 'id_system'}]},
+							{nodeName: 'id_system', format: [{columnName: 'id_system'}]},
+							{nodeName: 'nodeType', format: [{leadingText: 'System'}]},
+							{nodeName: 'name', format: [{columnName: 'systemName'}]},
+							{nodeName: 'filename', format: [{leadingText: './images/', columnName: 'image'}]},	
+						],
+						classes: [],
+						position: true,
+					},
 					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
 				]			
 			},
@@ -74,9 +226,10 @@ const graph = {
 					
 				],
 				afterServerInstructions:[
-					{action: 'buildGraphObject_system', sosmNodeName: 'systems', displayIf: 'compoundSystems',
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', displayIf: 'compoundSystems',
+					conditions: [{type: 'checkLocalStorage', localStorageName: 'displaySubsystems'}],
 						fields: [
-							{nodeName: 'parent', format: [{leadingText: 'node_s_', columnName: 'id_OSMap'},]},
+							{nodeName: 'parent', format: [{leadingText: 'node_os_', columnName: 'id_OSMap'},]},
 							{nodeName: 'id', format: [
 								{leadingText: 'node_ss_', columnName: 'id_SMap'},
 								{leadingText: '_', columnName: 'id_OSMap'},
@@ -89,145 +242,23 @@ const graph = {
 							//{nodeName: 'filename', leadingText: './images/', columnName: 'image'}]},	
 						],
 						classes: ['square', 'centerLabel'],
+						position: true,
 					},
 				]		
 			},
-			/*
-			{
-				queryType: 'Interfaces',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_interfaces', },
-					{action: 'getDataFromResult', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap'}
-				]			
-			},
-			{
-				queryType: 'Links',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_links', },
-				]			
-			},
-			*/
 		],
-	},
-	standard: {
-		title: 'Standard Graph',
-		iterations: [
-			{
-				//If id_organisation has been configured, get the list of organisational nodes which exists below
-				queryType: 'GetAllOrganisationalNodesBelow',
-				beforeServerInstructions: [
-					{action: 'resetSosmObject'},
-					{action: 'toServer_fromLocalStorage_int', sourceName: 'currentOrganisation', columnName: 'id_organisation'},
-				],
-				afterServerInstructions:[
-					{action: 'getDataFromResult', sosmName: 'id_organisation_arr', columnName: 'orgNode'},
-					//{action: 'getComplexDataFromResult', sosmName: 'id_system_qty_arr', columnName1: 'id_system', columnName2: 'quantity'},
-				]			
-			},		
-			{
-				queryType: 'Systems',
-				beforeServerInstructions: [
-					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
-					{action: 'toServer_fromSosmObject', sosmName: 'id_organisation_arr', columnName: 'id_organisation_arr'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
-				],
-				afterServerInstructions:[
-					//{action: 'getComplexDataFromResult', sosmName: 'id_system_qty_arr', columnName1: 'id_system', columnName2: 'quantity'},
-					{action: 'buildGraphObject_system', sosmNodeName: 'systems', 
-						fields: [
-							{nodeName: 'id', format: [{ columnName: 'id_system', leadingText: 'node_s_'}]},
-							{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
-							{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-							{nodeName: 'name', format: [{ columnName: 'name'}]},
-							{nodeName: 'filename', format: [{ columnName: 'image', leadingText: './images/'}]},	
-						],
-						classes: ['image']
-					},
-					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
-				]			
-			},
-			{
-				queryType: 'ChildrenSystems',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_system', sosmNodeName: 'systems', displayIf: 'compoundSystems',
-						fields: [
-							{nodeName: 'id', format: [{ leadingText: 'node_s_', columnName: 'id_SMap'}]},
-							{nodeName: 'parent', format: [{ leadingText: 'node_s_', columnName: 'parent'}]},
-							{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
-							{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-							{nodeName: 'name', format: [{ columnName: 'name'}]},
-							//{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image'}]},
-						],
-						classes: ['square', 'centerLabel']
-					},
-				]		
-			},
-			{
-				queryType: 'Interfaces',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_interfaces', },
-					{action: 'getDataFromResult', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap'}
-				]			
-			},
-			{
-				queryType: 'Links',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_links', },
-				]			
-			},
-		]
 	},
 	subsystems: {
 		title: 'Distributed Subsystem Graph',
 		iterations: [
-			{
-				queryType: 'Systems',
-				beforeServerInstructions: [
-					{action: 'resetSosmObject'},
-					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
-
-
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
-					
-				],
-				afterServerInstructions:[
-					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
-				]			
-			},
+			/*
 			{
 				queryType: 'AllDistributedSubsystems',
 				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
+					{action: 'resetSosmObject'},
 				],
 				afterServerInstructions:[
-					{action: 'buildGraphObject_system', sosmNodeName: 'systems', fields: [
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', fields: [
 						{nodeName: 'id', format: [{ columnName: 'id_system', leadingText: 'node_s_'}]},
 						{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
 						{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
@@ -236,24 +267,88 @@ const graph = {
 						{nodeName: 'filename', format: [{ columnName: 'image', leadingText: './images/'}]},		
 					]},
 
-					{action: 'getDataFromResult', sosmName: 'id_children_arr', columnName: 'id_system'}
+					//{action: 'getDataFromResult', sosmName: 'id_children_arr', columnName: 'id_system'}
+				]
+			},
+			*/
+			{
+				queryType: 'ParentsOfChildren2',
+				beforeServerInstructions: [
+					{action: 'resetSosmObject'},
+					//{action: 'toServer_fromSosmObject', sosmName: 'id_children_arr', columnName: 'id_children_arr'},
+				],
+				afterServerInstructions:[
+					//{action: 'buildGraphObject_parents', },
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems',
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{nodeName: 'id', format: [{ columnName: 'parent', leadingText: 'node_p_'}]},
+							{nodeName: 'idNo', format: [{ columnName: 'parent'}]},
+							{nodeName: 'id_system', format: [{ columnName: 'parent'}]},
+							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
+							{nodeName: 'name', format: [{ columnName: 'parentName'}]},
+							{nodeName: 'filename', format: [{ columnName: 'parentImage', leadingText: './images/'}]},		
+						],
+						classes: ['small'],
+						position: true,
+					},
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', 
+					conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{nodeName: 'id', format: [{ leadingText: 'node_c_', columnName: 'child' }]},
+							{nodeName: 'idNo', format: [{ columnName: 'child'}]},
+							{nodeName: 'id_system', format: [{ columnName: 'child'}]},
+							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
+							{nodeName: 'name', format: [{ columnName: 'childName'}]},
+							{nodeName: 'filename', format: [{  leadingText: './images/', columnName: 'childImage'}]},
+							//{nodeName: 'parent', format: [{ leadingText: 'node_p_', columnName: 'parent' }]},
+						],
+						classes: [''],
+						position: true,
+					},
+					{action: 'buildGraphObject_edges', sosmNodeName: 'edges', 
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{nodeName: 'id', format: [
+								{ leadingText: 'node_c_', columnName: 'child' },
+								{ leadingText: 'node_p_', columnName: 'parent' }
+							]},
+							{nodeName: 'idNo', format: [{ columnName: 'child'}]},
+							{nodeName: 'source', format: [{ leadingText: 'node_c_', columnName: 'child' }]},
+							{nodeName: 'target', format: [{ columnName: 'parent', leadingText: 'node_p_'}]},
+							//lineColor?
+						],
+						classes: ['']
+					},
 				]		
 			},
 			{
-				queryType: 'ParentsOfChildren',
+				queryType: 'ParentsOfChildren2',
 				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_children_arr', columnName: 'id_children_arr'},
+					{action: 'toServer_fromObject', type: 'boolean', columnName: 'deepSubsystems'},
 				],
 				afterServerInstructions:[
-					{action: 'buildGraphObject_parents', },
-					//{action: 'getDataFromResult', sosmName: 'id_children_arr', dataId: 'id_system'}
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', 
+					conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{nodeName: 'id', format: [{ leadingText: 'node_cdgf_', columnName: 'child' }]},
+							{nodeName: 'idNo', format: [{ columnName: 'child'}]},
+							{nodeName: 'id_system', format: [{ columnName: 'child'}]},
+							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
+							{nodeName: 'name', format: [{ columnName: 'childName'}]},
+							{nodeName: 'filename', format: [{  leadingText: './images/', columnName: 'childImage'}]},
+							{nodeName: 'parent', format: [{ leadingText: 'node_p_', columnName: 'parent' }]},
+						],
+						classes: [''],
+						position: true,
+					},
 				]		
 			},
-
-/*
+			/*
 			{
 				queryType: 'Systems',
 				beforeServerInstructions: [
+					{action: 'resetSosmObject'},
 					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
 					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
 					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
@@ -264,35 +359,15 @@ const graph = {
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
 					
-
-
 				],
 				afterServerInstructions:[
-					{action: 'getDataFromSosmObject', sosmName: 'id_system_arr', sosmNodesName: 'systems', dataId: 'id_system'}
+					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
 				]			
 			},
 
-			{
-				queryType: 'Interfaces',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_interfaces', },
-					//{action: 'getDataFromSosmObject', sosmName: 'id_SIMap_arr', sosmNodesName: 'interfaces', dataId: 'id_SIMap'}
-					{action: 'getDataFromResult', sosmName: 'id_SIMap_arr', sosmNodesName: 'interfaces', dataId: 'id_SIMap'}
-					//{action: 'getSIMapIds', sosmName: 'id_SIMap_arr'}
-				]			
-			},
-			{
-				queryType: 'Links',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_links', },
-				]			
-			},
+
+			
+
 
 			*/
 		]
@@ -405,54 +480,77 @@ const graphTable = {
 //Cy styling objects
 const cyStyle = [ // the stylesheet for the graph
 
+	// { selector: 'node',
+	// 	style: {
+	// 		'width': '100px',
+	// 		'background-width': '92px',
+	// 		'height': '100px',
+	// 		'background-height': '92px',
+	// 		'background-color': 'white',
+	// 		'background-fit': 'none',
+	// 		'label': 'data(name)',
+	// 		'border-color': 'black',
+	// 		'border-width': '3px'
+	// 	}
+	// },
+
 	{ selector: 'node',
 		style: {
-			'width': '100px',
-			'background-width': '92px',
-			'height': '100px',
-			'background-height': '92px',
+			'width': '600px',
+			'background-width': '591px',
+			'height': '600px',
+			'background-height': '591px',
 			'background-color': 'white',
 			'background-fit': 'none',
 			'label': 'data(name)',
 			'border-color': 'black',
-			'border-width': '3px'
+			'border-width': '15px',
+			'font-size': '80px',
 		}
 	},
-
-
 	{ selector: '[filename]',
 		style: {
 			'background-image': 'data(filename)',
 		}
 	},
+	{
+		selector: 'edge[linkCategory = "alternate"]',
+		style: {
+			'line-style': 'dashed',
+			'line-opacity': 0.8,
+			'line-dash-pattern': [25,25],
+		}
+	},
+	{
+		selector: 'node[proposed = "1"]',
+		style: {
+			//'border-style': 'dashed',
+			//'border-dash-pattern': [25,25],
+			//'border-opacity': 0.5,
+			'border-color': 'grey',
+		}
+	},
 
-
-
-	// { selector: '.image[filename]',
-	// 	style: {
-	// 		'background-image': 'data(filename)',
-	// 	}
-	// },
 	{ selector: '.network',
 		style: {
-			'width': '58px',
-			'background-width': '60px',
-			'height': '58px',
-			'background-height': '60px',
+			'width': '300px',
+			'background-width': '320px',
+			'height': '300px',
+			'background-height': '320px',
 			'border-color': 'blue',
 			'shape': 'round-octagon',
-			'border-width': '1px'
+			'border-width': '5px'
 		}
 	},
-	{ selector: '.interface',
-		style: {
-			'width': '60px',
-			'background-width': '52px',
-			'height': '60px',
-			'background-height': '52px',
-			'border-color': 'black',
-		}
-	},
+	// { selector: '.interface',
+	// 	style: {
+	// 		'width': '300px',
+	// 		'background-width': '300px',
+	// 		'height': '300px',
+	// 		'background-height': '300px',
+	// 		'border-color': 'black',
+	// 	}
+	// },
 
 	{ selector: '.critical', style: { 'background-color': 'red' }},
 	{ selector: '.warning', style: { 'background-color': '#ffcc00' }},
@@ -465,8 +563,7 @@ const cyStyle = [ // the stylesheet for the graph
 	{
 		selector: 'edge',
 		style: {
-			'width': 3,
-			//'line-color': '#000',
+			'width': 15,
 			'line-color': 'data(lineColor)',
 			'curve-style': 'bezier',
 		}
@@ -478,16 +575,12 @@ const cyStyle = [ // the stylesheet for the graph
 			'color': 'black',
 			'text-border-color': 'green',
 			'text-border-opacity': 1,
-			'text-border-width': 2,
-			//'line-color': 'orange',
-			
+			'text-border-width': 2,		
 			'text-background-padding': 1,
 			'text-background-color': 'white',
 			'text-background-opacity': 1,
 		}
 	},
-	//Need to add styling for various subsystem classes
-		
 	{
 		selector: '.subordinateSystem',
 		style: {
@@ -510,17 +603,17 @@ const cyStyle = [ // the stylesheet for the graph
 	},
 	{ selector: '.small',
 		style: {
-			'width': '60px',
-			'background-width': '52px',
-			'height': '60px',
-			'background-height': '52px',
+			'width': '300px',
+			'background-width': '280px',
+			'height': '300px',
+			'background-height': '280px',
 		}
 	},
 	{
 		selector: '.square',
 		style: {
 			'shape': 'round-rectangle',
-			'height': '60px',
+			'height': '200px',
 		}
 	},
 	{
@@ -530,24 +623,23 @@ const cyStyle = [ // the stylesheet for the graph
 			'text-valign':'center',
 		}
 	},
-	{
-		selector: '.proposed',
-		style: {
-			'line-style': 'dashed',
-			'line-color': 'grey',
-			'border-style': 'dashed',
-			'border-color': 'grey',
-		}
-	},
+	// {
+	// 	selector: '.proposed',
+	// 	style: {
+	// 		'line-style': 'dashed',
+	// 		'line-color': 'grey',
+	// 		'border-style': 'dashed',
+	// 		'border-color': 'grey',
+	// 	}
+	// },
 
-	{
-		selector: '.dashed',
-		style: {
-			'line-style': 'dashed',
-			'line-opacity': 0.8,
-		}
-	},
-
+	// {
+	// 	selector: '.dashed',
+	// 	style: {
+	// 		'line-style': 'dashed',
+	// 		'line-opacity': 0.8,
+	// 	}
+	// },
 ];
 
 
@@ -556,7 +648,7 @@ function cyLayout(){
 		name: localStorage.getItem('graphLayoutName'),
 		rows: localStorage.getItem('graphLayoutRows'),
 		animate: localStorage.getItem('graphLayoutAnimate'),
-		idealEdgeLength: 250,
+		idealEdgeLength: 1000,
 	}
 	return obj
 }
@@ -597,7 +689,7 @@ const technologyCategory = [
 ]
 */
 
-const graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random', 'fcose'];
+const graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random', 'fcose', 'preset'];
 const defaultLandingPageOptions = ['graph', 'summary', 'issues'];
 
 /**
@@ -614,11 +706,11 @@ const settings = [
 	{ type: 'heading', align: 'left', text: 'Graph Settings', noUpdate: true },
 	{ type: 'select', id: 'graphLayoutName', label: 'Graph Layout', default: 'cose', options: graphLayoutNames },
 	{ type: 'checkbox', id: 'showInterfaces', label: 'Display Interface Nodes', default: 1 },
-	{ type: 'checkbox', id: 'showIssues', label: 'Display issues on graph', default: 1 },
-	{ type: 'checkbox', id: 'pruneEdgeLinks', label: 'Prune links with only one interface', default: 0 },
+	{ type: 'checkbox', id: 'displaySubsystems', label: 'Display Subsystem Nodes', default: 0 },
+	//{ type: 'checkbox', id: 'showIssues', label: 'Display issues on graph', default: 1 },
+	//{ type: 'checkbox', id: 'pruneEdgeLinks', label: 'Prune links with only one interface', default: 0 },
 	{ type: 'checkbox', id: 'showPrimaryLinks', label: 'Display Primary Links', default: 1 },
 	{ type: 'checkbox', id: 'showAlternateLinks', label: 'Display Alternate Links', default: 1 },
-	{ type: 'checkbox', id: 'displaySubsystems', label: 'Display subsystems', default: 0 },
 	{ type: 'number', id: 'zoomSensitivity', label: 'Scroll Wheel Zoom Sensitivity', default: 1},
 	
 	{ type: 'heading', align: 'left', text: 'Issue Settings', noUpdate: true},
@@ -1063,7 +1155,7 @@ const modals = {
 			{id: 'textSystemReferences', on: 'input'},
 			{id: 'textSystemTags', on: 'input'},
 		],
-		lockOnChange: ['selectSystem','buttonNew','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces'], //The ID of the controls to lock when editing an object
+		lockOnChange: ['selectSystem','buttonNew','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces','buttonSystemRelationships'], //The ID of the controls to lock when editing an object
 		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
 		iterations: [ //The objects to process in order to fetch information from the server and insert into the form controls
 			{ //Get the all the systems
@@ -1252,6 +1344,7 @@ const modals = {
 			{ type: 'note', text: 'Select an interface to access additional details:'},
 			{ type: 'text', id: 'textSystemInterfaceName', label: 'System Interface Name' },
 			{ type: 'textarea', id: 'textSystemInterfaceDescription', label: 'Description' },
+			{ type: 'checkbox', id: 'chkIsProposed', label: 'Proposed Interface'},
 			{ type: 'droppable2', id: 'containerCompatibleLinks', label: 'Compatible Links'},
 			{ type: 'droppable2', id: 'containerPrimaryLinks', label: 'Primary Links'},
 			{ type: 'droppable2', id: 'containerAlternateLinks', label: 'Alternate Links'},
@@ -1260,6 +1353,7 @@ const modals = {
 		monitorChanges: [
 			{id: 'textSystemInterfaceName', on: 'input'},
 			{id: 'textSystemInterfaceDescription', on: 'input'},
+			{id: 'chkIsProposed', on: 'change'},
 		],
 		lockOnChange: ['buttonAssignSystem','containerAssignedInterfaces','buttonDelete', 'containerAssignedInterfaces button'], 
 		unlockOnChange: ['buttonUpdate'], 
@@ -1289,6 +1383,7 @@ const modals = {
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'iconButton', id: 'containerAssignedInterfaces', columnName: 'name', attr: {name: 'id_SIMap', columnName: 'id_SIMap'}},
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textSystemInterfaceName', definition: 'id_SIMap', columnName: 'SIName'},
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textSystemInterfaceDescription', definition: 'id_SIMap', columnName: 'description'},
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'checkbox', id: 'chkIsProposed', definition: 'id_SIMap', columnName: 'isProposed'},
 					{action: 'setControl_SingleValue_fromDefinitionIfExists', type: 'iconButtonSelected', id: 'containerAssignedInterfaces', attrName: 'id_SIMap', definitionName: 'id_SIMap'},
 				],
 			},
@@ -1333,6 +1428,7 @@ const modals = {
 					{action: 'control_Empty', type: 'droppableElements', id: 'containerIncapableLinks'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'text', id: 'textSystemInterfaceName', columnName: 'name'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'text', id: 'textSystemInterfaceDescription', columnName: 'description'},
+					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'checkbox', id: 'chkIsProposed', columnName: 'isProposed'},
 					{action: 'setControl_MultipleValues', arrayIndex: 1, type: 'droppableElements', id: 'containerCompatibleLinks', columnName: 'name', attr: {name: 'id_network', columnName: 'id_network'}},
 					{action: 'setControl_MultipleValues', arrayIndex: 2, type: 'moveDroppableElements', id: 'containerPrimaryLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
 					{action: 'setControl_MultipleValues', arrayIndex: 3, type: 'moveDroppableElements', id: 'containerAlternateLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
@@ -1358,6 +1454,7 @@ const modals = {
 					{action: 'toServer_DefinitionValue', definitionName: 'id_SIMap', columnName: 'id_SIMap'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textSystemInterfaceName',  columnName: 'name'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textSystemInterfaceDescription', columnName: 'description'},
+					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkIsProposed', columnName: 'isProposed'},
 				],
 				cleanup: [
 					{action: 'reload'},
@@ -2283,6 +2380,61 @@ const modals = {
 			},
 		]
 	},
+	export: {
+		title: 'Export Data',
+		formButtons: [ 
+			//{type: 'cancel', id: 'buttonCancel', label: 'Close', initialState: 'unlock'},
+			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{ type: 'buttons', buttons: [
+				{ id: 'exportPNG', label: 'Export PNG'},
+				{ id: 'exportJPG', label: 'Export JPG'},
+				//{ id: 'exportSVG', label: 'Export SVG'}, //cytoscape SVG output is inadequate. TBC
+				{ id: 'exportCSV', label: 'Export CSV'},
+			]},
+		],
+		monitorChanges: [],
+		lockOnChange: [],
+		unlockOnChange: [], 
+		iterations: [
+		],
+		events: [
+			{
+				handlers: [{controlId: 'exportPNG', event: 'click'}, ], 
+				instructions: [],
+				cleanup: [
+					{action: 'launchFunction', functionName: 'savePNG'},
+					{action: 'closeModal'},
+				],
+			},
+			{
+				handlers: [{controlId: 'exportJPG', event: 'click'}, ],
+				instructions: [],
+				cleanup: [
+					{action: 'launchFunction', functionName: 'saveJPG'},
+					{action: 'closeModal'},
+				],
+			},
+			{
+				handlers: [{controlId: 'exportSVG', event: 'click'}, ],
+				instructions: [],
+				cleanup: [
+					{action: 'launchFunction', functionName: 'saveSVG'},
+					{action: 'closeModal'},
+				],
+			},
+			{
+				handlers: [{controlId: 'exportCSV', event: 'click'}, ],
+				instructions: [],
+				cleanup: [
+					{action: 'launchFunction', functionName: 'saveCSV'},
+					{action: 'closeModal'},
+
+				],
+			},
+		]
+	},
 }
 
 
@@ -2306,3 +2458,59 @@ events.cleanup
 */
 
 
+/*
+Backup before trying to nest subsystems
+
+subsystems: {
+		title: 'Distributed Subsystem Graph',
+		iterations: [
+			{
+				queryType: 'Systems',
+				beforeServerInstructions: [
+					{action: 'resetSosmObject'},
+					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
+					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
+					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
+
+
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
+					
+				],
+				afterServerInstructions:[
+					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
+				]			
+			},
+			{
+				queryType: 'AllDistributedSubsystems',
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
+				],
+				afterServerInstructions:[
+					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', fields: [
+						{nodeName: 'id', format: [{ columnName: 'id_system', leadingText: 'node_s_'}]},
+						{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
+						{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
+						{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
+						{nodeName: 'name', format: [{ columnName: 'name'}]},
+						{nodeName: 'filename', format: [{ columnName: 'image', leadingText: './images/'}]},		
+					]},
+
+					{action: 'getDataFromResult', sosmName: 'id_children_arr', columnName: 'id_system'}
+				]		
+			},
+			{
+				queryType: 'ParentsOfChildren',
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_children_arr', columnName: 'id_children_arr'},
+				],
+				afterServerInstructions:[
+					{action: 'buildGraphObject_parents', },
+					//{action: 'getDataFromResult', sosmName: 'id_children_arr', dataId: 'id_system'}
+				]		
+			},
+		]
+	},
+*/

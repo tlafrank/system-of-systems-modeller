@@ -88,6 +88,9 @@ ALTER TABLE systems ADD COLUMN distributedSubsystem BOOLEAN AFTER isSubsystem;
 -- V1.0.3 (See package.json)
 DROP TABLE systemClassMap;
 DROP TABLE classes;
+ALTER TABLE networks DROP COLUMN `linkColor`;
+ALTER TABLE networks DROP COLUMN `class`;
+ALTER TABLE interfaceIssues ADD COLUMN updateTime BIGINT;
 
 ALTER TABLE quantities DROP CONSTRAINT `fk_quantities_system`;
 ALTER TABLE quantities ADD CONSTRAINT `fk_quantities_system`

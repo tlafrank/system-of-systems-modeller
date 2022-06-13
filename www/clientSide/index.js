@@ -11,7 +11,6 @@ let sosmSystemData, sosmSystemInterfaceData, sosmNetworkData, sosmStats, sosmNet
 let issuesData = [];
 let breadcrumbTracker = [];
 
-
 const imagePath = './images/'
 var hideNodes = false; //Tracks whether a click on a node should remove it from the graph
 

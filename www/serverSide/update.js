@@ -81,7 +81,7 @@ exports.switch = (req,res) => {
 		//Simple Updates / Insertions
 		case 'UpdateSIMap':
 			//queryString += sql.format(`UPDATE SIMap SET isProposed = ?, name = ?, description = ? WHERE SIMap.id_SIMap = ?;`,[req.body.isProposed, req.body.name, req.body.description, req.body.id_SIMap]);
-			queryString += sql.format(`UPDATE SIMap SET name = ?, description = ? WHERE SIMap.id_SIMap = ?;`,[req.body.name, req.body.description, req.body.id_SIMap]);
+			queryString += sql.format(`UPDATE SIMap SET name = ?, description = ?, isProposed = ? WHERE SIMap.id_SIMap = ?;`,[req.body.name, req.body.description, req.body.isProposed, req.body.id_SIMap]);
 			break;
 		case 'UpdateImage':
 			if (req.body.id_system){ //Update the image associated with a system
@@ -133,9 +133,9 @@ exports.switch = (req,res) => {
 			break;
 		case 'UpdateLink':
 			if (req.body.id_network){
-				queryString += queryString = sql.format(`UPDATE networks SET name = ?, designation = ?, description = ?, id_technology = ?, linkColor = ? WHERE id_network = ?;`, [req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.linkColor, req.body.id_network])
+				queryString += queryString = sql.format(`UPDATE networks SET name = ?, designation = ?, description = ?, id_technology = ? WHERE id_network = ?;`, [req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.id_network])
 			} else {
-				queryString += sql.format(`INSERT INTO networks (name, designation, description, id_technology, linkColor, image) VALUES (?,?,?,?,?,'tba.svg')`, [req.body.name, req.body.designation, req.body.description,  req.body.id_technology, req.body.linkColor,])
+				queryString += sql.format(`INSERT INTO networks (name, designation, description, id_technology, image) VALUES (?,?,?,?,'tba.svg')`, [req.body.name, req.body.designation, req.body.description,  req.body.id_technology])
 			}
 			break;
 		case 'UpdateTechnology':
@@ -172,9 +172,9 @@ exports.switch = (req,res) => {
 			break;
 		case 'UpdateInterfaceIssue':
 			if (req.body.id_interfaceIssue) {
-				queryString += sql.format(`UPDATE interfaceIssues SET name = ?, severity = ?, issue = ?, resolution = ?  WHERE id_interfaceIssue = ?;`, [req.body.name, req.body.severity, req.body.issue, req.body.resolution, req.body.id_interfaceIssue]);
+				queryString += sql.format(`UPDATE interfaceIssues SET name = ?, severity = ?, issue = ?, resolution = ?, updateTime = ?  WHERE id_interfaceIssue = ?;`, [req.body.name, req.body.severity, req.body.issue, req.body.resolution, Date.now(), req.body.id_interfaceIssue]);
 			} else {
-				queryString += sql.format(`INSERT INTO interfaceIssues (id_interface, name, severity, issue, resolution) VALUES (?,?,?,?,?);`, [req.body.id_interface, req.body.name, req.body.severity, req.body.issue, req.body.resolution]);
+				queryString += sql.format(`INSERT INTO interfaceIssues (id_interface, name, severity, issue, resolution, updateTime) VALUES (?,?,?,?,?,?);`, [req.body.id_interface, req.body.name, req.body.severity, req.body.issue, req.body.resolution, Date.now()]);
 			}
 			break;
 		case 'UpdateSubsystem':

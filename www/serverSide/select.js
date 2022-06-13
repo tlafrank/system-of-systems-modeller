@@ -48,7 +48,7 @@ exports.switch = (req,res) => {
 			break;
 		case 'SingleSystem_WithTags':
 			queryString += sql.format(`SELECT * FROM systems WHERE id_system = ?;`,[req.body.id_system])
-			queryString += sql.format(`SELECT * FROM tags WHERE id_system = ?;`,[req.body.id_system])
+			queryString += sql.format(`SELECT * FROM tags WHERE id_system = ? ORDER BY tag;`,[req.body.id_system])
 			break;		
 		case 'AllSubsystems':
 			queryString += sql.format(`SELECT * FROM systems WHERE systems.isSubsystem = true ORDER BY name;`)
@@ -79,7 +79,7 @@ exports.switch = (req,res) => {
 			break;
 		case 'SystemInterfaces'://Get the list of all interfaces attached to a supplied id_system
 			queryString += sql.format(`
-				SELECT SIMap.id_SIMap AS id_SIMap, SIMap.id_interface, interfaces.name, interfaces.image, SIMap.name AS SIName, SIMap.description
+				SELECT SIMap.id_SIMap AS id_SIMap, SIMap.id_interface, interfaces.name, interfaces.image, SIMap.name AS SIName, SIMap.description, SIMap.isProposed
 				FROM SIMap
 				LEFT JOIN interfaces
 				ON SIMap.id_interface = interfaces.id_interface
@@ -126,7 +126,8 @@ exports.switch = (req,res) => {
 				ON SIMap.id_interface = interfaces.id_interface
 				LEFT JOIN TIMap
 				ON interfaces.id_interface = TIMap.id_interface
-				WHERE id_SIMap = ?);`, req.body.id_SIMap)
+				WHERE id_SIMap = ?)
+			ORDER BY name;`, req.body.id_SIMap)
 	
 			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND (category='primary' OR category IS NULL);`, [req.body.id_SIMap])
 			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND category='alternate';`, [req.body.id_SIMap])

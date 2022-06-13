@@ -30,7 +30,10 @@ async function commonGraph(definition){
 							alternateLinks: false,
 							compoundSystems: false,
 						},
-						stats: {}
+						stats: {},
+					}
+					if(localStorage.getItem('positions') !== null){
+						sosm.positions = JSON.parse(localStorage.getItem('positions'))
 					}
 					break;
 				case 'toServer_fromLocalStorage_int':
@@ -50,7 +53,8 @@ async function commonGraph(definition){
 					postData[element.columnName] = definition[element.definitionName]
 				break;
 
-				case '':
+				case 'toServer_fromObject':
+					postData[element.columnName] = true;
 				break;
 				case '':
 				break;
@@ -91,9 +95,9 @@ async function commonGraph(definition){
 
 		graph[definition.graph].iterations[i].afterServerInstructions.forEach((element) => {
 			switch (element.action){
-				case 'buildGraphObject_system': //Prepare and add system data to the graph
-					if ((typeof element.displayIf === 'undefined') || (sosm.display[element.displayIf])){
-						result.forEach((node) => {	
+				case 'buildGraphObject_nodes': //Prepare and add nodes to the graph
+					if (checkConditions(element.conditions)){
+						result.forEach((node) => {
 							var tempNode = {}
 							tempNode.group = 'nodes'
 							tempNode.data = {}
@@ -101,8 +105,7 @@ async function commonGraph(definition){
 							element.fields.forEach((field) => {
 								var str = '';
 								field.format.forEach((format) => {
-									if (node[format.columnName] !== null){
-										
+									if (node[format.columnName] !== null){	
 										if (format.leadingText){
 											str += format.leadingText
 										}
@@ -120,110 +123,87 @@ async function commonGraph(definition){
 									tempNode.classes += className + ' ';
 								})
 							}
+							//Handle existing position
+							if (element.position){
+								if(sosm.positions.find(x => x.id == tempNode.data.id)){
+									tempNode.position = sosm.positions.find(x => x.id == tempNode.data.id).position
+								}
+							}
 							sosm.nodes[element.sosmNodeName].push(tempNode)
 						})						
 					}
 
 					break;
-				case 'buildGraphObject_interfaces':
-
-					if(sosm.display.interfaces){//Show Interface nodes
-						result.forEach((element2) => {
-							//Elements
-							var tempNode = {}
-							tempNode.group = 'nodes'
-							tempNode.data = {
-								id: 'node_si_' + element2.id_SIMap,
-								idNo: element2.id_SIMap,
-								id_system: element2.id_system,
-								id_SIMap: element2.id_SIMap,
-								nodeType: 'SystemInterface',
-								name: element2.name,
-								filename: './images/' + element2.image,
-							}
-							sosm.nodes.interfaces.push(tempNode)
-
-							//Edges
-							tempNode = {}
-							tempNode.group = 'edges'
-							tempNode.data = {
-								id: 'edge_s_si_' + element2.id_SIMap,
-								idNo: element2.id_SIMap,
-								source: 'node_s_' + element2.id_system,
-								target: 'node_si_' + element2.id_SIMap,
-								lineColor: 'black'
-							}
-							sosm.nodes.edges.push(tempNode)
-						})
-					}
-
-					break;
-				case 'buildGraphObject_links':
-					result.forEach((element2) => {
-						//debug(1, sosm.display.primaryLinks, sosm.display.alternateLinks,element2.linkCategory == 'primary',element2.linkCategory == 'alternate')
-						if((sosm.display.primaryLinks && element2.linkCategory == 'primary') || (sosm.display.alternateLinks && element2.linkCategory == 'alternate')){	
-							//debug(1, element2.linkCategory)
-							//Link nodes
-							var tempNode = {}
-							tempNode.group = 'nodes'
-							tempNode.data = {
-								id: 'node_n_' + element2.id_network,
-								id_network: element2.id_network,
-								nodeType: 'Link',
-								name: element2.name,
-								filename: './images/' + element2.image,
-							}
-							tempNode.classes = 'network'
-							sosm.nodes.links.push(tempNode)
+				case 'buildGraphObject_edges':
+					//debug(1, 'Checking', element.conditions)
+					if (checkConditions(element.conditions)){
+						//debug(1, 'executing')
+						result.forEach((edge) => { //Iterate through each edge in the result
+							var tempEdge = {};
+							tempEdge.group = 'edges';
+							tempEdge.data = {};
+							
+							element.fields.forEach((field) => { //Handle the build of each property required for the cy graph
+								var str = '';
+								field.format.forEach((format) => {
+									if (edge[format.columnName] !== null){
+										if (format.leadingText){
+											str += format.leadingText
+										}
+										if (format.columnName){
+											str += edge[format.columnName]
+										}
+									}
+								})
+								//debug(1, edge)
+								tempEdge.data[field.nodeName] = str;
+							})
+							
 
 
-							//Link edges
-							tempNode = {}
-							tempNode.group = 'edges'
-							tempNode.data = {
-								idNo: element2.id_network,
-								id_network: element2.id_network,
-								target: 'node_n_' + element2.id_network,
-								//name: element.designation,
-							}
-
-							if(sosm.display.interfaces){//Show Interface nodes
-								tempNode.data.id = 'edge_si_' + element2.id_SIMap + '_n_' + element2.id_network
-								tempNode.data.source = 'node_si_' + element2.id_SIMap
-							} else { //No interface nodes
-								tempNode.data.id = 'edge_s_' + element2.id_SIMap + '_n_' + element2.id_network
-								tempNode.data.source = 'node_s_' + element2.id_system
-							}
-				
-							//Handle colours
-							tempNode.data.lineColor = 'black'
-							if (element2.technologyCategory !== null){
-								tempNode.data.lineColor = technologyCategory.find(x => x.value === element2.technologyCategory).color
-							}
-				
-							//Handle link category
-							switch (element2.linkCategory){
-								case 'primary':
-									break;
-								case 'alternate':
-								case 'incapable':			//Shouldnt be returned, precautionary
-								default:
-									tempNode.classes += ' dashed';					
+							//Line colours
+							tempEdge.data.lineColor = 'black'
+							if (typeof edge.technologyCategory !== 'undefined'){
+								tempEdge.data.lineColor = technologyCategory.find(x => x.value == edge.technologyCategory).color
 							}
 							
 							//Handle classes
-							if(element.designation){
-								tempNode.data.name = element.designation
-								if(element.designation.substring(1,2) == 'J'){
-									tempNode.classes += ' class3';
-								}
+							if (element.classes){
+								element.classes.forEach((className) => {
+									tempEdge.classes += className + ' ';
+								})
 							}
-				
-							
-							sosm.nodes.edges.push(tempNode)
-						}						
-					})
 
+							sosm.nodes[element.sosmNodeName].push(tempEdge);
+						})
+					}
+
+
+
+					break;
+
+
+				case 'buildGraphObject_links':
+
+//Handle link category
+switch (element2.linkCategory){
+	case 'primary':
+		break;
+	case 'alternate':
+	case 'incapable':			//Shouldnt be returned, precautionary
+	default:
+		tempNode.classes += ' dashed';					
+}
+
+//Handle classes
+if(element.designation){
+	tempNode.data.name = element.designation
+	if(element.designation.substring(1,2) == 'J'){
+		tempNode.classes += ' class3';
+	}
+}
+										
+					
 					break;
 				case 'buildGraphObject_parents':
 					result.forEach((element2) => {
@@ -368,12 +348,6 @@ async function commonGraph(definition){
 						}
 					}
 
-
-/*
-
-
-
-*/
 					break;
 				case 'buildInterfaceChartObject':
 					if(typeof sosm.charts === 'undefined'){ sosm.charts = {} }
@@ -457,30 +431,84 @@ break;
 		selectedNode = new Node();
 
 		//Event: Node in graph selected
-		cy.on('tap', 'node', (evt) => { nodeSelected(evt.target); })
+		cy.on('tap', 'node', (evt) => { 
+			debug(1, evt.target)
+			nodeSelected(evt.target); 
+		})
 
 		//Event: Node is dropped in graph/
 		//position info is undefined in the event for some reason, was hoping to use this to store position information in localStorage
-		//cy.on('free', 'node', (evt) => { debug(1, evt); })
+		cy.on('free', 'node', (evt) => { 
+			//debug(1, evt)
+			//debug(1,evt.target._private.position)
+			//debug(1,evt.target._private.data.nodeType)
+			
 
-		//Event: Node in graph selected
-		cy.on('tap', 'edge', (evt) => { edgeSelected(evt.target); })
+			if(localStorage.getItem('graphLayoutName') == 'preset'){ //Only set positions if set to preset
+				debug(1,`${evt.target._private.data.id} is free, position will be logged`)
+
+				//Create the object if it doesnt already exist
+				if(typeof sosm.positions === 'undefined'){
+					sosm.positions = [];
+				}
+
+				//Store dropped position
+				var index = -1;
+				if(sosm.positions.find(x => x.id == evt.target._private.data.id)){ //Position already reported, change existing object
+					//debug(1, 'Already exists, updating');
+					index = sosm.positions.findIndex(x => x.id == evt.target._private.data.id);
+					sosm.positions[index].position = evt.target._private.position;
+
+				} else { //Doesnt exist
+					//debug(1, `Doesn't exist, creating`)
+					sosm.positions.push({
+						nodeType: evt.target._private.data.nodeType,
+						id: evt.target._private.data.id,
+						position: evt.target._private.position,
+					})
+				}
+				savePositions()
+				//debug(1, 'sosm posn:', sosm.positions)				
+			}
+		})
+
+		//Event: Edge in graph selected
+		cy.on('tap', 'edge', (evt) => { 
+			//debug(1, evt.target)
+			edgeSelected(evt.target); 
+		})
 	}
 }
 
 
 
-//To copy & remove
 
 
-// sosmSystemData = result[0];
-// sosmSystemInterfaceData = result[1];
-// sosmNetworkData = result[2];
-// sosmStats = result[3];
-// sosmNetworkStats = result[4];
-// sosmQuantities = result[5];
+
+function checkConditions(conditions){
+	var execute = false;
+	//if ((typeof element.displayIf === 'undefined') || (sosm.display[element.displayIf])){
+	conditions.forEach((condition) => {
+		switch (condition.type){
+			case 'alwaysRun':
+				execute = true;
+				break;
+			case 'checkLocalStorage':
+				if(parseInt(localStorage.getItem(condition.localStorageName)) === 1){ execute = true }
+				break;
+			case '!checkLocalStorage':
+				if(parseInt(localStorage.getItem(condition.localStorageName)) === 0){ execute = true }
+				break;
+			default:
+				debug(1, `Switch default. Shouldn't make it here in checkConditions()`);
+		}
+	})
+	//debug(1, 'checkConditions() result is ' + execute)
+	return execute
+}
 
 
+//Depricated
 function newCyX(){
 	
 
@@ -504,4 +532,3 @@ function newCyX(){
 		})		
 	}
 }
-

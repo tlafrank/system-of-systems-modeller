@@ -290,9 +290,6 @@ function commonModal_actions(definition, element, postData, result){
 			}
 			
 			break;
-		//case 'setDefinition_SingleValue_fromParamNoArray': //Populate key ID's if they were not supplied
-			//definition[element.definitionName] = result[element.columnName]
-			//break;
 		case 'setLocalStorage_fromDefinition':
 			localStorage.setItem(element.localStorageName, definition[element.definitionName])
 
@@ -378,9 +375,11 @@ function commonModal_actions(definition, element, postData, result){
 			getFormElement('#' + element.id, element).forEach((element2) => {
 				resultArray.push(element2[element.attrName])
 			})
-
 			localStorage.setItem(element.localStorageName, JSON.stringify(resultArray));
 
+			break;
+		case 'launchFunction':
+			window[element.functionName]()
 			break;
 		case 'debug':
 			debug(1, element.message)

@@ -116,18 +116,102 @@ function reorgGraph(){
  * @description 
  * 
  */
-function savePng(){
-	var image = cy.png();
-
+function savePNG(){
+	var image = cy.png({scale: 1, full:true, quality: 1});
 	var hiddenElement = document.createElement('a');
-
 	hiddenElement.href = encodeURI(image);
-
 	hiddenElement.target = '_blank';
-	hiddenElement.download = 'tba.png';
+	hiddenElement.download = 'sosm.png';
+	hiddenElement.click();
+}
+/**
+ * @description 
+ * 
+ */
+ function saveJPG(){
+	var image = cy.jpg({scale: 1, full:true, quality: 1});
+	var hiddenElement = document.createElement('a');
+	hiddenElement.href = encodeURI(image);
+	hiddenElement.target = '_blank';
+	hiddenElement.download = 'sosm.jpg';
 	hiddenElement.click();
 }
 
+
+/**
+ * @description 
+ * 
+ */
+ function saveSVG(){
+	var svg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="26027" height="18861">`
+	svg += `<rect width="100%" height="100%" fill="red" /><circle cx="150" cy="100" r="80" fill="green" /><text x="150" y="125" font-size="60" text-anchor="middle" fill="white">SVG</text></svg>`
+
+	cy.fit()
+	debug(1, cy.extent())
+	var blob = new Blob([svg], {type:"image/svg+xml;charset=utf-8"});
+	var hiddenElement = document.createElement('a');
+	hiddenElement.href = URL.createObjectURL(blob);
+	hiddenElement.target = '_blank';
+	hiddenElement.download = 'sosm.svg';
+	hiddenElement.click();
+
+
+	// var svgContent = cy.svg({scale: 1, full: true});
+	// debug(1, svgContent)
+	// var blob = new Blob([svgContent], {type:"image/svg+xml;charset=utf-8"});
+	// var hiddenElement = document.createElement('a');
+	// hiddenElement.href = URL.createObjectURL(blob);
+	// hiddenElement.target = '_blank';
+	// hiddenElement.download = 'sosm.svg';
+	// hiddenElement.click();
+
+	//var blob = new Blob([svgContent], {type:"image/svg+xml;charset=utf-8"});
+	//saveAs(blob, "demo.svg");
+/*
+			var getSvgUrl = function() {
+				var svgContent = cy.svg({scale: 1, full: true, bg: '#ffff00'});
+				var blob = new Blob([svgContent], {type:"image/svg+xml;charset=utf-8"});
+				var url = URL.createObjectURL(blob);
+				return url;
+			};
+
+	*/
+}
+
+/**
+ * @description 
+ * 
+ */
+ function saveCSV(){
+	//Need to work out exactly what is worth exporting. Summary. Issues.
+	debug(1, 'In saveCSV()', sosm, sessionStorage)
+	var csv = '';
+
+	switch(sessionStorage.getItem('currentPage')){
+		case 'issues':
+			csv += `"Interface ID","Interface Name","Interface Issue","Issue Name","Severity","Issue Details","Proposed Resolution","Qty Interfaces Affected"\n`
+			sosm.issues.forEach((interface) => {
+				interface.issues.forEach((issue) => {
+					csv += `"${interface.id_interface}","${interface.name}","${issue.id_interfaceIssue}","${issue.name}","${issue.severity}","${issue.issue}","${issue.resolution}","${issue.quantityAffected}","`
+					var systemCount = 0;
+					issue.systems.forEach((system) => {
+						csv += system.name + ';';
+					})
+					csv += `"\n`
+				})
+			})
+		break;
+		
+
+	}
+	
+	
+	var hiddenElement = document.createElement('a');
+	hiddenElement.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(csv);
+	hiddenElement.target = '_blank';
+	hiddenElement.download = 'sosm.csv';
+	hiddenElement.click();
+}
 
 /**
  * @description User clicks the button to hide the currently selected node from the graph
@@ -187,9 +271,10 @@ function hideNode(id, idNo, type){
 		debug(3,'Hiding Node: ', eventTarget);
 		hideNode(eventTarget.data('id'), eventTarget.data('idNo'), eventTarget.data('nodeType'));
 	} else {
+		
 
 		const postData = {};
-		debug(3,'NodeType: ' + eventTarget.data('nodeType'))
+		//debug(3,'NodeType: ' + eventTarget.data('nodeType'))
 		postData.type = eventTarget.data('nodeType');
 
 		switch (postData.type){
@@ -208,9 +293,9 @@ function hideNode(id, idNo, type){
 		}
 		
 		//Get node details from the server
-		debug(1, `Sending '${postData.type}' to the server (select.json):`)
+		//debug(1, `Sending '${postData.type}' to the server (select.json):`)
 		$.post('./select.json', postData, (result) => {
-			debug(3, postData, result)
+			//debug(3, postData, result)
 
 			//Check the result
 			if (result.msg){
@@ -221,7 +306,7 @@ function hideNode(id, idNo, type){
 				result.type = postData.type;
 				selectedNode.update(result, eventTarget.data('id'));				
 
-				debug(3,'selectedNode:', selectedNode)
+				//debug(3,'selectedNode:', selectedNode)
 			}
 			//Populate the table
 			//$('#nodeDetailsTable').replaceWith(nodeDetailsTable());
@@ -390,3 +475,6 @@ function mappingModal_deleteButton(idToDelete){
 
 
 
+function savePositions(){
+	localStorage.setItem('positions', JSON.stringify(sosm.positions))
+}

@@ -20,7 +20,6 @@
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.0/cytoscape.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-		<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
 		<script src="https://unpkg.com/layout-base/layout-base.js"></script>
 		<script src="https://unpkg.com/cose-base/cose-base.js"></script>
 		<script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
@@ -38,7 +37,7 @@
 		<script src="./src/layout-base.js"></script>
 		<script src="./src/cose-base.js"></script>
 		<script src="./src/cytoscape-fcose.js"></script>
-		
+		<script src="./src/cytoscape-svg.js"></script>
 
 		<link rel="stylesheet" href="./css/style.css">
 
@@ -146,9 +145,9 @@
 						</div>
 					</div>	
 					<button id="hideNodeToggleButton" type="button" class="btn btn-secondary btn-sm btn-block my-1" onclick="hideNodesButton()">Hide Node Toggle</button>
+
 					
 					
-					<button id="savePng" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="savePng()">Save PNG</button>
 					
 					<div class="row">
 						<div class="col">
@@ -168,7 +167,25 @@
 							<button id="manageTags" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="viewCommonModal('selectOrganisation')">Select Organisation</button>
 						</div>
 					</div>
-					
+
+					<div class="row">
+						<div class="col">
+							<button id="manageTags" type="button" class="btn btn-primary btn-sm btn-block my-1" onclick="viewCommonModal('export')">Export Data</button>
+							
+						</div>
+						<div class="col">
+							
+						</div>
+					</div>					
+					<div class="row">
+						<div class="col">
+
+						</div>
+						<div class="col">
+
+							
+						</div>
+					</div>
 
 				</div>
 				<div class="sidebar-heading border-bottom bg-dark text-white px-2"><h5 class="my-0">Selected Node Details</h5></div>
