@@ -10,13 +10,14 @@ SOSM defines the following terms:
 
 ## SOSM Dependencies
 SOSM requires a number of external dependencies to function. Client side external dependencies can be found within /www/index.html. Client side external dependencies include:
-- Bootstrap JS ()
-- Bootstrap CSS ()
-- Cytoscape JS ()
-- JQuery ()
+- Bootstrap JS (4.3.1)
+- Bootstrap CSS (4.6.1)
+- Cytoscape JS (3.21.0)
+- JQuery (3.5.1)
+- ChartJS (3.7.1)
 
 Server-side dependencies include
-- MySQL ()
-- NodeJS
+- MySQL (8.0.27)
+- NodeJS (12.21.0)
 - NPM. With packages:
 -- MySQL2
