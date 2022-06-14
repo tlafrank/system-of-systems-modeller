@@ -129,9 +129,9 @@ exports.switch = (req,res) => {
 				WHERE id_SIMap = ?)
 			ORDER BY name;`, req.body.id_SIMap)
 	
-			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND (category='primary' OR category IS NULL);`, [req.body.id_SIMap])
-			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND category='alternate';`, [req.body.id_SIMap])
-			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND category='incapable';`, [req.body.id_SIMap])
+			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND (SINMap.category='primary' OR SINMap.category IS NULL);`, [req.body.id_SIMap])
+			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND SINMap.category='alternate';`, [req.body.id_SIMap])
+			queryString += sql.format(`SELECT SINMap.*, networks.name FROM SINMap LEFT JOIN networks ON SINMap.id_network = networks.id_network WHERE SINMap.id_SIMap = ? AND SINMap.category='incapable';`, [req.body.id_SIMap])
 
 			break;
 		case 'AllInterfaceIssues':

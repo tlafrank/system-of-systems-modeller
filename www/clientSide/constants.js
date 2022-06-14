@@ -42,7 +42,8 @@ const graph = {
 							{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
 							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
 							{nodeName: 'name', format: [{ columnName: 'name'}]},
-							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image'}]},	
+							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image'}]},
+							{nodeName: 'lineColor', columnName: 'category', constantName: 'systems'},
 						],
 						classes: ['image'],
 						position: true,
@@ -65,6 +66,7 @@ const graph = {
 							{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
 							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
 							{nodeName: 'name', format: [{ columnName: 'name'}]},
+							{nodeName: 'lineColor', columnName: 'category', constantName: 'systems'},
 						],
 						classes: ['square', 'centerLabel'],
 						position: true,
@@ -88,6 +90,7 @@ const graph = {
 							{nodeName: 'name', format: [{ columnName: 'name'}]},
 							{nodeName: 'proposed', format: [{ columnName: 'isProposed'}]},
 							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image' }]},
+							{nodeName: 'lineColor', columnName: 'category', constantName: 'interfaces'},
 						],
 						classes: ['small']
 					},
@@ -120,6 +123,7 @@ const graph = {
 							{nodeName: 'nodeType', format: [{ leadingText: 'Link'}]},
 							{nodeName: 'name', format: [{ columnName: 'name'}]},
 							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image' }]},
+							{nodeName: 'lineColor', columnName: 'category', constantName: 'links'},
 						],
 						classes: ['network'],
 						position: true,
@@ -138,7 +142,7 @@ const graph = {
 							{nodeName: 'linkCategory', format: [{ columnName: 'linkCategory'}]},
 							//{nodeName: 'lineColor', format: [{ leadingText: 'black'}]},
 						],
-						classes: ['']
+						classes: []
 					},
 					{action: 'buildGraphObject_edges', sosmNodeName: 'edges', 
 						conditions: [{type: '!checkLocalStorage', localStorageName: 'showInterfaces'}],
@@ -156,7 +160,7 @@ const graph = {
 							]},
 							{nodeName: 'linkCategory', format: [{ columnName: 'linkCategory'}]},
 						],
-						classes: ['']
+						classes: []
 					},
 				],
 			},
@@ -181,7 +185,8 @@ const graph = {
 							{nodeName: 'idNo', format: [{columnName: 'id_organisation'}]},
 							{nodeName: 'id_organisation', format: [{columnName: 'id_organisation'}]},
 							{nodeName: 'nodeType', format: [{leadingText: 'Organisation'}]},
-							{nodeName: 'name', format: [{columnName: 'name'}]}
+							{nodeName: 'name', format: [{columnName: 'name'}]},
+							
 						],
 						classes: ['square'],
 						position: true,
@@ -209,7 +214,8 @@ const graph = {
 							{nodeName: 'id_system', format: [{columnName: 'id_system'}]},
 							{nodeName: 'nodeType', format: [{leadingText: 'System'}]},
 							{nodeName: 'name', format: [{columnName: 'systemName'}]},
-							{nodeName: 'filename', format: [{leadingText: './images/', columnName: 'image'}]},	
+							{nodeName: 'filename', format: [{leadingText: './images/', columnName: 'image'}]},
+							{nodeName: 'lineColor', columnName: 'category', constantName: 'systems'},
 						],
 						classes: [],
 						position: true,
@@ -239,6 +245,7 @@ const graph = {
 							{nodeName: 'nodeType', format: [{leadingText: 'Subsystem'}]},
 							{nodeName: 'name', format: [{columnName: 'name'}]},
 							{nodeName: 'org', format: [{columnName: 'id_organisation'}]},
+							{nodeName: 'lineColor', columnName: 'category', constantName: 'systems'},
 							//{nodeName: 'filename', leadingText: './images/', columnName: 'image'}]},	
 						],
 						classes: ['square', 'centerLabel'],
@@ -479,21 +486,6 @@ const graphTable = {
 
 //Cy styling objects
 const cyStyle = [ // the stylesheet for the graph
-
-	// { selector: 'node',
-	// 	style: {
-	// 		'width': '100px',
-	// 		'background-width': '92px',
-	// 		'height': '100px',
-	// 		'background-height': '92px',
-	// 		'background-color': 'white',
-	// 		'background-fit': 'none',
-	// 		'label': 'data(name)',
-	// 		'border-color': 'black',
-	// 		'border-width': '3px'
-	// 	}
-	// },
-
 	{ selector: 'node',
 		style: {
 			'width': '600px',
@@ -503,7 +495,7 @@ const cyStyle = [ // the stylesheet for the graph
 			'background-color': 'white',
 			'background-fit': 'none',
 			'label': 'data(name)',
-			'border-color': 'black',
+			//'border-color': 'black',
 			'border-width': '15px',
 			'font-size': '80px',
 		}
@@ -512,6 +504,11 @@ const cyStyle = [ // the stylesheet for the graph
 		style: {
 			'background-image': 'data(filename)',
 		}
+	},
+	{ selector: 'node[lineColor]',
+	style: {
+		'border-color': 'data(lineColor)',
+	}
 	},
 	{
 		selector: 'edge[linkCategory = "alternate"]',
@@ -537,9 +534,7 @@ const cyStyle = [ // the stylesheet for the graph
 			'background-width': '320px',
 			'height': '300px',
 			'background-height': '320px',
-			'border-color': 'blue',
 			'shape': 'round-octagon',
-			'border-width': '5px'
 		}
 	},
 	// { selector: '.interface',
@@ -677,16 +672,34 @@ const colors = [//Cyclic array for chart colur selection
 
 
 /**
- * @description Contains the categories for assigning colors to the various links. Uncomment if
- * privateConstants.js is not used.
+ * @description Contains the categories for assigning colors to the various systems, interfaces and links (nodes and edges). Uncomment and
+ * populate if these are not contained elsewhere. (i.e. privateConstants.js)
  *  
  */
 /*
-const technologyCategory = [
-	{title: 'Red', value: '', color: 'red'},
-	{title: 'Green', value: '', color: 'green'},
-	{title: 'Blue', value: '', color: 'blue'},
-]
+
+var categories = { //Must stay var to be found within the window object
+	systems:[
+		{title: 'Red', value: '', color: 'red'},
+		{title: 'Green', value: '', color: 'green'},
+		{title: 'Blue', value: '', color: 'blue'},
+	],
+	interfaces:[
+		{title: 'Red', value: '', color: 'red'},
+		{title: 'Green', value: '', color: 'green'},
+		{title: 'Blue', value: '', color: 'blue'},
+	],
+	links:[
+		{title: 'Red', value: '', color: 'red'},
+		{title: 'Green', value: '', color: 'green'},
+		{title: 'Blue', value: '', color: 'blue'},
+	],
+	technology: [ 
+		{title: 'Red', value: '', color: 'red'},
+		{title: 'Green', value: '', color: 'green'},
+		{title: 'Blue', value: '', color: 'blue'},
+	],
+}
 */
 
 const graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random', 'fcose', 'preset'];
@@ -711,6 +724,7 @@ const settings = [
 	//{ type: 'checkbox', id: 'pruneEdgeLinks', label: 'Prune links with only one interface', default: 0 },
 	{ type: 'checkbox', id: 'showPrimaryLinks', label: 'Display Primary Links', default: 1 },
 	{ type: 'checkbox', id: 'showAlternateLinks', label: 'Display Alternate Links', default: 1 },
+	{ type: 'checkbox', id: 'snapToGrid', label: 'Snap To Grid', default: 1 },
 	{ type: 'number', id: 'zoomSensitivity', label: 'Scroll Wheel Zoom Sensitivity', default: 1},
 	
 	{ type: 'heading', align: 'left', text: 'Issue Settings', noUpdate: true},
@@ -1137,6 +1151,7 @@ const modals = {
 			{ type: 'heading', id: 'headingSystemName', align: 'center'},
 			{ type: 'text', id: 'textSystemName', label: 'Name'},
 			{ type: 'textarea', id: 'textSystemDescription', label: 'Description' },
+			{ type: 'select', id: 'selectCategory', label: 'Category'},
 			{ type: 'text', id: 'textSystemReferences', label: 'System Block Diagram Reference', append: {
 				id: 'systemReferenceDropZone', label: '&#8595'
 			} },
@@ -1154,6 +1169,7 @@ const modals = {
 			{id: 'textSystemDescription', on: 'input'},
 			{id: 'textSystemReferences', on: 'input'},
 			{id: 'textSystemTags', on: 'input'},
+			{id: 'selectCategory', on: 'change'},
 		],
 		lockOnChange: ['selectSystem','buttonNew','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces','buttonSystemRelationships'], //The ID of the controls to lock when editing an object
 		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
@@ -1166,6 +1182,7 @@ const modals = {
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectSystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system'},
+					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'systems', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
 				],
 			},
 			{ //Get specific system details
@@ -1179,6 +1196,7 @@ const modals = {
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemName', type: 'text', columnName: 'name'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemDescription', type: 'text', columnName: 'description'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemReferences', type: 'text', columnName: 'reference'},
+					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_MultipleValues_AtSpecificArrayIndex', arrayIndex: 1, id: 'textSystemTags', type: 'textList', columnName: 'tag'},
 					{action: 'setControl_Focus', id: 'selectSystem'}
 				]
@@ -1228,6 +1246,7 @@ const modals = {
 					{action: 'toServer_ControlValue', id: 'textSystemDescription',  type: 'text', columnName: 'description'},
 					{action: 'toServer_ControlValue', id: 'textSystemReferences',  type: 'text', columnName: 'reference'},
 					{action: 'toServer_ControlValue', id: 'textSystemTags',  type: 'text', columnName: 'tags'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
 				],
 				cleanup: [
 					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},
@@ -1254,6 +1273,158 @@ const modals = {
 				handlers: [{controlId: 'selectSystem', event: 'change'},],
 				instructions: [
 					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSystem', definitionName: 'id_system', dataAttr: 'id_system'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+			{	//Attach interfaces button
+				handlers: [{controlId: 'buttonUpdateSystemInterfaces', event: 'click'},],
+				instructions: [
+
+				],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'interfacesToSystems'},
+				],
+			},
+		]
+	},
+
+	subsystems: {
+		title: 'Subsystems', //The title of the modal to display at the top of the modal
+		formButtons: [ //The buttons to insert at the bottom of the modal
+			{type: 'info', id: 'buttonNew', label: 'New Subsystem', initialState: 'unlock'},
+			{type: 'delete', id: 'buttonDelete', label: 'Remove Subsystem', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ //The empty controls to insert in the modal
+			{ type: 'select', id: 'selectSubsystem', label: 'Subsystems'},
+			{ type: 'img', id: 'imageSubsystem', columnName: 'image'},
+			{ type: 'heading', id: 'headingSubsystemName', align: 'center'},
+			{ type: 'text', id: 'textSubsystemName', label: 'Name'},
+			{ type: 'textarea', id: 'textSubsystemDescription', label: 'Description' },
+			{ type: 'select', id: 'selectCategory', label: 'Category'},
+			{ type: 'checkbox', id: 'chkDistributedSystem', label: 'Distributed Subsystem' },
+			
+			//{ type: 'text', id: 'textSystemReferences', label: 'Subsystem Block Diagram Reference', append: {
+			//	id: 'subsystemReferenceDropZone', label: '&#8595'
+			//} },
+			//{ type: 'text', id: 'textSystemTags', label: 'Tag List (Comma separated)'},
+			{ type: 'buttons', buttons: [
+				{ id: 'buttonIcons', label: 'Choose Icon'},
+				//{ id: 'buttonSystemQuantities', label: 'Map Systems to Years'},
+				//{ id: 'buttonUpdateSystemInterfaces', label: 'Attach Interfaces & Connect Links'},
+				//{ id: 'buttonSystemRelationships', label: 'System Relationships'},
+			]}
+
+		],
+		monitorChanges: [//The ID of the controls to monitor for changes
+			{id: 'textSubsystemName', on: 'input'},
+			{id: 'textSubsystemDescription', on: 'input'},
+			{id: 'chkDistributedSystem', on: 'input'},
+			{id: 'selectCategory', on: 'change'},
+		],
+		lockOnChange: ['selectSubsystem','buttonNew','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces'], //The ID of the controls to lock when editing an object
+		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
+		iterations: [ //The objects to process in order to fetch information from the server and insert into the form controls
+			{ //Get the all the subsystems
+				type: 'AllSubsystems',
+				definitionFields: [], 
+				continueOnUndefined: true,
+				instructions: [
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectSubsystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSubsystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSubsystem', definition: 'id_system', dataAttr: 'id_system'},
+				],
+			},
+			{ //Get specific system details
+				type: 'SingleSystem',
+				definitionFields: ['id_system'],
+				continueOnUndefined: true,
+				instructions: [
+					{action: 'setControl_SingleValue', id: 'headingSubsystemName', type: 'heading', columnName: 'name'},
+					{action: 'setControl_SingleValue', id: 'imageSubsystem', type: 'image', columnName: 'image'},
+					{action: 'setDefinition_SingleValue', id: 'image', columnName: 'image'},
+					{action: 'setControl_SingleValue',  id: 'textSubsystemName', type: 'text', columnName: 'name'},
+					{action: 'setControl_SingleValue', id: 'textSubsystemDescription', type: 'text', columnName: 'description'},
+					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'systems', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
+					{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
+					{action: 'setControl_SingleValue', id: 'chkDistributedSystem', type: 'checkbox', columnName: 'distributedSubsystem'},
+					{action: 'setControl_Focus', id: 'selectSubsystem'}
+				]
+			}
+		],
+		events: [
+			{	//System quantities button clicked
+				handlers: [{controlId: 'buttonSystemQuantities', event: 'click'},],
+				instructions: [
+				],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'systemQuantities'},
+				],
+			},
+			{	//Delete system button clicked
+				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
+				postType: 'DeleteSystem',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
+					{action: 'deleteDefinitionValue', definitionName: 'id_system'},
+				],
+				cleanup: [{action: 'reload'},],
+			},
+			
+			{ 	//New system button clicked
+				handlers: [{controlId: 'buttonNew', event: 'click'},],
+				instructions: [
+					{action: 'deleteDefinitionValue', definitionName: 'id_system'},
+					{action: 'emptyControl', type: 'heading', id: 'headingSubsystemName'},
+					{action: 'emptyControl', type: 'text', id: 'textSubsystemName'},
+					{action: 'emptyControl', type: 'text', id: 'textSubsystemDescription'},
+					{action: 'emptyControl', type: 'image', id: 'imageSubsystem'},
+					{action: 'emptyControl', type: 'checkbox', id: 'chkDistributedSystem'},
+					{action: 'lockControls'}
+				],
+				cleanup: [],
+			},
+			{	//Update system button clicked
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},],
+				postType: 'UpdateSubsystem',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
+					{action: 'toServer_ControlValue', id: 'textSubsystemName', type: 'text', columnName: 'name'},
+					{action: 'toServer_ControlValue', id: 'imageSubsystem',  type: 'image', columnName: 'image'},
+					{action: 'toServer_ControlValue', id: 'textSubsystemDescription',  type: 'text', columnName: 'description'},
+					{action: 'toServer_ControlValue', id: 'chkDistributedSystem',  type: 'checkbox', columnName: 'distributedSubsystem'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},
+					{action: 'reload'}
+				],
+			},
+			{	//System relationship modal
+				handlers: [{controlId: 'buttonSystemRelationships', event: 'click'},],
+				instructions: [],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'mapSystems'},
+				],
+			},
+			{	//Icon chooser
+				handlers: [{controlId: 'buttonIcons', event: 'click'},],
+				instructions: [],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'icons'},
+				],
+			},
+			{	//Change to system select
+				handlers: [{controlId: 'selectSubsystem', event: 'change'},],
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSubsystem', definitionName: 'id_system', dataAttr: 'id_system'}
 				],
 				cleanup: [
 					{action: 'reload'},
@@ -1344,6 +1515,7 @@ const modals = {
 			{ type: 'note', text: 'Select an interface to access additional details:'},
 			{ type: 'text', id: 'textSystemInterfaceName', label: 'System Interface Name' },
 			{ type: 'textarea', id: 'textSystemInterfaceDescription', label: 'Description' },
+			{ type: 'select', id: 'selectCategory', label: 'Category'},
 			{ type: 'checkbox', id: 'chkIsProposed', label: 'Proposed Interface'},
 			{ type: 'droppable2', id: 'containerCompatibleLinks', label: 'Compatible Links'},
 			{ type: 'droppable2', id: 'containerPrimaryLinks', label: 'Primary Links'},
@@ -1354,6 +1526,7 @@ const modals = {
 			{id: 'textSystemInterfaceName', on: 'input'},
 			{id: 'textSystemInterfaceDescription', on: 'input'},
 			{id: 'chkIsProposed', on: 'change'},
+			{id: 'selectCategory', on: 'change'},
 		],
 		lockOnChange: ['buttonAssignSystem','containerAssignedInterfaces','buttonDelete', 'containerAssignedInterfaces button'], 
 		unlockOnChange: ['buttonUpdate'], 
@@ -1385,6 +1558,8 @@ const modals = {
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textSystemInterfaceDescription', definition: 'id_SIMap', columnName: 'description'},
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'checkbox', id: 'chkIsProposed', definition: 'id_SIMap', columnName: 'isProposed'},
 					{action: 'setControl_SingleValue_fromDefinitionIfExists', type: 'iconButtonSelected', id: 'containerAssignedInterfaces', attrName: 'id_SIMap', definitionName: 'id_SIMap'},
+					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'systems', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
+					
 				],
 			},
 			{	//Populate the droppables
@@ -1396,6 +1571,7 @@ const modals = {
 					{action: 'setControl_MultipleValues', arrayIndex: 2, type: 'moveDroppableElements', id: 'containerPrimaryLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
 					{action: 'setControl_MultipleValues', arrayIndex: 3, type: 'moveDroppableElements', id: 'containerAlternateLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
 					{action: 'setControl_MultipleValues', arrayIndex: 4, type: 'moveDroppableElements', id: 'containerIncapableLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
+					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 				],
 			},
 		],
@@ -1422,13 +1598,14 @@ const modals = {
 					{action: 'setButtonClassesCurrentTarget', id: 'containerAssignedInterfaces'},
 				],
 				cleanup: [
-					{action: 'control_Empty', type: 'droppableElements', id: 'containerCompatibleLinks'},
-					{action: 'control_Empty', type: 'droppableElements', id: 'containerPrimaryLinks'},
-					{action: 'control_Empty', type: 'droppableElements', id: 'containerAlternateLinks'},
-					{action: 'control_Empty', type: 'droppableElements', id: 'containerIncapableLinks'},
+					{action: 'emptyControl', type: 'droppableElements', id: 'containerCompatibleLinks'},
+					{action: 'emptyControl', type: 'droppableElements', id: 'containerPrimaryLinks'},
+					{action: 'emptyControl', type: 'droppableElements', id: 'containerAlternateLinks'},
+					{action: 'emptyControl', type: 'droppableElements', id: 'containerIncapableLinks'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'text', id: 'textSystemInterfaceName', columnName: 'name'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'text', id: 'textSystemInterfaceDescription', columnName: 'description'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'checkbox', id: 'chkIsProposed', columnName: 'isProposed'},
+					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_MultipleValues', arrayIndex: 1, type: 'droppableElements', id: 'containerCompatibleLinks', columnName: 'name', attr: {name: 'id_network', columnName: 'id_network'}},
 					{action: 'setControl_MultipleValues', arrayIndex: 2, type: 'moveDroppableElements', id: 'containerPrimaryLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
 					{action: 'setControl_MultipleValues', arrayIndex: 3, type: 'moveDroppableElements', id: 'containerAlternateLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
@@ -1455,6 +1632,7 @@ const modals = {
 					{action: 'toServer_ControlValue', type: 'text', id: 'textSystemInterfaceName',  columnName: 'name'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textSystemInterfaceDescription', columnName: 'description'},
 					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkIsProposed', columnName: 'isProposed'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
 				],
 				cleanup: [
 					{action: 'reload'},
@@ -1735,6 +1913,7 @@ const modals = {
 			{ type: 'img', id: 'imageLinks', columnName: 'image'},
 			{ type: 'heading', id: 'headingLinks', align: 'center'},
 			{ type: 'text', id: 'textLinkName', label: 'Name'},
+			{ type: 'select', id: 'selectCategory', label: 'Category'},
 			{ type: 'text', id: 'textLinkDesignation', label: 'Designation'},
 			{ type: 'select', id: 'selectTechnology', label: 'Link Technology'},
 			{ type: 'textarea', id: 'textLinkDescription', label: 'Description' },
@@ -1749,6 +1928,7 @@ const modals = {
 			{id: 'selectTechnology', on: 'change'},
 			{id: 'textLinkDescription', on: 'input'},
 			{id: 'selectLinkColor', on: 'change'},
+			{id: 'selectCategory', on: 'change'}
 		],
 		lockOnChange: ['buttonDelete','buttonNew','selectLinks','buttonIcons',],
 		unlockOnChange: ['buttonUpdate'], 
@@ -1779,8 +1959,10 @@ const modals = {
 					{action: 'setControl_SingleValue', type: 'heading', id: 'headingLinks', columnName: 'name'},
 					{action: 'setControl_SingleValue', type: 'text', id: 'textLinkName', columnName: 'name'},
 					{action: 'setControl_SingleValue', type: 'text', id: 'textLinkDesignation', columnName: 'designation'},
+					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'links', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
 					{action: 'setControl_SingleValue', type: 'select', id: 'selectTechnology', columnName: 'id_technology', dataAttr: 'id_technology'},
 					{action: 'setControl_SingleValue', type: 'text', id: 'textLinkDescription', columnName: 'description'},
+					{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_Focus', id: 'selectLinks'}
 				],
 			},
@@ -1838,6 +2020,7 @@ const modals = {
 					{action: 'toServer_ControlValue', type: 'text', id: 'textLinkDesignation', columnName: 'designation'},
 					{action: 'toServer_ControlValue', type: 'select', id: 'selectTechnology', columnName: 'id_technology', dataAttr: 'id_technology'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textLinkDescription', columnName: 'description'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
 				],
 				cleanup: [
 					{action: 'setDefinition_FromResultInsert', definitionName: 'id_network'},
@@ -1882,7 +2065,7 @@ const modals = {
 					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectTechnologies', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology', columnName: 'id_technology'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology'},
-					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'technologyCategory', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
+					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'technology', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
 					
 				],
 			},
@@ -2188,152 +2371,6 @@ const modals = {
 				],
 				instructions: [{action: 'preventDefault'},],
 				cleanup: [],
-			},
-		]
-	},
-	subsystems: {
-		title: 'Subsystems', //The title of the modal to display at the top of the modal
-		formButtons: [ //The buttons to insert at the bottom of the modal
-			{type: 'info', id: 'buttonNew', label: 'New Subsystem', initialState: 'unlock'},
-			{type: 'delete', id: 'buttonDelete', label: 'Remove Subsystem', initialState: 'unlock'},
-			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
-			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
-		], 
-		formFields: [ //The empty controls to insert in the modal
-			{ type: 'select', id: 'selectSubsystem', label: 'Subsystems'},
-			{ type: 'img', id: 'imageSubsystem', columnName: 'image'},
-			{ type: 'heading', id: 'headingSubsystemName', align: 'center'},
-			{ type: 'text', id: 'textSubsystemName', label: 'Name'},
-			{ type: 'textarea', id: 'textSubsystemDescription', label: 'Description' },
-			{ type: 'checkbox', id: 'chkDistributedSystem', label: 'Distributed Subsystem' },
-			
-			//{ type: 'text', id: 'textSystemReferences', label: 'Subsystem Block Diagram Reference', append: {
-			//	id: 'subsystemReferenceDropZone', label: '&#8595'
-			//} },
-			//{ type: 'text', id: 'textSystemTags', label: 'Tag List (Comma separated)'},
-			{ type: 'buttons', buttons: [
-				{ id: 'buttonIcons', label: 'Choose Icon'},
-				//{ id: 'buttonSystemQuantities', label: 'Map Systems to Years'},
-				//{ id: 'buttonUpdateSystemInterfaces', label: 'Attach Interfaces & Connect Links'},
-				//{ id: 'buttonSystemRelationships', label: 'System Relationships'},
-			]}
-
-		],
-		monitorChanges: [//The ID of the controls to monitor for changes
-			{id: 'textSubsystemName', on: 'input'},
-			{id: 'textSubsystemDescription', on: 'input'},
-			{id: 'chkDistributedSystem', on: 'input'},
-		],
-		lockOnChange: ['selectSubsystem','buttonNew','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces'], //The ID of the controls to lock when editing an object
-		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
-		iterations: [ //The objects to process in order to fetch information from the server and insert into the form controls
-			{ //Get the all the subsystems
-				type: 'AllSubsystems',
-				definitionFields: [], 
-				continueOnUndefined: true,
-				instructions: [
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectSubsystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSubsystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
-					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSubsystem', definition: 'id_system', dataAttr: 'id_system'},
-				],
-			},
-			{ //Get specific system details
-				type: 'SingleSystem',
-				definitionFields: ['id_system'],
-				continueOnUndefined: true,
-				instructions: [
-					{action: 'setControl_SingleValue', id: 'headingSubsystemName', type: 'heading', columnName: 'name'},
-					{action: 'setControl_SingleValue', id: 'imageSubsystem', type: 'image', columnName: 'image'},
-					{action: 'setDefinition_SingleValue', id: 'image', columnName: 'image'},
-					{action: 'setControl_SingleValue',  id: 'textSubsystemName', type: 'text', columnName: 'name'},
-					{action: 'setControl_SingleValue', id: 'textSubsystemDescription', type: 'text', columnName: 'description'},
-					{action: 'setControl_SingleValue', id: 'chkDistributedSystem', type: 'checkbox', columnName: 'distributedSubsystem'},
-					{action: 'setControl_Focus', id: 'selectSubsystem'}
-				]
-			}
-		],
-		events: [
-			{	//System quantities button clicked
-				handlers: [{controlId: 'buttonSystemQuantities', event: 'click'},],
-				instructions: [
-				],
-				cleanup: [
-					{action: 'modalDefinitionToBreadcrumb'},
-					{action: 'newModal', modal: 'systemQuantities'},
-				],
-			},
-			{	//Delete system button clicked
-				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
-				postType: 'DeleteSystem',
-				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
-					{action: 'deleteDefinitionValue', definitionName: 'id_system'},
-				],
-				cleanup: [{action: 'reload'},],
-			},
-			
-			{ 	//New system button clicked
-				handlers: [{controlId: 'buttonNew', event: 'click'},],
-				instructions: [
-					{action: 'deleteDefinitionValue', definitionName: 'id_system'},
-					{action: 'emptyControl', type: 'heading', id: 'headingSubsystemName'},
-					{action: 'emptyControl', type: 'text', id: 'textSubsystemName'},
-					{action: 'emptyControl', type: 'text', id: 'textSubsystemDescription'},
-					{action: 'emptyControl', type: 'image', id: 'imageSubsystem'},
-					{action: 'emptyControl', type: 'checkbox', id: 'chkDistributedSystem'},
-					{action: 'lockControls'}
-				],
-				cleanup: [],
-			},
-			{	//Update system button clicked
-				handlers: [{controlId: 'buttonUpdate', event: 'click'},],
-				postType: 'UpdateSubsystem',
-				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
-					{action: 'toServer_ControlValue', id: 'textSubsystemName', type: 'text', columnName: 'name'},
-					{action: 'toServer_ControlValue', id: 'imageSubsystem',  type: 'image', columnName: 'image'},
-					{action: 'toServer_ControlValue', id: 'textSubsystemDescription',  type: 'text', columnName: 'description'},
-					{action: 'toServer_ControlValue', id: 'chkDistributedSystem',  type: 'checkbox', columnName: 'distributedSubsystem'},
-				],
-				cleanup: [
-					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},
-					{action: 'reload'}
-				],
-			},
-			{	//System relationship modal
-				handlers: [{controlId: 'buttonSystemRelationships', event: 'click'},],
-				instructions: [],
-				cleanup: [
-					{action: 'modalDefinitionToBreadcrumb'},
-					{action: 'newModal', modal: 'mapSystems'},
-				],
-			},
-			{	//Icon chooser
-				handlers: [{controlId: 'buttonIcons', event: 'click'},],
-				instructions: [],
-				cleanup: [
-					{action: 'modalDefinitionToBreadcrumb'},
-					{action: 'newModal', modal: 'icons'},
-				],
-			},
-			{	//Change to system select
-				handlers: [{controlId: 'selectSubsystem', event: 'change'},],
-				instructions: [
-					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSubsystem', definitionName: 'id_system', dataAttr: 'id_system'}
-				],
-				cleanup: [
-					{action: 'reload'},
-				],
-			},
-			{	//Attach interfaces button
-				handlers: [{controlId: 'buttonUpdateSystemInterfaces', event: 'click'},],
-				instructions: [
-
-				],
-				cleanup: [
-					{action: 'modalDefinitionToBreadcrumb'},
-					{action: 'newModal', modal: 'interfacesToSystems'},
-				],
 			},
 		]
 	},

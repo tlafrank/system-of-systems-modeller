@@ -211,10 +211,9 @@ function commonModal_actions(definition, element, postData, result){
 		case 'setControl_MultipleValues_AtSpecificArrayIndex':
 			if(element.arrayIndex >= 0){setFormElement('#' + element.id, element, result[element.arrayIndex]) } else {setFormElement('#' + element.id, element, result)}
 			break;
-		
 		case 'setControl_MultipleValues_fromConstant':
 			debug(1, 'cn is ' + element.constantName, window)
-			setFormElement('#' + element.id, element, window[element.constantName])
+			setFormElement('#' + element.id, element, window.categories[element.constantName])
 			break;
 		case 'setControl_SingleValue':
 		case 'setControl_SingleValue_fromParamNoArray':
@@ -257,25 +256,16 @@ function commonModal_actions(definition, element, postData, result){
 			debug(1,value)
 
 
-
 			break;
+
+		//Set definition
 		case 'setDefinition_SingleValue_ifDefintionNotAlreadySet':
 			if (!definition[element.definition]){
 				definition[element.definition] = getFormElement('#' + element.id, element)
 			}
 			break;
-
-
-
-
-
-		//Set definition
 		case 'setDefinition_SingleValue':
-
-
 			break;
-
-
 		case 'setDefinitionValueFromControlWithDataAttribute':
 			definition[element.definitionName] = getFormElement('#' + element.id, element)
 			break;
@@ -294,28 +284,22 @@ function commonModal_actions(definition, element, postData, result){
 			localStorage.setItem(element.localStorageName, definition[element.definitionName])
 
 			break;
-		case 'removeElement':
-			$(`#${element.id}[data-${element.dataAttr}="${definition[element.definitionName]}"`).remove();
-			break;
 
 		//To server
-		case 'toServer_DefinitionValue':
-			//debug(1, 'toServer_DefinitionValue(definition[element.definitionName]): ' + definition[element.definitionName])
+		case 'toServer_DefinitionValue': //Set postData[element.columnName] if definition[element.definitionName] exists
 			if (definition[element.definitionName]){postData[element.columnName] = definition[element.definitionName];}
-			//debug(1, 'toServer_DefinitionValue(postData[element.columnName]): ' + postData[element.columnName])
 			break;
-		case 'toServer_ControlValue':
+		case 'toServer_ControlValue': //Set postData[element.columnName] to the value of the control specified by element.id
 			postData[element.columnName] = getFormElement('#' + element.id, element)
 			break;		
-		case 'resetButtonClasses':
+		case 'resetButtonClasses': //Deselect all buttons container within the element specified at element.id
 			$('#' + element.id + ' button').addClass('btn-secondary').removeClass('btn-primary')
 			break;
-		case 'control_Empty':
 		case 'emptyControl':
 		case 'setSliderDescription':
 			setFormElement('#' + element.id, element, '')
 			break;
-		case 'moveDefinitionValue':
+		case 'moveDefinitionValue': //Move definition[element.old] to definiton[element.new]
 			definition[element.new] = definition[element.old]
 			delete definition[element.old]
 			break;
@@ -324,6 +308,7 @@ function commonModal_actions(definition, element, postData, result){
 			break;
 		case 'lockControls':
 			modals[definition.modal].lockOnChange.forEach((element2) => { $('#' + element2).prop('disabled', true) })
+			break;
 		case 'unlockControls':
 			modals[definition.modal].unlockOnChange.forEach((element2) => {$('#' + element2).prop('disabled', false)})	
 			break;
@@ -335,6 +320,7 @@ function commonModal_actions(definition, element, postData, result){
 			break;
 		case 'removeControls':
 			deleteFormElement('#' + element.id, element)
+			break;
 		case 'debug':
 			debug(1, element.message)
 			break;
@@ -380,6 +366,9 @@ function commonModal_actions(definition, element, postData, result){
 			break;
 		case 'launchFunction':
 			window[element.functionName]()
+			break;
+		case 'removeElement':
+			$(`#${element.id}[data-${element.dataAttr}="${definition[element.definitionName]}"`).remove();
 			break;
 		case 'debug':
 			debug(1, element.message)

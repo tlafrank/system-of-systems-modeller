@@ -76,12 +76,10 @@ exports.switch = (req,res) => {
 			}
 			break;
 
-
-
 		//Simple Updates / Insertions
 		case 'UpdateSIMap':
 			//queryString += sql.format(`UPDATE SIMap SET isProposed = ?, name = ?, description = ? WHERE SIMap.id_SIMap = ?;`,[req.body.isProposed, req.body.name, req.body.description, req.body.id_SIMap]);
-			queryString += sql.format(`UPDATE SIMap SET name = ?, description = ?, isProposed = ? WHERE SIMap.id_SIMap = ?;`,[req.body.name, req.body.description, req.body.isProposed, req.body.id_SIMap]);
+			queryString += sql.format(`UPDATE SIMap SET name = ?, description = ?, category = ?, isProposed = ? WHERE SIMap.id_SIMap = ?;`,[req.body.name, req.body.description, req.body.category, req.body.isProposed, req.body.id_SIMap]);
 			break;
 		case 'UpdateImage':
 			if (req.body.id_system){ //Update the image associated with a system
@@ -98,7 +96,7 @@ exports.switch = (req,res) => {
 			if (req.body.id_interface){
 				queryString += sql.format(`UPDATE interfaces SET name = ?, description = ?, updateTime = ? WHERE interfaces.id_interface = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_interface]);
 			} else {
-				queryString += sql.format(`INSERT INTO interfaces (name, description, image, updateTime) VALUES (?,?,"tba.svg",?);`,[req.body.name, req.body.description, Date.now()]);
+				queryString += sql.format(`INSERT INTO interfaces (name, description, image, updateTime) VALUES (?,?,?,"tba.svg",?);`,[req.body.name, req.body.description, Date.now()]);
 			}
 			break;
 		case 'UpdateSystem':
@@ -108,7 +106,7 @@ exports.switch = (req,res) => {
 				
 			if (req.body.id_system) { //Update existing system
 				//Update system details
-				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, updateTime = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description, req.body.reference, Date.now(), req.body.id_system]);
+				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, category = ?, updateTime = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.id_system]);
 	
 				//Delete existing tags
 				queryString += sql.format(`DELETE FROM tags WHERE id_system = ?;`, req.body.id_system)
@@ -120,7 +118,7 @@ exports.switch = (req,res) => {
 	
 			} else { //Add new system
 				
-				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, updateTime, isSubsystem) VALUES (?,?,?,?,?,0);`, [req.body.name, req.body.image, req.body.description, req.body.reference, Date.now()]);
+				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem) VALUES (?,?,?,?,?,?,0);`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now()]);
 				queryString += sql.format(`SET @insertID = LAST_INSERT_ID();`)
 	
 				//Add new tags
@@ -133,9 +131,9 @@ exports.switch = (req,res) => {
 			break;
 		case 'UpdateLink':
 			if (req.body.id_network){
-				queryString += queryString = sql.format(`UPDATE networks SET name = ?, designation = ?, description = ?, id_technology = ? WHERE id_network = ?;`, [req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.id_network])
+				queryString += queryString = sql.format(`UPDATE networks SET name = ?, designation = ?, description = ?, id_technology = ?, category = ? WHERE id_network = ?;`, [req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.category, req.body.id_network])
 			} else {
-				queryString += sql.format(`INSERT INTO networks (name, designation, description, id_technology, image) VALUES (?,?,?,?,'tba.svg')`, [req.body.name, req.body.designation, req.body.description,  req.body.id_technology])
+				queryString += sql.format(`INSERT INTO networks (name, designation, description, id_technology, category, image) VALUES (?,?,?,?,?,'tba.svg')`, [req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.category])
 			}
 			break;
 		case 'UpdateTechnology':
@@ -145,7 +143,6 @@ exports.switch = (req,res) => {
 					queryString += sql.format(`INSERT INTO technologies (name, category, description) VALUES (?,?,?);`, [req.body.name, req.body.category, req.body.description]);
 				}
 			break;
-
 		case 'AssignLinksToSystemInterface': //Assigns a network to a System Interface
 			
 			//Delete existing records
@@ -202,7 +199,6 @@ exports.switch = (req,res) => {
 				queryString += sql.format('COMMIT;')
 			}
 			break;
-	
 		case 'DataExchange':
 			if (req.body.id_dataExchange > 0) { //Update existing system
 				//Update system details
@@ -212,14 +208,13 @@ exports.switch = (req,res) => {
 				queryString += sql.format(`INSERT INTO dataExchanges (name, description) VALUES (?,?);`, [req.body.name, req.body.description]);
 			}
 			break;
-
 		case 'UpdateOrgSystemMap':
 			queryString += sql.format(`UPDATE OSMap SET quantity = ? WHERE id_OSMap = ?`, [req.body.quantity, req.body.id_OSMap])
 		break;
 
 
 		
-		default:		
+		default:
 	}
 
 

@@ -104,16 +104,28 @@ async function commonGraph(definition){
 							tempNode.classes = ''
 							element.fields.forEach((field) => {
 								var str = '';
-								field.format.forEach((format) => {
-									if (node[format.columnName] !== null){	
-										if (format.leadingText){
-											str += format.leadingText
+								if(typeof field.format !== 'undefined'){
+									field.format.forEach((format) => {
+										if (node[format.columnName] !== null){	
+											if (format.leadingText){
+												str += format.leadingText
+											}
+											if (format.columnName){
+												str += node[format.columnName]
+											}
 										}
-										if (format.columnName){
-											str += node[format.columnName]
-										}
-									}
-								})
+									})									
+								} else {
+									switch(field.nodeName){
+										case 'lineColor': //Handle node border colours
+											str = 'grey'
+											if (typeof node[field.columnName] !== 'undefined' && node[field.columnName] != null ){
+												str = categories[field.constantName].find(x => x.value == node[field.columnName]).color
+											}											
+											break;
+										default:
+									}									
+								}
 								tempNode.data[field.nodeName] = str;
 							})
 							
@@ -159,12 +171,10 @@ async function commonGraph(definition){
 								tempEdge.data[field.nodeName] = str;
 							})
 							
-
-
 							//Line colours
 							tempEdge.data.lineColor = 'black'
 							if (typeof edge.technologyCategory !== 'undefined'){
-								tempEdge.data.lineColor = technologyCategory.find(x => x.value == edge.technologyCategory).color
+								tempEdge.data.lineColor = categories.technology.find(x => x.value == edge.technologyCategory).color
 							}
 							
 							//Handle classes
@@ -408,7 +418,7 @@ break;
 	debug(1, 'SOSM', sosm)
 
 
-
+	//Build the graph visualisation
 	if(!definition.headless){
 		//Setup the graph 
 		cy = cytoscape({
@@ -432,7 +442,7 @@ break;
 
 		//Event: Node in graph selected
 		cy.on('tap', 'node', (evt) => { 
-			debug(1, evt.target)
+			debug(1, evt.target._private.data)
 			nodeSelected(evt.target); 
 		})
 
@@ -443,6 +453,10 @@ break;
 			//debug(1,evt.target._private.position)
 			//debug(1,evt.target._private.data.nodeType)
 			
+			if(localStorage.getItem('snapToGrid') == 1){ //Snap to grid (setting to be configured later)
+				evt.target._private.position.x = Math.round(evt.target._private.position.x/200) * 200
+				evt.target._private.position.y = Math.round(evt.target._private.position.y/200) * 200
+			}
 
 			if(localStorage.getItem('graphLayoutName') == 'preset'){ //Only set positions if set to preset
 				debug(1,`${evt.target._private.data.id} is free, position will be logged`)

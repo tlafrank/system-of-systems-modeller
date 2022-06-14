@@ -27,7 +27,7 @@ exports.switch = (req,res) => {
 		case 'Systems_WithOrganisation':
 			var arrString = req.body.id_organisation_arr.toString()
 			queryString += sql.format(`
-			SELECT systems.id_system, systems.name AS systemName, systems.image, OSMap.quantity, OSMap.id_OSMap, organisation.id_organisation, organisation.name AS orgName
+			SELECT systems.id_system, systems.name AS systemName, systems.image, systems.category, OSMap.quantity, OSMap.id_OSMap, organisation.id_organisation, organisation.name AS orgName
 			FROM OSMap
 			LEFT JOIN systems
 			ON OSMap.id_system = systems.id_system
@@ -69,7 +69,7 @@ exports.switch = (req,res) => {
 		case 'Systems':
 			queryString += sql.format(`SET @inputYear = ?;`, req.body.year)
 			queryString += sql.format(`
-				SELECT a.id_system, name, image, a.quantity
+				SELECT a.id_system, name, image, a.quantity, category
 				FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
 				LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
 				ON a.id_system = b.id_system AND a.year < b.year
@@ -246,7 +246,7 @@ exports.switch = (req,res) => {
 			var arrString_org = req.body.id_organisation_arr.toString()
 
 			queryString += sql.format(`
-				SELECT SMap.id_SMap, OSMap.id_OSMap, OSMap.id_organisation, SMap.parent, systems.id_system, systems.name, systems.image
+				SELECT SMap.id_SMap, OSMap.id_OSMap, OSMap.id_organisation, SMap.parent, systems.id_system, systems.name, systems.image, systems.category
 				FROM OSMap
 				LEFT JOIN SMap
 				ON SMap.parent = OSMap.id_system
