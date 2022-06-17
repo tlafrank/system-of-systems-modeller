@@ -840,8 +840,6 @@ function addDragableBadge2($selector, properties){
 }
 
 
-
-
 /**
  * @description Returns the URL to enable the user to quickly bring up related documents. Can
  * be changed to an Objective reference.
@@ -1333,4 +1331,25 @@ function updateSlider($selector, value){
 	if (value != undefined){
 		$($selector + '_desc').html(`<strong>${severityLabels[value].label}</strong> ${severityLabels[value].description}`)
 	}
+}
+
+/**
+ * @description Returns a string identifying how long ago something was updated
+ * 
+ * @param t1 The first time to compare, in ms
+ * @param t2 The second time to compare, in ms
+ */
+ function updatedWhen(t1, t2){
+	diff = Math.abs(t1-t2)/1000;
+	debug(1, diff)
+	if (diff < 60){ return 'in the last minute'}
+	if (diff < 3600){ return Math.trunc(diff /60) + ' minutes ago'}
+	if (diff < 7200){ return 'an hour ago'}
+	if (diff < 86400){ return Math.trunc(diff /3600) + ' hours ago'}
+	if (diff < 172800){ return 'a day ago'}
+	if (diff < 604800){ return Math.trunc(diff /86400) + ' days ago'}
+	if (diff < 1209600){ return 'over a week ago'}
+	if (diff < 31449600){ return Math.trunc(diff /86400) + ' weeks ago'}
+	if (diff < 62899200){ return ' over a year ago'}
+	if (diff => 62899200){ return Math.trunc(diff /62899200) + ' years ago'}
 }
