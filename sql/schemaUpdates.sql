@@ -124,3 +124,27 @@ ALTER TABLE SINMap ADD CONSTRAINT `fk_SINMap_SIMap`
   REFERENCES `db_sosm`.`SIMap` (`id_SIMap`)
   ON DELETE CASCADE
   ON UPDATE NO ACTION;
+
+  -- V1.0.5 (See package.json)
+  -- Introduction of AMap table (Association) to map the critical assocations across the system
+
+
+CREATE TABLE IF NOT EXISTS `db_sosm`.`AMap` (
+  `id_AMap` INT NOT NULL AUTO_INCREMENT,
+  `source` INT NOT NULL,
+  `destination` INT NOT NULL,
+  PRIMARY KEY (`id_AMap`),
+  INDEX `from_idx` (`source` ASC) VISIBLE,
+  INDEX `to_idx` (`destination` ASC) VISIBLE,
+  CONSTRAINT `fk_AMap_systems_source`
+    FOREIGN KEY (`source`)
+    REFERENCES `db_sosm`.`systems` (`id_system`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_AMap_systems_destination`
+    FOREIGN KEY (`destination`)
+    REFERENCES `db_sosm`.`systems` (`id_system`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+

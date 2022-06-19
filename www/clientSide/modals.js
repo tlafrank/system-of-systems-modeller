@@ -212,7 +212,6 @@ function commonModal_actions(definition, element, postData, result){
 			if(element.arrayIndex >= 0){setFormElement('#' + element.id, element, result[element.arrayIndex]) } else {setFormElement('#' + element.id, element, result)}
 			break;
 		case 'setControl_MultipleValues_fromConstant':
-			debug(1, 'cn is ' + element.constantName, window)
 			setFormElement('#' + element.id, element, window.categories[element.constantName])
 			break;
 		case 'setControl_SingleValue':
@@ -280,10 +279,22 @@ function commonModal_actions(definition, element, postData, result){
 			}
 			
 			break;
+
+		case 'setDefinition_FromResultInsert':
+			if (result.insertId > 0){ definition[element.definitionName] = result.insertId }
+			break;
+		case 'setDefinition_SingleValue_FromConstant':
+			definition[element.definitionName] = element.value;
+			break;
+		case 'resetDefinition':
+			for (const prop of Object.getOwnPropertyNames(definition)) {
+				delete definition[prop];
+			  }
+		break;
+
 		case 'setLocalStorage_fromDefinition':
 			localStorage.setItem(element.localStorageName, definition[element.definitionName])
-
-			break;
+			break;		
 
 		//To server
 		case 'toServer_DefinitionValue': //Set postData[element.columnName] if definition[element.definitionName] exists
@@ -304,6 +315,7 @@ function commonModal_actions(definition, element, postData, result){
 			delete definition[element.old]
 			break;
 		case 'deleteDefinitionValue':
+		case 'deleteDefinition':
 			delete definition[element.definitionName]
 			break;
 		case 'lockControls':
@@ -320,9 +332,6 @@ function commonModal_actions(definition, element, postData, result){
 			break;
 		case 'removeControls':
 			deleteFormElement('#' + element.id, element)
-			break;
-		case 'debug':
-			debug(1, element.message)
 			break;
 
 		//From update cleanup
@@ -349,12 +358,7 @@ function commonModal_actions(definition, element, postData, result){
 		case 'reloadPage':
 			pageSwitch();
 			break;
-		case 'setDefinition_FromResultInsert':
-			if (result.insertId > 0){ definition[element.definitionName] = result.insertId }
-			break;
-		case 'deleteDefinition':
-			delete definition[element.definitionName]
-			break;
+
 		case 'setLocalStorage':
 
 			var resultArray = [];
@@ -367,14 +371,17 @@ function commonModal_actions(definition, element, postData, result){
 		case 'launchFunction':
 			window[element.functionName]()
 			break;
+		case 'launchFunctionWithDefinition':
+			window[element.functionName].apply(null, [definition])
+			break;
 		case 'removeElement':
 			$(`#${element.id}[data-${element.dataAttr}="${definition[element.definitionName]}"`).remove();
 			break;
 		case 'debug':
-			debug(1, element.message)
-			break;		
+			debug(1, 'In switch debug with definition: ', definition)
+			break;
 		default:
-			debug(1, `Switch default. Shouldn't make it here in commonModal_action with ${element.action}`)
+			debug(1, `Switch default. Shouldn't make it here in commonModal_action with ${element.action} and definition`, definition)
 	}
 
 }

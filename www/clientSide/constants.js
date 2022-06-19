@@ -17,91 +17,104 @@ const graph = {
 			},
 		],
 	},
-	standard: {
+
+	standard: { //Node name prefix: g1
 		title: 'Standard Graph',
+		//Naming Convention
+		//System Nodes: 					g1_node_system_<id_system>_<id_system>
+		//Subsystem Nodes: 					g1_node_system_<id_system>_<id_system>
+		//SystemInterface Nodes: 			g1_node_systemInterface_<id_SIMap>
+		//Link Nodes: 						g1_node_link_<id_SINMap>
+		//System-System Interface Edges: 	g1_edge_System_<id_system>_SystemInterface_<id_SIMap>
+		//System-Link Edges: 				g1_edge_System_<id_system>_Link_<id_SINMap>
+		//SystemInterface-Link Edges: 		g1_edge_SystemInterface_<id_SIMap>_Link_<id_network>
+
+
 		iterations: [
+			//Get and prepare the systems as nodes on the graph
 			{
-				queryType: 'Systems',
 				beforeServerInstructions: [
 					{action: 'resetSosmObject'},
 					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
 					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
 					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
-					
+					{action: 'toServer_fromDefinition', definitionName: 'id_system', columnName: 'id_system'},
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
 				],
+				queryType: 'Systems', url: 'graph', 
 				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems',
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{nodeName: 'id', format: [{ leadingText: 'node_s_', columnName: 'id_system'}]},
-							{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
-							{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-							{nodeName: 'name', format: [{ columnName: 'name'}]},
-							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image'}]},
-							{nodeName: 'lineColor', columnName: 'category', constantName: 'systems'},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system', 'id_system']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
 						],
 						classes: ['image'],
 						position: true,
 					},
 					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
-				]			
+				],
 			},
+
+			//Get and prepare subsystems as nodes on the graph
 			{
-				queryType: 'ChildrenSystems',
 				beforeServerInstructions: [
 					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
+					{action: 'toServer_fromGraphConstant', columnName: 'startDepth', value: 1},
 				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems',
+				queryType: 'Subsystems', url: 'graph',
+				afterServerInstructions:[ 
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'displaySubsystems'}],
 						fields: [
-							{nodeName: 'id', format: [{ leadingText: 'node_ss_', columnName: 'id_SMap'}]},
-							{nodeName: 'parent', format: [{ leadingText: 'node_s_', columnName: 'parent'}]},
-							{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
-							{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-							{nodeName: 'name', format: [{ columnName: 'name'}]},
-							{nodeName: 'lineColor', columnName: 'category', constantName: 'systems'},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_system_<0>_<1>', columnNames: ['topSystem', 'id_system']},
+							{action: 'fromResult', nodeName: 'parent', format: 'g1_node_system_<0>_<1>', columnNames: ['topSystem', 'immediateParent']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 						],
 						classes: ['square', 'centerLabel'],
 						position: true,
 					},
 				]		
 			},
+
+			//Get and prepare System Interfaces as nodes on the graph, and their associated edges, if setting is enabled
 			{
-				queryType: 'Interfaces',
 				beforeServerInstructions: [
 					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
 				],
+				queryType: 'Interfaces', url: 'graph',
 				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'interfaces',
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'interfaces',
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{nodeName: 'id', format: [{ leadingText: 'node_si_', columnName: 'id_SIMap'}]},
-							{nodeName: 'idNo', format: [{ columnName: 'id_SIMap'}]},
-							{nodeName: 'id_interface', format: [{ columnName: 'id_interface'}]},
-							{nodeName: 'id_SIMap', format: [{ columnName: 'id_SIMap'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'SystemInterface'}]},
-							{nodeName: 'name', format: [{ columnName: 'name'}]},
-							{nodeName: 'proposed', format: [{ columnName: 'isProposed'}]},
-							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image' }]},
-							{nodeName: 'lineColor', columnName: 'category', constantName: 'interfaces'},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id_interface', format: '<0>', columnNames: ['id_interface']},
+							{action: 'fromResult', nodeName: 'id_SIMap', format: '<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'SystemInterface', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'interfaces', default: 'grey'},
 						],
-						classes: ['small']
+						classes: ['small'],
+						position: true
 					},
-					{action: 'buildGraphObject_edges', sosmNodeName: 'edges',
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges',
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{nodeName: 'id', format: [{ leadingText: 'edge_s_si_', columnName: 'id_SIMap' },]},
-							{nodeName: 'idNo', format: [{ columnName: 'id_SIMap'}]},
-							{nodeName: 'source', format: [{ leadingText: 'node_s_', columnName: 'id_system' }]},
-							{nodeName: 'target', format: [{ leadingText: 'node_si_', columnName: 'id_SIMap'}]},
-							{nodeName: 'lineColor', format: [{ leadingText: 'black'}]},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<id_system>_SystemInterface_<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'source', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system','id_system']}, //System
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
+							{action: 'fromDefault', nodeName: 'lineColor', default: 'black'},
 						],
 						classes: []
 					},
@@ -109,56 +122,53 @@ const graph = {
 					{action: 'getDataFromResult', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap'}
 				]			
 			},
+
+			//Get and prepare Links as nodes on their graph, and their associated edges.
 			{
 				queryType: 'Links',
 				beforeServerInstructions: [
 					{action: 'toServer_fromSosmObject', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap_arr'},
 				],
 				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'links',
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'links',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{nodeName: 'id', format: [{ leadingText: 'node_n_', columnName: 'id_network'}]},
-							{nodeName: 'id_network', format: [{ columnName: 'id_network'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'Link'}]},
-							{nodeName: 'name', format: [{ columnName: 'name'}]},
-							{nodeName: 'filename', format: [{ leadingText: './images/', columnName: 'image' }]},
-							{nodeName: 'lineColor', columnName: 'category', constantName: 'links'},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_link_<0>', columnNames: ['id_network']},
+							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromResult', nodeName: 'id_SIMap', format: '<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'Link', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'grey'},
 						],
 						classes: ['network'],
 						position: true,
 					},
-					{action: 'buildGraphObject_edges', sosmNodeName: 'edges', 
+					//Draw edges from interfaces to links, if showInterfaces is true
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges', 
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{nodeName: 'id', format: [
-								{ leadingText: 'edge_si_', columnName: 'id_SIMap' },
-								{ leadingText: '_n_', columnName: 'id_network' },
-							]},
-							{nodeName: 'idNo', format: [{ columnName: 'id_network'}]},
-							{nodeName: 'id_network', format: [{ columnName: 'id_network'}]},
-							{nodeName: 'source', format: [{ leadingText: 'node_si_', columnName: 'id_SIMap' }]},
-							{nodeName: 'target', format: [{ leadingText: 'node_n_', columnName: 'id_network'}]},
-							{nodeName: 'linkCategory', format: [{ columnName: 'linkCategory'}]},
-							//{nodeName: 'lineColor', format: [{ leadingText: 'black'}]},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_SystemInterface_<0>_Link_<1>', columnNames: ['id_SIMap','id_network']},
+							{action: 'fromResult', nodeName: 'source', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
+							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
 						classes: []
 					},
-					{action: 'buildGraphObject_edges', sosmNodeName: 'edges', 
+					//Draw edges from systems to links, if showInterfaces is false
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges', 
 						conditions: [{type: '!checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{nodeName: 'id', format: [
-								{ leadingText: 'edge_si_', columnName: 'id_SIMap' },
-								{ leadingText: '_n_', columnName: 'id_network' },
-							]},
-							{nodeName: 'idNo', format: [{ columnName: 'id_network'}]},
-							{nodeName: 'id_network', format: [{ columnName: 'id_network'}]},
-							{nodeName: 'source', format: [{ leadingText: 'node_s_', columnName: 'id_system' }]},
-							{nodeName: 'target', format: [{ leadingText: 'node_n_', columnName: 'id_network'}]},
-							{nodeName: 'lineColor', format: [
-								{ leadingText: 'black', columnName: 'technologyCategory' }
-							]},
-							{nodeName: 'linkCategory', format: [{ columnName: 'linkCategory'}]},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<0>_Link_<1>', columnNames: ['id_system','id_network']},
+							{action: 'fromResult', nodeName: 'source', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system', 'id_system']}, //System
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
 						classes: []
 					},
@@ -166,9 +176,11 @@ const graph = {
 			},
 		]
 	},
+
 	standardOrganisation:{
 		title: 'Standard Graph by Organisation',
 		iterations: [
+			//Get the organisational structure below the node provided at id_organisation
 			{
 				queryType: 'GetAllOrganisationalNodesBelow',
 				beforeServerInstructions: [
@@ -177,27 +189,28 @@ const graph = {
 				],
 				afterServerInstructions:[
 					{action: 'getDataFromResult', sosmName: 'id_organisation_arr', columnName: 'id_organisation'},
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', 
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{nodeName: 'id', format: [{leadingText: 'node_o_', columnName: 'id_organisation'}]},
-							{nodeName: 'parent', format: [{leadingText: 'node_o_', columnName: 'parent'}]},
-							{nodeName: 'idNo', format: [{columnName: 'id_organisation'}]},
-							{nodeName: 'id_organisation', format: [{columnName: 'id_organisation'}]},
-							{nodeName: 'nodeType', format: [{leadingText: 'Organisation'}]},
-							{nodeName: 'name', format: [{columnName: 'name'}]},
-							
+							{action: 'fromResult', nodeName: 'id', format: 'node_o_<0>', columnNames: ['id_organisation']},
+							{action: 'fromResult', nodeName: 'parent', format: 'node_o_<0>', columnNames: ['parent']},
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_organisation']},
+							{action: 'fromResult', nodeName: 'id_organisation', format: '<0>', columnNames: ['id_organisation']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'Organisation', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							//{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							//{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'grey'},
 						],
 						classes: ['square'],
 						position: true,
 					},
 				]
 			},
+
+			//Get all the systems which are attacehd to the organisational nodes provided at id_organisation_arr
 			{
 				queryType: 'Systems_WithOrganisation',
 				beforeServerInstructions: [
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
 					{action: 'toServer_fromSosmObject', sosmName: 'id_organisation_arr', columnName: 'id_organisation_arr'},
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
@@ -205,17 +218,17 @@ const graph = {
 					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
 				],
 				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', 
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{nodeName: 'parent', format: [{leadingText: 'node_o_', columnName: 'id_organisation'}]},
-							{nodeName: 'id', format: [{leadingText: 'node_os_', columnName: 'id_OSMap'}]},
-							{nodeName: 'idNo', format: [{columnName: 'id_system'}]},
-							{nodeName: 'id_system', format: [{columnName: 'id_system'}]},
-							{nodeName: 'nodeType', format: [{leadingText: 'System'}]},
-							{nodeName: 'name', format: [{columnName: 'systemName'}]},
-							{nodeName: 'filename', format: [{leadingText: './images/', columnName: 'image'}]},
-							{nodeName: 'lineColor', columnName: 'category', constantName: 'systems'},
+							{action: 'fromResult', nodeName: 'id', format: 'node_os_<0>', columnNames: ['id_OSMap']},
+							{action: 'fromResult', nodeName: 'parent', format: 'node_o_<0>', columnNames: ['id_organisation']},
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['systemName']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
 						],
 						classes: [],
 						position: true,
@@ -224,6 +237,7 @@ const graph = {
 				]			
 			},
 			
+			//Get all subsystems, if enabled in settings
 			{
 				queryType: 'ChildrenSystems_WithOrganisation',
 				beforeServerInstructions: [
@@ -232,21 +246,18 @@ const graph = {
 					
 				],
 				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', displayIf: 'compoundSystems',
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
 					conditions: [{type: 'checkLocalStorage', localStorageName: 'displaySubsystems'}],
 						fields: [
-							{nodeName: 'parent', format: [{leadingText: 'node_os_', columnName: 'id_OSMap'},]},
-							{nodeName: 'id', format: [
-								{leadingText: 'node_ss_', columnName: 'id_SMap'},
-								{leadingText: '_', columnName: 'id_OSMap'},
-							]},
-							{nodeName: 'idNo', format: [{columnName: 'id_SMap'}]},
-							{nodeName: 'id_system', format: [{columnName: 'id_system'}]},
-							{nodeName: 'nodeType', format: [{leadingText: 'Subsystem'}]},
-							{nodeName: 'name', format: [{columnName: 'name'}]},
-							{nodeName: 'org', format: [{columnName: 'id_organisation'}]},
-							{nodeName: 'lineColor', columnName: 'category', constantName: 'systems'},
-							//{nodeName: 'filename', leadingText: './images/', columnName: 'image'}]},	
+							{action: 'fromResult', nodeName: 'id', format: 'node_ss_<0>_<1>', columnNames: ['id_SMap','id_OSMap']},
+							{action: 'fromResult', nodeName: 'parent', format: 'node_os_<0>', columnNames: ['id_OSMap']},
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_SMap']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'Subsystem', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'org', format: '<0>', columnNames: ['id_organisation']},
+							//{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
 						],
 						classes: ['square', 'centerLabel'],
 						position: true,
@@ -255,130 +266,145 @@ const graph = {
 			},
 		],
 	},
-	subsystems: {
+
+	subsystems: { //Node name prefix: g2
+		//Naming Convention
+		//System Nodes: 					g2_node_system_<id_system>
+		//Subsystem Nodes: 					g2_node_system_<id_system>
+		//System-Subsystem Edges:			g2_edge_System_<id_system>_Subsystem_<id_SMap>
+		//SystemInterface Nodes: 			g2_node_systemInterface_<id_SIMap>
+		//Link Nodes: 						g2_node_link_<id_SINMap>
+		//System-System Interface Edges: 	g2_edge_System_<id_system>_SystemInterface_<id_SIMap>
+		//System-Link Edges: 				g2_edge_System_<id_system>_Link_<id_SINMap>
+		//SystemInterface-Link Edges: 		g2_edge_SystemInterface_<id_SIMap>_Link_<id_network>
 		title: 'Distributed Subsystem Graph',
 		iterations: [
-			/*
-			{
-				queryType: 'AllDistributedSubsystems',
-				beforeServerInstructions: [
-					{action: 'resetSosmObject'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', fields: [
-						{nodeName: 'id', format: [{ columnName: 'id_system', leadingText: 'node_s_'}]},
-						{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
-						{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
-						{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-						{nodeName: 'name', format: [{ columnName: 'name'}]},
-						{nodeName: 'filename', format: [{ columnName: 'image', leadingText: './images/'}]},		
-					]},
 
-					//{action: 'getDataFromResult', sosmName: 'id_children_arr', columnName: 'id_system'}
-				]
-			},
-			*/
+			//Place all primary systems in the given year
 			{
-				queryType: 'ParentsOfChildren2',
+				queryType: 'Systems',//'Systems',
 				beforeServerInstructions: [
 					{action: 'resetSosmObject'},
-					//{action: 'toServer_fromSosmObject', sosmName: 'id_children_arr', columnName: 'id_children_arr'},
+					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
 				],
 				afterServerInstructions:[
-					//{action: 'buildGraphObject_parents', },
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems',
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{nodeName: 'id', format: [{ columnName: 'parent', leadingText: 'node_p_'}]},
-							{nodeName: 'idNo', format: [{ columnName: 'parent'}]},
-							{nodeName: 'id_system', format: [{ columnName: 'parent'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-							{nodeName: 'name', format: [{ columnName: 'parentName'}]},
-							{nodeName: 'filename', format: [{ columnName: 'parentImage', leadingText: './images/'}]},		
+							{action: 'fromResult', nodeName: 'id', format: 'g2_node_system_<0>', columnNames: ['id_system']},
+							//{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
 						],
 						classes: ['small'],
 						position: true,
 					},
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', 
-					conditions: [{type: 'alwaysRun'}],
-						fields: [
-							{nodeName: 'id', format: [{ leadingText: 'node_c_', columnName: 'child' }]},
-							{nodeName: 'idNo', format: [{ columnName: 'child'}]},
-							{nodeName: 'id_system', format: [{ columnName: 'child'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-							{nodeName: 'name', format: [{ columnName: 'childName'}]},
-							{nodeName: 'filename', format: [{  leadingText: './images/', columnName: 'childImage'}]},
-							//{nodeName: 'parent', format: [{ leadingText: 'node_p_', columnName: 'parent' }]},
-						],
-						classes: [''],
-						position: true,
-					},
-					{action: 'buildGraphObject_edges', sosmNodeName: 'edges', 
+					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
+					{action: 'getDataFromResult', sosmName: 'id_system_arr!', columnName: 'id_system'},
+				],		
+			},
+
+			//Place all distributed systems
+			{
+				queryType: 'AllDistributedSubsystems',
+				beforeServerInstructions: [],
+				afterServerInstructions:[
+
+					//Place the distributed systems
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{nodeName: 'id', format: [
-								{ leadingText: 'node_c_', columnName: 'child' },
-								{ leadingText: 'node_p_', columnName: 'parent' }
-							]},
-							{nodeName: 'idNo', format: [{ columnName: 'child'}]},
-							{nodeName: 'source', format: [{ leadingText: 'node_c_', columnName: 'child' }]},
-							{nodeName: 'target', format: [{ columnName: 'parent', leadingText: 'node_p_'}]},
-							//lineColor?
+							{action: 'fromResult', nodeName: 'id', format: 'g2_node_system_<0>', columnNames: ['id_system']},
+							//{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'Subsystem', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
 						],
-						classes: ['']
-					},
-				]		
-			},
-			{
-				queryType: 'ParentsOfChildren2',
-				beforeServerInstructions: [
-					{action: 'toServer_fromObject', type: 'boolean', columnName: 'deepSubsystems'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', 
-					conditions: [{type: 'alwaysRun'}],
-						fields: [
-							{nodeName: 'id', format: [{ leadingText: 'node_cdgf_', columnName: 'child' }]},
-							{nodeName: 'idNo', format: [{ columnName: 'child'}]},
-							{nodeName: 'id_system', format: [{ columnName: 'child'}]},
-							{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-							{nodeName: 'name', format: [{ columnName: 'childName'}]},
-							{nodeName: 'filename', format: [{  leadingText: './images/', columnName: 'childImage'}]},
-							{nodeName: 'parent', format: [{ leadingText: 'node_p_', columnName: 'parent' }]},
-						],
-						classes: [''],
+						classes: [],
 						position: true,
 					},
-				]		
+				],
 			},
-			/*
+
+			//Edges between systems and subsystems
 			{
-				queryType: 'Systems',
+				queryType: 'SystemToSubsystems',
 				beforeServerInstructions: [
-					{action: 'resetSosmObject'},
-					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
-
-
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
-					
+					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
 				],
 				afterServerInstructions:[
-					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
-				]			
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'links',
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g2_edge_System_Subsystem_<0>', columnNames: ['id_SMap']},
+							{action: 'fromResult', nodeName: 'source', format: 'g2_node_system_<0>', columnNames: ['parent']},
+							{action: 'fromResult', nodeName: 'target', format: 'g2_node_system_<0>', columnNames: ['child']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
+						],
+						classes: [],
+						position: true,
+					},
+					{action: 'removeFromArr', sosmName: 'id_system_arr!', columnName: 'parent'},
+				],
 			},
 
 
-			
+			//Edges between distributed subsystems
+			{
+				queryType: 'DistributedSubsystemAssociations',
+				beforeServerInstructions: [],
+				afterServerInstructions:[
+					//Links between distributed systems
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'links',
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g2_edge_System_Subsystem_<0>', columnNames: ['id_SMap']},
+							{action: 'fromResult', nodeName: 'source', format: 'g2_node_system_<0>', columnNames: ['parent']},
+							{action: 'fromResult', nodeName: 'target', format: 'g2_node_system_<0>', columnNames: ['child']},
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
+						],
+						classes: [],
+						position: true,
+					},
+				],
+			},
 
-
-			*/
+			//For systems with no distributed systems, draw the network links between associated systems
+			{
+				queryType: 'LinksForAssociatedSystems',
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr!', columnName: 'id_system_arr!'},
+					{action: 'toServer_fromGraphConstant', columnName: 'linkCategory', value: 'primary'},
+				],
+				afterServerInstructions:[
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'links',
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g2_edge_System_System_<0>_<1>', columnNames: ['id_AMap', 'id_network']},
+							{action: 'fromResult', nodeName: 'source', format: 'g2_node_system_<0>', columnNames: ['source']},
+							{action: 'fromResult', nodeName: 'target', format: 'g2_node_system_<0>', columnNames: ['destination']},
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_SINMap']},
+							{action: 'fromResult', nodeName: 'id_SINMap', format: '<0>', columnNames: ['id_SINMap']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
+						],
+						classes: [],
+						position: true,
+					},
+					
+				],
+			},	
 		]
 	},
+
 	summary: {
 		title: 'Standard Graph',
 		iterations: [
@@ -394,6 +420,7 @@ const graph = {
 			},
 		]
 	},
+
 	issues: {
 		title: 'Issues',
 		iterations: [
@@ -411,6 +438,7 @@ const graph = {
 			},
 		]
 	},
+
 	chartInterfaces: {
 		title: 'chartInterfaces',
 		iterations: [
@@ -429,6 +457,7 @@ const graph = {
 			},
 		]
 	},
+
 	chartInterfaces2: {
 		title: 'chartInterfaces2',
 		iterations: [
@@ -444,8 +473,6 @@ const graph = {
 		]
 	},
 }
-
-
 
 
 
@@ -703,7 +730,7 @@ var categories = { //Must stay var to be found within the window object
 */
 
 const graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random', 'fcose', 'preset'];
-const defaultLandingPageOptions = ['graph', 'summary', 'issues'];
+const defaultLandingPageOptions = ['standard', 'summary', 'issues'];
 
 /**
  * @description Settings definition. All are stored in localStorage
@@ -711,7 +738,7 @@ const defaultLandingPageOptions = ['graph', 'summary', 'issues'];
  */
 const settings = [
 	{ type: 'heading', id: 'generalHeading', align: 'left', text: 'General Settings', noUpdate: true },
-	{ type: 'select', id: 'defaultLandingPage', label: 'Default Landing Page', default: 'graph', options: defaultLandingPageOptions },
+	{ type: 'select', id: 'defaultLandingPage', label: 'Default Landing Page', default: 'standard', options: defaultLandingPageOptions },
 	{ type: 'checkbox', id: 'refreshOnUpdate', label: 'Redraw the graph on update', default: 0 },
 	{ type: 'number', id: 'yearMin', label: 'Minimum Year', default: 2020},
 	{ type: 'number', id: 'yearMax', label: 'Minimum Year', default: 2030},
@@ -1175,10 +1202,10 @@ const modals = {
 		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
 		iterations: [ //The objects to process in order to fetch information from the server and insert into the form controls
 			{ //Get the all the systems
-				type: 'AllSystems', //The type of select query to call (See req.body.type in select.js)
-				definitionFields: [], //The params from definition that also need to be sent to the server to accompany the query
+				type: 'AllSystems',
+				definitionFields: [],
 				continueOnUndefined: true,
-				instructions: [ //The actions to perform upon return of the query from the server
+				instructions: [
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectSystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system'},
@@ -2472,6 +2499,52 @@ const modals = {
 			},
 		]
 	},
+
+	specificSystem: {
+		title: 'Title',
+		formButtons: [ 
+			{type: 'submit', id: 'buttonUpdate', label: 'Go', initialState: 'unlock'},
+			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{ type: 'select', id: 'selectSystem', label: 'System'},
+		],
+		monitorChanges: [],
+		lockOnChange: [],
+		unlockOnChange: [], 
+		iterations: [
+			{ //Get the all the systems
+				type: 'AllSystems', 
+				definitionFields: [], 
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectSystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system'},
+				],
+			},
+		],
+		events: [
+			{	//Change to system select
+				handlers: [{controlId: 'selectSystem', event: 'change'},],
+				instructions: [{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSystem', definitionName: 'id_system', dataAttr: 'id_system'}],
+				cleanup: [],
+			},
+			{	//Update system button clicked
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},],
+				instructions: [
+					{action: 'resetDefinition'},
+					{action: 'debug'},
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSystem', definitionName: 'id_system', dataAttr: 'id_system'},
+					{action: 'setDefinition_SingleValue_FromConstant', definitionName: 'graph', value: 'standard'},
+				],
+				cleanup: [
+					{action: 'launchFunctionWithDefinition', functionName: 'commonGraph'},
+					{action: 'closeModal'},
+				],
+			},
+		]
+	},
 }
 
 
@@ -2492,62 +2565,4 @@ events.instructions
 events.cleanup
 {action: 'reload'},
 
-*/
-
-
-/*
-Backup before trying to nest subsystems
-
-subsystems: {
-		title: 'Distributed Subsystem Graph',
-		iterations: [
-			{
-				queryType: 'Systems',
-				beforeServerInstructions: [
-					{action: 'resetSosmObject'},
-					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
-					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
-
-
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
-					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
-					
-				],
-				afterServerInstructions:[
-					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
-				]			
-			},
-			{
-				queryType: 'AllDistributedSubsystems',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_nodes', sosmNodeName: 'systems', fields: [
-						{nodeName: 'id', format: [{ columnName: 'id_system', leadingText: 'node_s_'}]},
-						{nodeName: 'idNo', format: [{ columnName: 'id_system'}]},
-						{nodeName: 'id_system', format: [{ columnName: 'id_system'}]},
-						{nodeName: 'nodeType', format: [{ leadingText: 'System'}]},
-						{nodeName: 'name', format: [{ columnName: 'name'}]},
-						{nodeName: 'filename', format: [{ columnName: 'image', leadingText: './images/'}]},		
-					]},
-
-					{action: 'getDataFromResult', sosmName: 'id_children_arr', columnName: 'id_system'}
-				]		
-			},
-			{
-				queryType: 'ParentsOfChildren',
-				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_children_arr', columnName: 'id_children_arr'},
-				],
-				afterServerInstructions:[
-					{action: 'buildGraphObject_parents', },
-					//{action: 'getDataFromResult', sosmName: 'id_children_arr', dataId: 'id_system'}
-				]		
-			},
-		]
-	},
 */

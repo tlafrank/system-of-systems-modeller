@@ -43,9 +43,9 @@
 
 		<!-- Page scripts -->
 		<script src="./clientSide/Node.js" type="text/javascript" defer></script>
-		
-		<script src="./clientSide/constants.js" type="text/javascript" defer></script>
 		<script src="./clientSide/privateConstants.js" type="text/javascript" defer></script>
+		<script src="./clientSide/constants.js" type="text/javascript" defer></script>
+		
 		<script src="./clientSide/helpers.js" type="text/javascript" defer></script>
 		<script src="./clientSide/modals.js" type="text/javascript" defer></script>
 		<script src="./clientSide/index.js" type="text/javascript" defer></script>
@@ -91,23 +91,27 @@
 
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">View</a>
-					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-						<a class="dropdown-item" href="#" onclick="pageSwitch('standard')">System Graph</a>
-						<a class="dropdown-item" href="#" onclick="pageSwitch('standardOrganisation')">System Graph (Incl Organisation)</a>
-						<a class="dropdown-item" href="#" onclick="pageSwitch('subsystems')">Subsystem Graph</a>
-						<a class="dropdown-item" href="#" onclick="view_summary()">System Summary</a>
-						<a class="dropdown-item" href="#" onclick="view_issues()">Issue Summary</a>
-						<a class="dropdown-item" href="#" onclick="view_charts()">Charts</a>
-					</div>
-				</li>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<li><a class="dropdown-item" href="#" onclick="pageSwitch('standard')">System Graph</a></li>
+						<li><a class="dropdown-item" href="#" onclick="pageSwitch('standardOrganisation')">System Graph (Incl Organisation)</a></li>
+						<li><a class="dropdown-item" href="#" onclick="pageSwitch('subsystems')">Subsystem Graph</a></li>
+						<li><a class="dropdown-item" href="#" onclick="view_summary()">System Summary</a></li>
+						<li><a class="dropdown-item" href="#" onclick="view_issues()">Issue Summary</a></li>
+						<li><a class="dropdown-item" href="#" onclick="view_charts()">Charts</a></li>
+						<li><hr class="dropdown-divider"></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('specificSystem')">Specific System</a></li>
 
+					</ul>
+				</li>
+<!--
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Analysis</a>
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-						<!--<a id="nodeConnections" class="dropdown-item" href="#">Node Connections</a> -->
+						<a id="nodeConnections" class="dropdown-item" href="#">Node Connections</a>
 						
 					</ul>
-				</li>			
+				</li>	
+			-->		
 				
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Maintenance</a>

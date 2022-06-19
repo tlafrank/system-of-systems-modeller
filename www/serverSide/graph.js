@@ -1,4 +1,4 @@
-const { format } = require('./db');
+const { format, query } = require('./db');
 const sql = require('./db');
 
 let debugLevel = 7;
@@ -24,196 +24,71 @@ exports.switch = (req,res) => {
 
 
 	switch (req.body.type){
-		case 'Systems_WithOrganisation':
+		case 'Systems_WithOrganisation': //Gets all the systems which are assigned to the organisational nodes provided in id_organisation_arr
 			var arrString = req.body.id_organisation_arr.toString()
 			queryString += sql.format(`
-			SELECT systems.id_system, systems.name AS systemName, systems.image, systems.category, OSMap.quantity, OSMap.id_OSMap, organisation.id_organisation, organisation.name AS orgName
-			FROM OSMap
-			LEFT JOIN systems
-			ON OSMap.id_system = systems.id_system
-			LEFT JOIN organisation
-			ON organisation.id_organisation = OSMap.id_organisation
-			WHERE OSMap.id_organisation IN (${arrString});`)
-
-			//Handle included and excluded tags
-			/*
-			switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
-				case 3:
-					//Both included and excluded tags have been provided
-					queryString += sql.format(`
-					LEFT JOIN tags
-					ON tags.id_system = a.id_system
-					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?) AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [includedTags, excludedTags]);
-					break;
-				case 2:
-					//Only included tags have been provided
-					queryString += sql.format(`
-					LEFT JOIN tags
-					ON tags.id_system = a.id_system
-					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?);`, [includedTags]);
-					break;
-				case 1:
-					//Only excluded tags have been provided
-					queryString += sql.format(`
-					WHERE b.year IS NULL AND a.quantity > 0 AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [excludedTags]);
-					break;
-				case 0:
-					//No tags have been provided
-					queryString += sql.format(`
-					WHERE b.id_system IS NULL AND a.quantity != 0;`)
-				default:
-			}
-			*/
-
-			break;
-		case 'Systems':
-			queryString += sql.format(`SET @inputYear = ?;`, req.body.year)
-			queryString += sql.format(`
-				SELECT a.id_system, name, image, a.quantity, category
-				FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
-				LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
-				ON a.id_system = b.id_system AND a.year < b.year
+				SELECT systems.id_system, systems.name AS systemName, systems.image, systems.category, OSMap.quantity, OSMap.id_OSMap, organisation.id_organisation, organisation.name AS orgName
+				FROM OSMap
 				LEFT JOIN systems
-				ON a.id_system = systems.id_system `);
+				ON OSMap.id_system = systems.id_system
+				LEFT JOIN organisation
+				ON organisation.id_organisation = OSMap.id_organisation
+				WHERE OSMap.id_organisation IN (${arrString});`)
+			break;
+		case 'Systems': //Gets the details of the specific system if id_system was provided. Otherwise, gets the list of systems which exist in the provided year, and which considers the included and excluded tags
+			if(req.body.id_system){
+				queryString += sql.format(`SELECT 1;`)
+				queryString += sql.format(`SELECT * FROM systems WHERE id_system = ?;`, req.body.id_system)
+			} else {
+				queryString += sql.format(`SET @inputYear = ?;`, req.body.year)
+				queryString += sql.format(`
+					SELECT a.id_system, name, image, a.quantity, category
+					FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
+					LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
+					ON a.id_system = b.id_system AND a.year < b.year
+					LEFT JOIN systems
+					ON a.id_system = systems.id_system `);
 
-			//Handle included and excluded tags
-			switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
-				case 3:
-					//Both included and excluded tags have been provided
-					queryString += sql.format(`
-					LEFT JOIN tags
-					ON tags.id_system = a.id_system
-					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?) AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [includedTags, excludedTags]);
-					break;
-				case 2:
-					//Only included tags have been provided
-					queryString += sql.format(`
-					LEFT JOIN tags
-					ON tags.id_system = a.id_system
-					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?);`, [includedTags]);
-					break;
-				case 1:
-					//Only excluded tags have been provided
-					queryString += sql.format(`
-					WHERE b.year IS NULL AND a.quantity > 0 AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [excludedTags]);
-					break;
-				case 0:
-					//No tags have been provided
-					queryString += sql.format(`
-					WHERE b.id_system IS NULL AND a.quantity != 0;`)
-				default:
+				//Handle included and excluded tags
+				switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
+					case 3:
+						//Both included and excluded tags have been provided
+						queryString += sql.format(`
+						LEFT JOIN tags
+						ON tags.id_system = a.id_system
+						WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?) AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [includedTags, excludedTags]);
+						break;
+					case 2:
+						//Only included tags have been provided
+						queryString += sql.format(`
+						LEFT JOIN tags
+						ON tags.id_system = a.id_system
+						WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?);`, [includedTags]);
+						break;
+					case 1:
+						//Only excluded tags have been provided
+						queryString += sql.format(`
+						WHERE b.year IS NULL AND a.quantity > 0 AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?));`, [excludedTags]);
+						break;
+					case 0:
+						//No tags have been provided
+						queryString += sql.format(`
+						WHERE b.id_system IS NULL AND a.quantity != 0;`)
+					default:
+				}				
 			}
-
 			break;
-		case 'Compound':
+		case 'Interfaces': //Gets all system interfaces associated with the the systems provided in id_system_arr
 			queryString += sql.format(`
-			SET @depthCount = 10;
-			WITH RECURSIVE cte AS
-				(SELECT DISTINCT a.id_SMap, a.parent, a.child, 0 AS depth FROM systems
-				LEFT JOIN SMap AS a
-				ON systems.id_system = a.parent
-				WHERE systems.id_system NOT IN (SELECT child FROM SMap)
-				UNION ALL
-				SELECT b.id_SMap, b.parent, b.child, cte.depth + 1 FROM cte, SMap AS b WHERE b.parent = cte.child AND (depth IS NULL OR depth < @depthCount))
-			SELECT * FROM systems 
-			LEFT JOIN cte 
-			ON systems.id_system = cte.child;`)
+				SELECT * 
+				FROM SIMap 
+				LEFT JOIN interfaces 
+				ON SIMap.id_interface = interfaces.id_interface 
+				WHERE SIMap.id_system IN (?) 
+				ORDER BY interfaces.id_interface;`,[req.body.id_system_arr])
 
 			break;
-		case 'Normal':
-			queryString += sql.format(`
-			SET @inputYear = ?;
-			SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
-
-			DROP TABLE IF EXISTS systemsResult, SIResult, SINResult;
-			
-			CREATE TEMPORARY TABLE systemsResult AS
-				(SELECT DISTINCT a.id_system, name, image, a.quantity
-				FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
-				LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
-				ON a.id_system = b.id_system AND a.year < b.year
-				LEFT JOIN systems
-				ON a.id_system = systems.id_system `,req.body.year);
-
-
-
-			//Handle included and excluded tags
-			switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
-				case 3:
-					//Both included and excluded tags have been provided
-					queryString += sql.format(`
-					LEFT JOIN tags
-					ON tags.id_system = a.id_system
-					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?) AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?))`, [includedTags, excludedTags]);
-					break;
-				case 2:
-					//Only included tags have been provided
-					queryString += sql.format(`
-					LEFT JOIN tags
-					ON tags.id_system = a.id_system
-					WHERE b.year IS NULL AND a.quantity > 0 AND tags.tag IN (?)`, [includedTags]);
-					break;
-				case 1:
-					//Only excluded tags have been provided
-					queryString += sql.format(`
-					WHERE b.year IS NULL AND a.quantity > 0 AND a.id_system NOT IN (SELECT DISTINCT id_system FROM tags WHERE tag IN (?))`, [excludedTags]);
-					break;
-				case 0:
-					//No tags have been provided
-					queryString += sql.format(`
-					WHERE b.id_system IS NULL AND a.quantity != 0`)
-				default:
-			}
-
-			queryString += sql.format(`
-			);
-			SELECT * FROM systemsResult;
-			
-			#Get each system's interface
-			CREATE TEMPORARY TABLE SIResult AS
-				(SELECT SIMap.id_SIMap, SIMap.id_system, interfaces.*
-				FROM interfaces
-				LEFT JOIN SIMap
-				ON interfaces.id_interface = SIMap.id_interface
-				WHERE SIMap.id_system IN (SELECT id_system FROM systemsResult));
-			SELECT * FROM SIResult;
-			
-			#Get the networks associated with each system's interfaces
-			CREATE TEMPORARY TABLE SINResult AS
-				(SELECT SIMap.id_system, SINMap.id_SINMap, SINMap.id_SIMap, SINMap.category AS linkCategory, networks.*, technologies.category AS technologyCategory
-					FROM SIMap
-					LEFT JOIN SINMap
-					ON SIMap.id_SIMap = SINMap.id_SIMap
-					LEFT JOIN networks
-					ON networks.id_network = SINMap.id_network
-					LEFT JOIN technologies
-					ON technologies.id_technology = networks.id_technology
-					WHERE SINMap.id_SIMap IN (SELECT id_SIMap FROM SIResult));
-			SELECT * FROM SINResult;
-			
-			#Statistics
-			SELECT SIResult.id_interface, SIResult.id_system, SIResult.name AS interfaceName, systemsResult.name AS systemName, systemsResult.quantity, COUNT(id_interface) AS interfaceQtyPerIndividualSystem, (systemsResult.quantity * COUNT(id_interface)) AS interfaceTotalAcrossEachSystemInYear
-			FROM SIResult
-			LEFT JOIN systemsResult
-			ON systemsResult.id_system = SIResult.id_system
-			GROUP BY id_interface, SIResult.id_system
-			ORDER BY id_interface;
-
-			#Networks and the quantity of their connections
-			(SELECT SINResult.id_network, networks.*, COUNT(SINResult.id_network) AS qtyConnections
-			FROM SINResult
-			LEFT JOIN networks
-			ON SINResult.id_network = networks.id_network
-			GROUP BY SINResult.id_network);`);
-
-			break;
-		case 'Interfaces':
-			var arrString = req.body.id_system_arr.toString()
-			queryString += sql.format(`SELECT * FROM SIMap LEFT JOIN interfaces ON SIMap.id_interface = interfaces.id_interface WHERE SIMap.id_system IN (${arrString}) ORDER BY interfaces.id_interface;`)
-
-			break;
-		case 'Links':
-			var arrString = req.body.id_SIMap_arr.toString()
+		case 'Links': //Gets all links associated with the system interfaces provided in id_SIMap_arr
 			queryString += sql.format(`
 				SELECT networks.*, SINMap.id_SINMap, SINMap.id_SIMap, SINMap.category AS linkCategory, technologies.category as technologyCategory, SIMap.id_system
 				FROM SINMap
@@ -223,12 +98,32 @@ exports.switch = (req,res) => {
 				ON networks.id_network = SINMap.id_network
 				LEFT JOIN technologies
 				ON technologies.id_technology = networks.id_technology
-				WHERE SIMap.id_SIMap IN (${arrString}) AND SINMap.category != 'incapable';`)
+				WHERE SIMap.id_SIMap IN (?)`,[req.body.id_SIMap_arr])
 			break;
-		case 'ChildrenSystems':
-			var arrString = req.body.id_system_arr.toString()
+		case 'Subsystems': // Returns the system provided at id_system_arr and their children, by depth
+			
+			//Might break things, as this returns the system (add a 'WHERE cte.depth > 0' to the last statement)
+			queryString += sql.format(`WITH RECURSIVE cte (id_SMap, depth, topSystem, immediateParent, id_system) AS
+				(
+					SELECT 0, 0, systems.id_system, 0, systems.id_system FROM systems WHERE systems.id_system IN (?)
+					UNION ALL
+					SELECT SMap.id_SMap, cte.depth + 1, cte.topSystem, SMap.parent, SMap.child FROM cte LEFT JOIN SMap ON cte.id_system = SMap.parent
+					WHERE SMap.parent IS NOT NULL
+				)
+				SELECT cte.id_SMap, cte.depth, cte.topSystem, cte.immediateParent, systems.* FROM cte LEFT JOIN systems ON cte.id_system = systems.id_system`,[req.body.id_system_arr])
+			if(req.body.startDepth){
+				queryString += sql.format(` WHERE depth >= ?;`,[req.body.startDepth])
+			} else {
+				queryString += `;`
+			}
 
-			queryString += sql.format(`SELECT * FROM SMap LEFT JOIN systems ON systems.id_system = SMap.child WHERE SMap.parent IN (${arrString});`)
+			//Immediate children only
+			// queryString += sql.format(`
+			// 	SELECT * 
+			// 	FROM SMap 
+			// 	LEFT JOIN systems 
+			// 	ON systems.id_system = SMap.child 
+			// 	WHERE SMap.parent IN (${arrString});`)
 
 			/*
 			Doesn't get all results for some reason
@@ -241,10 +136,8 @@ exports.switch = (req,res) => {
 				SELECT * FROM cte LEFT JOIN systems ON cte.child = systems.id_system;`)
 			*/
 			break;
-		case 'ChildrenSystems_WithOrganisation':
-			var arrString_sys = req.body.id_system_arr.toString()
-			var arrString_org = req.body.id_organisation_arr.toString()
-
+		case 'ChildrenSystems_WithOrganisation': //Gets the immediate children
+		//Needs to be recursive to get subsystems to a particular depth?
 			queryString += sql.format(`
 				SELECT SMap.id_SMap, OSMap.id_OSMap, OSMap.id_organisation, SMap.parent, systems.id_system, systems.name, systems.image, systems.category
 				FROM OSMap
@@ -252,61 +145,28 @@ exports.switch = (req,res) => {
 				ON SMap.parent = OSMap.id_system
 				LEFT JOIN systems
 				ON systems.id_system = SMap.child
-				WHERE OSMap.id_system IN (${arrString_sys}) AND OSMap.id_organisation IN (${arrString_org});`)
+				WHERE OSMap.id_system IN (?) AND OSMap.id_organisation IN (?);`,[req.body.id_system_arr,req.body.id_organisation_arr])
 
 			break;
-		case 'AllDistributedSubsystems':
-			queryString += sql.format(`SELECT DISTINCT systems.* FROM SMap LEFT JOIN systems ON systems.id_system = SMap.child WHERE systems.distributedSubsystem = true;`)
+		case 'AllDistributedSubsystems': //Gets all unique distributed subsystems
+			queryString += sql.format(`SELECT * FROM systems WHERE systems.distributedSubsystem = TRUE;`);
 			break;
-		case 'ParentsOfChildren':
-			var arrString = req.body.id_children_arr.toString()
-			queryString += sql.format(`SELECT * 
-			FROM SMap 
-			LEFT JOIN systems 
-			ON systems.id_system = SMap.parent
-			WHERE SMap.child IN (${arrString});`)
-			break;
-		case 'ParentsOfChildren2':
-			
-			queryString += sql.format(`
-				WITH RECURSIVE cte (parent, child, depth) AS
-				(
-					SELECT a.parent, a.child, 0 FROM SMap AS a LEFT JOIN systems ON systems.id_system = a.child WHERE isSubsystem = TRUE
-					UNION ALL
-					SELECT cte.child, b.child, depth + 1 FROM cte LEFT JOIN SMap AS b ON b.parent = cte.child WHERE b.child IS NOT NULL
-					LIMIT 100
-				)
-				SELECT cte.parent, a.name AS parentName, a.image AS parentImage, cte.child, b.name AS childName, b.image AS childImage, cte.depth
-				FROM cte
-				LEFT JOIN systems AS a
-				ON a.id_system = cte.parent
-				LEFT JOIN systems AS b
-				ON b.id_system = cte.child
-				WHERE b.distributedSubsystem IS TRUE AND `)
-
-				if(req.body.deepSubsystems) {
-					queryString += sql.format(`depth > 0;`)
-				} else {
-					queryString += sql.format(`depth = 0;`)
-				}
-
-			break;
-		case 'InterfaceQuantitiesInYear':
+		case 'InterfaceQuantitiesInYear': //Get all interfaces (and their quantities) which are present in systems for a given year
 			queryString = sql.format(`
-			SET @year = ?;
-			SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
+				SET @year = ?;
+				SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 
-			DROP TABLE IF EXISTS systemsResult, SIResult, SINResult;
+				DROP TABLE IF EXISTS systemsResult, SIResult, SINResult;
 
-			#Get the systems present in the provided year
-			CREATE TEMPORARY TABLE systemsResult AS
-				SELECT DISTINCT a.id_system, name, image, a.quantity 
-				FROM (SELECT * FROM quantities WHERE year <= @year) AS a
-				LEFT JOIN (SELECT * FROM quantities WHERE year <= @year) AS b
-				ON a.id_system = b.id_system AND a.year < b.year
-				LEFT JOIN systems
-				ON a.id_system = systems.id_system`, [req.body.year])
-				
+				#Get the systems present in the provided year
+				CREATE TEMPORARY TABLE systemsResult AS
+					SELECT DISTINCT a.id_system, name, image, a.quantity 
+					FROM (SELECT * FROM quantities WHERE year <= @year) AS a
+					LEFT JOIN (SELECT * FROM quantities WHERE year <= @year) AS b
+					ON a.id_system = b.id_system AND a.year < b.year
+					LEFT JOIN systems
+					ON a.id_system = systems.id_system`, [req.body.year])
+					
 			//Handle included and excluded tags
 			switch (2 * (includedTags.length>0) + 1 * (excludedTags.length>0)){
 				case 3:
@@ -346,7 +206,7 @@ exports.switch = (req,res) => {
 				GROUP BY id_interface
 				ORDER BY interfaces.id_interface;`)
 			break;
-		case 'Issues':
+		case 'Issues': //Get all issues associated with the interfaces for a given year
 			queryString = sql.format(`
 			SET @inputYear = ?;
 			SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
@@ -420,21 +280,21 @@ exports.switch = (req,res) => {
 			break;
 		case 'QuantityOfInterfacesPerSystem':
 			queryString += sql.format(`
-			SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
-			SET @inputYear = ?;
-			SELECT interfaces.id_interface, a.id_system, systems.name AS systemName, systems.image AS systemImage, a.quantity AS qtySystems,  interfaces.name AS interfaceName, COUNT(SIMap.id_SIMap) AS qtyEachSystem
-			FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
-			LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
-			ON a.id_system = b.id_system AND a.year < b.year
-			LEFT JOIN systems
-			ON a.id_system = systems.id_system
-			LEFT JOIN SIMap
-			ON systems.id_system = SIMap.id_system
-			LEFT JOIN interfaces
-			ON interfaces.id_interface = SIMap.id_interface
-			WHERE b.id_system IS NULL AND a.quantity != 0 AND systems.id_system IN (${req.body.id_system_arr}) AND interfaces.id_interface IS NOT NULL
-			GROUP BY interfaces.id_interface, systems.id_system
-			ORDER BY interfaces.id_interface, systemName;`, req.body.year)
+				SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
+				SET @inputYear = ?;
+				SELECT interfaces.id_interface, a.id_system, systems.name AS systemName, systems.image AS systemImage, a.quantity AS qtySystems,  interfaces.name AS interfaceName, COUNT(SIMap.id_SIMap) AS qtyEachSystem
+				FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
+				LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
+				ON a.id_system = b.id_system AND a.year < b.year
+				LEFT JOIN systems
+				ON a.id_system = systems.id_system
+				LEFT JOIN SIMap
+				ON systems.id_system = SIMap.id_system
+				LEFT JOIN interfaces
+				ON interfaces.id_interface = SIMap.id_interface
+				WHERE b.id_system IS NULL AND a.quantity != 0 AND systems.id_system IN (${req.body.id_system_arr}) AND interfaces.id_interface IS NOT NULL
+				GROUP BY interfaces.id_interface, systems.id_system
+				ORDER BY interfaces.id_interface, systemName;`, req.body.year)
 
 		break;
 		case 'GetAllOrganisationalNodesBelow': //Returns the id_organisations of the seed node (id_organisation) and all nodes below.
@@ -448,11 +308,71 @@ exports.switch = (req,res) => {
 			)
 			SELECT organisation.*, OMap.parent FROM cte LEFT JOIN organisation ON cte.orgNode = organisation.id_organisation LEFT JOIN OMap ON OMap.child = organisation.id_organisation;`, [req.body.id_organisation])
 			break;
+		case 'SystemToSubsystems': //Gets the links between systems and their subsystems, for the systems provided at id_system_arr
+			queryString += sql.format(`
+				SELECT *
+				FROM SMap
+				LEFT JOIN systems AS a
+				ON SMap.child = a.id_system
+				WHERE SMap.parent IN (?) AND a.distributedSubsystem = TRUE;`,[req.body.id_system_arr])
+			break;
+		case 'DistributedSubsystemAssociations': //Get the associations between subsystems
+			queryString += sql.format(`
+				SELECT SMap.* 
+				FROM systems AS a
+				LEFT JOIN SMap
+				ON SMap.parent = a.id_system
+				LEFT JOIN systems AS b
+				ON SMap.child = b.id_system
+				WHERE a.distributedSubsystem = TRUE AND b.distributedSubsystem = TRUE;
+				`)
+
+			break;
+		case 'LinksForAssociatedSystems': //Draw links between systems which do not have a distributed subsystem attached
+			queryString += sql.format(`
+				SELECT AMap.id_AMap, AMap.source, c.name , AMap.destination, d.name, networks.id_network, networks.name, technologies.category AS technologyCategory, SINMap.category AS linkCategory
+				FROM AMap
+				LEFT JOIN SIMap ON SIMap.id_system = AMap.source
+				LEFT JOIN SINMap ON SINMap.id_SIMap = SIMap.id_SIMap
+				LEFT JOIN networks ON networks.id_network = SINMap.id_network
+				LEFT JOIN technologies ON technologies.id_technology = networks.id_technology
+				LEFT JOIN SINMap AS a ON a.id_network = networks.id_network
+				LEFT JOIN SIMap AS b ON b.id_SIMap = a.id_SIMap
+				LEFT JOIN systems AS c ON c.id_system = AMap.source
+				LEFT JOIN systems AS d ON d.id_system = AMap.destination
+				WHERE
+					AMap.source IN (?)
+					AND b.id_system = AMap.destination
+				;
+				`,[req.body['id_system_arr!']])
+
+			// queryString += sql.format(`
+			// 	SELECT a.id_SINMap, systems.id_system, systems.name, c.id_system AS destinationId, c.name AS destinationName, technologies.category AS technologyCategory
+			// 	FROM systems
+			// 	LEFT JOIN SIMap ON SIMap.id_system = systems.id_system
+			// 	LEFT JOIN SINMap ON SINMap.id_SIMap = SIMap.id_SIMap
+			// 	LEFT JOIN networks ON networks.id_network = SINMap.id_network
+			// 	LEFT JOIN technologies ON technologies.id_technology = networks.id_technology
+			// 	LEFT JOIN SINMap AS a ON a.id_network = networks.id_network
+			// 	LEFT JOIN SIMap AS b ON b.id_SIMap = a.id_SIMap
+			// 	LEFT JOIN systems AS c ON c.id_system = b.id_system
+			// 	WHERE 
+			// 		#technologies.category IN ('terresterialNB','terresterialWB', 'satelliteWB')
+			// 		systems.id_system IN (${arrStringOut})
+			// 		AND c.id_system IN (${arrStringIn})
+			// 		AND a.category = 'primary'
+			// 		AND SINMap.category = 'primary'
+			// 		AND SINMap.id_SINMap != a.id_SINMap
+			// 		;`)
+					
+			break;
+		case 'AllSystems': //Regardless of years
+			queryString += sql.format(`
+				SELECT * FROM systems WHERE systems.isSubsystem = FALSE;`)
+
+
+			break;
 	}
-
-
-
-
 
 	executeQuery(queryString).then((result) => { 
 		//res.json(result);
@@ -464,11 +384,11 @@ exports.switch = (req,res) => {
 			case 'QuantityOfInterfacesPerSystem':
 				res.json(result[2])
 				break;
-			case 'Issues':
-				res.json(result[6]);
 			case 'InterfaceQuantitiesInYear':
 				res.json(result[4]);
-				break;
+				break;	
+			case 'Issues':
+				res.json(result[6]);
 			case 'Normal':
 				res.json([result[4], result[6], result[8], result[9], result[10]]) 
 			break;

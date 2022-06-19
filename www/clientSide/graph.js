@@ -50,16 +50,20 @@ async function commonGraph(definition){
 					postData[element.columnName] = sosm[element.sosmName]
 				break;
 				case 'toServer_fromDefinition':
-					postData[element.columnName] = definition[element.definitionName]
+					if (definition[element.definitionName]){
+						postData[element.columnName] = definition[element.definitionName]
+					}
 				break;
 
 				case 'toServer_fromObject':
 					postData[element.columnName] = true;
 				break;
-				case '':
+				case 'toServer_fromGraphConstant':
+					postData[element.columnName] = element.value;
 				break;
 
-				case '':
+				case 'toServer_fromLocalConstant':
+					postData[element.columnName] = element.value;
 				break;
 				case '':
 				break;
@@ -94,103 +98,158 @@ async function commonGraph(definition){
 
 
 		graph[definition.graph].iterations[i].afterServerInstructions.forEach((element) => {
+
 			switch (element.action){
-				case 'buildGraphObject_nodes': //Prepare and add nodes to the graph
+
+				case 'nodeOrEdge': //Prepare nodes or edges for adding to the cy graph
+					//debug(1, 'element is: ', element)
+					//Check the conditions to ensure that this particular result set should be added to the cy graph
 					if (checkConditions(element.conditions)){
-						result.forEach((node) => {
-							var tempNode = {}
-							tempNode.group = 'nodes'
-							tempNode.data = {}
-							tempNode.classes = ''
+						//Process each row in the resultset
+						result.forEach((row) => {
+							var tempElement = {}
+							tempElement.group = element.group
+							tempElement.data = {}
+							tempElement.classes = ''
+
+							//Process each row according to the instructions in element.fields
 							element.fields.forEach((field) => {
 								var str = '';
-								if(typeof field.format !== 'undefined'){
-									field.format.forEach((format) => {
-										if (node[format.columnName] !== null){	
-											if (format.leadingText){
-												str += format.leadingText
-											}
-											if (format.columnName){
-												str += node[format.columnName]
-											}
+								switch (field.action){
+									case 'fromResult':
+										str = field.format
+										for (var i = 0; i < field.columnNames.length; i++){
+											str = str.replace(`<${i}>`, row[field.columnNames[i]])
 										}
-									})									
-								} else {
-									switch(field.nodeName){
-										case 'lineColor': //Handle node border colours
-											str = 'grey'
-											if (typeof node[field.columnName] !== 'undefined' && node[field.columnName] != null ){
-												str = categories[field.constantName].find(x => x.value == node[field.columnName]).color
-											}											
-											break;
-										default:
-									}									
+										
+										break;
+									case 'fromConstant':
+										str = field.default
+										if (typeof row[field.columnName] !== 'undefined' && row[field.columnName] != null ){
+											str = categories[field.constantName].find(x => x.value == row[field.columnName]).color
+										}	
+										break;
+									case 'fromDefault':
+										str = field.default
+										break;
 								}
-								tempNode.data[field.nodeName] = str;
+								tempElement.data[field.nodeName] = str;
 							})
 							
 							//Handle classes
 							if (element.classes){
 								element.classes.forEach((className) => {
-									tempNode.classes += className + ' ';
+									tempElement.classes += className + ' ';
 								})
 							}
+
 							//Handle existing position
-							if (element.position){
-								if(sosm.positions.find(x => x.id == tempNode.data.id)){
-									tempNode.position = sosm.positions.find(x => x.id == tempNode.data.id).position
+							if (element.position && sosm.positions){
+								if(sosm.positions.find(x => x.id == tempElement.data.id)){
+									tempElement.position = sosm.positions.find(x => x.id == tempElement.data.id).position
 								}
 							}
-							sosm.nodes[element.sosmNodeName].push(tempNode)
+							sosm.nodes[element.sosmNodeName].push(tempElement)
 						})						
 					}
-
 					break;
-				case 'buildGraphObject_edges':
-					//debug(1, 'Checking', element.conditions)
-					if (checkConditions(element.conditions)){
-						//debug(1, 'executing')
-						result.forEach((edge) => { //Iterate through each edge in the result
-							var tempEdge = {};
-							tempEdge.group = 'edges';
-							tempEdge.data = {};
+				// case 'buildGraphObject_nodes': //Prepare and add nodes to the graph
+				// 	if (checkConditions(element.conditions)){
+				// 		result.forEach((node) => {
+				// 			var tempNode = {}
+				// 			tempNode.group = 'nodes'
+				// 			tempNode.data = {}
+				// 			tempNode.classes = ''
+
+				// 			element.fields.forEach((field) => {
+				// 				var str = '';
+				// 				if(typeof field.format !== 'undefined'){
+				// 					field.format.forEach((format) => {
+				// 						if (node[format.columnName] !== null){	
+				// 							if (format.leadingText){
+				// 								str += format.leadingText
+				// 							}
+				// 							if (format.columnName){
+				// 								str += node[format.columnName]
+				// 							}
+				// 						}
+				// 					})									
+				// 				} else {
+				// 					switch(field.nodeName){
+				// 						case 'lineColor': //Handle node border colours
+				// 							str = 'grey'
+				// 							if (typeof node[field.columnName] !== 'undefined' && node[field.columnName] != null ){
+				// 								str = categories[field.constantName].find(x => x.value == node[field.columnName]).color
+				// 							}											
+				// 							break;
+				// 						default:
+				// 					}									
+				// 				}
+				// 				tempNode.data[field.nodeName] = str;
+				// 			})
 							
-							element.fields.forEach((field) => { //Handle the build of each property required for the cy graph
-								var str = '';
-								field.format.forEach((format) => {
-									if (edge[format.columnName] !== null){
-										if (format.leadingText){
-											str += format.leadingText
-										}
-										if (format.columnName){
-											str += edge[format.columnName]
-										}
-									}
-								})
-								//debug(1, edge)
-								tempEdge.data[field.nodeName] = str;
-							})
+				// 			//Handle classes
+				// 			if (element.classes){
+				// 				element.classes.forEach((className) => {
+				// 					tempNode.classes += className + ' ';
+				// 				})
+				// 			}
+				// 			//Handle existing position
+				// 			if (element.position && sosm.positions){
+				// 				if(sosm.positions.find(x => x.id == tempNode.data.id)){
+				// 					tempNode.position = sosm.positions.find(x => x.id == tempNode.data.id).position
+				// 				}
+				// 			}
+				// 			sosm.nodes[element.sosmNodeName].push(tempNode)
+				// 		})						
+				// 	}
+
+				// 	break;
+				// case 'buildGraphObject_edges':
+				// 	//debug(1, 'Checking', element.conditions)
+				// 	if (checkConditions(element.conditions)){
+				// 		//debug(1, 'executing')
+				// 		result.forEach((edge) => { //Iterate through each edge in the result
+				// 			var tempEdge = {};
+				// 			tempEdge.group = 'edges';
+				// 			tempEdge.data = {};
 							
-							//Line colours
-							tempEdge.data.lineColor = 'black'
-							if (typeof edge.technologyCategory !== 'undefined'){
-								tempEdge.data.lineColor = categories.technology.find(x => x.value == edge.technologyCategory).color
-							}
+				// 			element.fields.forEach((field) => { //Handle the build of each property required for the cy graph
+				// 				var str = '';
+				// 				field.format.forEach((format) => {
+				// 					if (edge[format.columnName] !== null){
+				// 						if (format.leadingText){
+				// 							str += format.leadingText
+				// 						}
+				// 						if (format.columnName){
+				// 							str += edge[format.columnName]
+				// 						}
+				// 					}
+				// 				})
+				// 				//debug(1, edge)
+				// 				tempEdge.data[field.nodeName] = str;
+				// 			})
 							
-							//Handle classes
-							if (element.classes){
-								element.classes.forEach((className) => {
-									tempEdge.classes += className + ' ';
-								})
-							}
+				// 			//Line colours
+				// 			tempEdge.data.lineColor = 'black'
+				// 			if (typeof edge.technologyCategory !== 'undefined'){
+				// 				tempEdge.data.lineColor = categories.technology.find(x => x.value == edge.technologyCategory).color
+				// 			}
+							
+				// 			//Handle classes
+				// 			if (element.classes){
+				// 				element.classes.forEach((className) => {
+				// 					tempEdge.classes += className + ' ';
+				// 				})
+				// 			}
 
-							sosm.nodes[element.sosmNodeName].push(tempEdge);
-						})
-					}
+				// 			sosm.nodes[element.sosmNodeName].push(tempEdge);
+				// 		})
+				// 	}
 
 
 
-					break;
+				// 	break;
 
 
 				case 'buildGraphObject_links':
@@ -265,6 +324,17 @@ if(element.designation){
 					})
 					//debug(1,'getSystemIds', sosm[element.sosmName])
 					break;
+				case 'removeFromArr':
+
+					result.forEach((row) => {
+						var index = sosm[element.sosmName].indexOf(row[element.columnName])
+						if (index > -1){
+							sosm[element.sosmName].splice(index, 1);
+						}
+
+					})
+
+					break;
 				case 'getComplexDataFromResult'://Improve before reusing (for multiple defs)
 					sosm[element.sosmName] = []
 					result.forEach((node) => {
@@ -306,6 +376,8 @@ if(element.designation){
 
 
 					break;
+
+					
 				case 'buildIssuesObject':
 					sosm.issues = []
 					var interfaceId = 0;
@@ -495,13 +567,8 @@ break;
 }
 
 
-
-
-
-
-function checkConditions(conditions){
+function checkConditions(conditions, element){
 	var execute = false;
-	//if ((typeof element.displayIf === 'undefined') || (sosm.display[element.displayIf])){
 	conditions.forEach((condition) => {
 		switch (condition.type){
 			case 'alwaysRun':
@@ -513,11 +580,15 @@ function checkConditions(conditions){
 			case '!checkLocalStorage':
 				if(parseInt(localStorage.getItem(condition.localStorageName)) === 0){ execute = true }
 				break;
+			case 'checkLocalStorageAgainstElement':
+				if(parseInt(localStorage.getItem(condition.localStorageName)) === 1 && element[condition.columnName] == condition.value){
+					execute = true
+				}
+				break;
 			default:
 				debug(1, `Switch default. Shouldn't make it here in checkConditions()`);
 		}
 	})
-	//debug(1, 'checkConditions() result is ' + execute)
 	return execute
 }
 
