@@ -40,7 +40,12 @@ async function commonGraph(definition){
 					postData[element.columnName] = parseInt(localStorage.getItem(element.sourceName))
 					break;
 				case 'toServer_fromLocalStorage_arr':
-					var arr = JSON.parse(localStorage.getItem(element.sourceName))
+					debug(1,'is',localStorage.getItem(element.sourceName))
+					if (localStorage.getItem(element.sourceName) !== ''){
+						var arr = JSON.parse(localStorage.getItem(element.sourceName))
+					} else {
+						var arr = []
+					}
 					if (arr.length > 0){postData[element.columnName] = arr}
 					break;
 				case 'setSosmDisplay_fromLocalStorage':

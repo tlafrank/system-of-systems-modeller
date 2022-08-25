@@ -478,3 +478,8 @@ function mappingModal_deleteButton(idToDelete){
 function savePositions(){
 	localStorage.setItem('positions', JSON.stringify(sosm.positions))
 }
+
+//Debug function to chase a problem where there is nothing in localStorage initially
+function resetLocalStorage(){
+	localStorage.clear()
+}

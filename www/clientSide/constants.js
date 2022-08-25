@@ -1,5 +1,5 @@
 /**
- * @description Labels for the issue severity. Uncomment if privateConstants.js is not used
+ * @description Objects to support graph production
  * 
  */
 const graph = {
@@ -931,7 +931,6 @@ const modals = {
 	mapSystems: {
 		title: 'Map Subsystems to Systems',
 		formButtons: [
-			//{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
 			{type: 'cancel', id: 'buttonCancel', label: 'Close', initialState: 'unlock'},
 		],
 		formFields: [
@@ -949,13 +948,21 @@ const modals = {
 		
 		iterations: [
 			{ //Get the systems for the parent system select
-				type: 'AllSubsystems',
+				type: 'AllSystems',
 				definitionFields: [],
 				continueOnUndefined: true,
 				instructions: [
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'parentSystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'parentSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'parentSystem', definition: 'id_system', dataAttr: 'id_system'},
+
+				],
+			},
+			{ //Get the subsystems for the available subsystems box
+				type: 'AllSubsystems',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'droppableElements', id: 'availableChildSystems', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'removeElement', id: 'availableChildSystems span', dataAttr: 'id_system', definitionName: 'id_system' },
 				],
@@ -1332,18 +1339,9 @@ const modals = {
 			{ type: 'heading', id: 'headingSubsystemName', align: 'center'},
 			{ type: 'text', id: 'textSubsystemName', label: 'Name'},
 			{ type: 'textarea', id: 'textSubsystemDescription', label: 'Description' },
-			{ type: 'select', id: 'selectCategory', label: 'Category'},
 			{ type: 'checkbox', id: 'chkDistributedSystem', label: 'Distributed Subsystem' },
-			
-			//{ type: 'text', id: 'textSystemReferences', label: 'Subsystem Block Diagram Reference', append: {
-			//	id: 'subsystemReferenceDropZone', label: '&#8595'
-			//} },
-			//{ type: 'text', id: 'textSystemTags', label: 'Tag List (Comma separated)'},
 			{ type: 'buttons', buttons: [
 				{ id: 'buttonIcons', label: 'Choose Icon'},
-				//{ id: 'buttonSystemQuantities', label: 'Map Systems to Years'},
-				//{ id: 'buttonUpdateSystemInterfaces', label: 'Attach Interfaces & Connect Links'},
-				//{ id: 'buttonSystemRelationships', label: 'System Relationships'},
 			]}
 
 		],
@@ -1351,7 +1349,7 @@ const modals = {
 			{id: 'textSubsystemName', on: 'input'},
 			{id: 'textSubsystemDescription', on: 'input'},
 			{id: 'chkDistributedSystem', on: 'input'},
-			{id: 'selectCategory', on: 'change'},
+			//{id: 'selectCategory', on: 'change'},
 		],
 		lockOnChange: ['selectSubsystem','buttonNew','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces'], //The ID of the controls to lock when editing an object
 		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
@@ -1376,8 +1374,8 @@ const modals = {
 					{action: 'setDefinition_SingleValue', id: 'image', columnName: 'image'},
 					{action: 'setControl_SingleValue',  id: 'textSubsystemName', type: 'text', columnName: 'name'},
 					{action: 'setControl_SingleValue', id: 'textSubsystemDescription', type: 'text', columnName: 'description'},
-					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'systems', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
-					{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
+					//{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'systems', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
+					//{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_SingleValue', id: 'chkDistributedSystem', type: 'checkbox', columnName: 'distributedSubsystem'},
 					{action: 'setControl_Focus', id: 'selectSubsystem'}
 				]
@@ -1425,7 +1423,7 @@ const modals = {
 					{action: 'toServer_ControlValue', id: 'imageSubsystem',  type: 'image', columnName: 'image'},
 					{action: 'toServer_ControlValue', id: 'textSubsystemDescription',  type: 'text', columnName: 'description'},
 					{action: 'toServer_ControlValue', id: 'chkDistributedSystem',  type: 'checkbox', columnName: 'distributedSubsystem'},
-					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
+					//{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
 				],
 				cleanup: [
 					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},
@@ -2548,21 +2546,3 @@ const modals = {
 }
 
 
-/*
-iterations.instructions
-{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
-
-
-
-events.instructions
-{action: 'setControl_SingleValue', type: 'image', id: 'imageInterface', columnName: 'image'},
-{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectInterfaces', columnName: 'name', attr: {name: 'id_interface', columnName: 'id_interface'}},
-{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectInterfaces', definition: 'id_interface', dataAttr: 'id_interface'},
-{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'parentSystem', definitionName: 'id_system', dataAttr: 'id_system'},
-{action: 'toServer_DefinitionValue', definitionName: 'id_organisation', columnName: 'id_organisation'},
-
-
-events.cleanup
-{action: 'reload'},
-
-*/

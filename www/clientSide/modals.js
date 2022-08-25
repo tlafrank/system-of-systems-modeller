@@ -246,7 +246,12 @@ function commonModal_actions(definition, element, postData, result){
 			$('#' + element.id).focus()
 			break;
 		case 'setControl_MultipleValues_FromLocalStorage':
-			var value = JSON.parse(localStorage.getItem(element.localStorageName));
+			if (localStorage.getItem(element.localStorageName) !== ''){
+				var value = JSON.parse(localStorage.getItem(element.localStorageName));
+			} else {
+				var value = [];
+			}
+			
 			let value2 = []
 			value.forEach((element) => {
 				value2.push({tag: element})
