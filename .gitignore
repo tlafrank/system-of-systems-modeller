@@ -2,7 +2,7 @@ www/node_modules
 www/images
 package-lock.json
 private/
-src/
+www/src/*
 www/assets/*.map
 www/assets/*.css
 www/assets/*.js
