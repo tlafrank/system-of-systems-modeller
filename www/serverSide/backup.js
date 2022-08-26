@@ -23,14 +23,13 @@ const tableList = [
 	'quantities',
 	'interfaceIssues',
 	'issuesToSystemsMap',
-	'classes',
-	'systemClassMap',
 	'tags',
 	'dataExchanges',
 	'organisation',
 	'OMap',
 	'OSMap',
-	'SMap'
+	'SMap',
+	'AMap'
 ];
 
 exports.run = (req,res) => {
