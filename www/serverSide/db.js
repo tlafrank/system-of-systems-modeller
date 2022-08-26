@@ -4,9 +4,9 @@ const mysql = require('mysql2');
 //Database connection details
 var connection = mysql.createConnection({
 	host: 'localhost',
-	user: process.env.LCS_USER,
-	password: process.env.LCS_PASS,
-	database: process.env.LCS_DB,
+	user: process.env.SOSM_USER,
+	password: process.env.SOSM_PASS,
+	database: process.env.SOSM_DB,
 	multipleStatements: true
 });
 

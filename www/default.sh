@@ -1,9 +1,16 @@
 #!/bin/bash
 
-export LCS_USER=sosmUser
-export LCS_DB=db_sosm
-export LCS_PASS=dnRk384!djrLdo}836w:
-export LCS_PORT=$((3000+UID))
-echo "Starting LIF Tool with main DB ($LCS_USER - $LCS_DB - $LCS_PORT)"
+export SOSM_USER=sosmUser
+export SOSM_DB=db_sosm
+export SOSM_PASS=dnRk384!djrLdo}836w:
+
+read -p "Which port would you like to start the server on (Above 3000 recommended): " port
+
+export SOSM_PORT=$port
+
+echo "Starting SOSM with main DB ($SOSM_USER - $SOSM_DB - $SOSM_PORT)"
+
 #nodejs app.js
+
+#Nodemon automattically reloads the nodeJS server on changes to web apps files
 nodemon www/app.js
