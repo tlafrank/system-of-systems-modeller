@@ -7,7 +7,6 @@ async function commonGraph(definition){
 	$('#nodeDetailsTable').empty();
 	$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
 
-
 	
 	for(var i = 0; i < graph[definition.graph].iterations.length; i++){
 

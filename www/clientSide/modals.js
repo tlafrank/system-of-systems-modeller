@@ -1,8 +1,3 @@
-//Systems modal doesnt save icon appropriately when changing (form isnt locked out until update is selected)
-//Update link technology isnt locking out the buttons as expected
-//Update link isnt locking out new link buttons as expected
-//Clicking on edit node button when an interface is selected fails to correctly load that interface
-//Update links choose icon button is broken
 
 async function commonModal(definition){
 	/*
@@ -372,6 +367,12 @@ function commonModal_actions(definition, element, postData, result){
 			})
 			localStorage.setItem(element.localStorageName, JSON.stringify(resultArray));
 
+			break;
+		case 'setSessionStorageFromConstant':
+			sessionStorage.setItem(element.sessionStorageName, element.value);
+			break;
+		case 'setSessionStorageFromDefinition':
+			sessionStorage.setItem(element.sessionStorageName, definition[element.definitionName]);
 			break;
 		case 'launchFunction':
 			window[element.functionName]()

@@ -36,7 +36,7 @@ $(document).ready(function(){
 
 //Load the appropriate main pane data
 async function pageSwitch(page){
-	debug(1,'In pageSwitch()')
+	debug(1,`In pageSwitch() with page:`)
 
 	if (!page){
 		if (sessionStorage.getItem('currentPage') === null){
@@ -45,8 +45,15 @@ async function pageSwitch(page){
 			page = sessionStorage.getItem('currentPage');
 		}
 	}
+	debug(1, page)
 
 	switch (page){
+		case 'specificSystem':
+			$('#mainPaneContainer').empty();
+			displayTags('#mainPaneContainer');
+			$('#mainPaneContainer').append(`<div class="row"><div class="col"><div id="cy" class="px-1 w-100"></div></div></div>`);
+			commonGraph({graph: page, id_system: sessionStorage.getItem('id_system')})
+			break;	
 		case 'standard':
 			sessionStorage.setItem('currentPage', page);
 			$('#mainPaneContainer').empty();

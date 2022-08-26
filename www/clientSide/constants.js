@@ -472,6 +472,165 @@ const graph = {
 			},
 		]
 	},
+
+	specificSystem: { //Node name prefix: g1
+		title: 'Standard Graph',
+		//Naming Convention
+		//System Nodes: 					g1_node_system_<id_system>_<id_system>
+		//Subsystem Nodes: 					g1_node_system_<id_system>_<id_system>
+		//SystemInterface Nodes: 			g1_node_systemInterface_<id_SIMap>
+		//Link Nodes: 						g1_node_link_<id_SINMap>
+		//System-System Interface Edges: 	g1_edge_System_<id_system>_SystemInterface_<id_SIMap>
+		//System-Link Edges: 				g1_edge_System_<id_system>_Link_<id_SINMap>
+		//SystemInterface-Link Edges: 		g1_edge_SystemInterface_<id_SIMap>_Link_<id_network>
+
+
+		iterations: [
+			//Get and prepare the systems as nodes on the graph
+			{
+				beforeServerInstructions: [
+					{action: 'resetSosmObject'},
+					{action: 'toServer_fromLocalStorage_int', sourceName: 'activeYear', columnName: 'year'},
+					{action: 'toServer_fromLocalStorage_arr', sourceName: 'includedFilterTag', columnName: 'includedFilterTag'},
+					{action: 'toServer_fromLocalStorage_arr', sourceName: 'excludedFilterTag', columnName: 'excludedFilterTag'},
+					{action: 'toServer_fromDefinition', definitionName: 'id_system', columnName: 'id_system'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showInterfaces', sosmDisplayName: 'interfaces'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showPrimaryLinks', sosmDisplayName: 'primaryLinks'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'showAlternateLinks', sosmDisplayName: 'alternateLinks'},
+					{action: 'setSosmDisplay_fromLocalStorage', sourceName: 'displaySubsystems', sosmDisplayName: 'compoundSystems'},
+				],
+				queryType: 'Systems', url: 'graph', 
+				afterServerInstructions:[
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system', 'id_system']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
+						],
+						classes: ['image'],
+						position: true,
+					},
+					{action: 'getDataFromResult', sosmName: 'id_system_arr', columnName: 'id_system'},
+				],
+			},
+
+			//Get and prepare subsystems as nodes on the graph
+			{
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
+					{action: 'toServer_fromGraphConstant', columnName: 'startDepth', value: 1},
+				],
+				queryType: 'Subsystems', url: 'graph',
+				afterServerInstructions:[ 
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'systems',
+						conditions: [{type: 'checkLocalStorage', localStorageName: 'displaySubsystems'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_system_<0>_<1>', columnNames: ['topSystem', 'id_system']},
+							{action: 'fromResult', nodeName: 'parent', format: 'g1_node_system_<0>_<1>', columnNames: ['topSystem', 'immediateParent']},
+							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+						],
+						classes: ['square', 'centerLabel'],
+						position: true,
+					},
+				]		
+			},
+
+			//Get and prepare System Interfaces as nodes on the graph, and their associated edges, if setting is enabled
+			{
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_system_arr', columnName: 'id_system_arr'},
+				],
+				queryType: 'Interfaces', url: 'graph',
+				afterServerInstructions:[
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'interfaces',
+						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id_interface', format: '<0>', columnNames: ['id_interface']},
+							{action: 'fromResult', nodeName: 'id_SIMap', format: '<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'SystemInterface', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'interfaces', default: 'grey'},
+						],
+						classes: ['small'],
+						position: true
+					},
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges',
+						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<id_system>_SystemInterface_<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'source', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system','id_system']}, //System
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
+							{action: 'fromDefault', nodeName: 'lineColor', default: 'black'},
+						],
+						classes: []
+					},
+
+					{action: 'getDataFromResult', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap'}
+				]			
+			},
+
+			//Get and prepare Links as nodes on their graph, and their associated edges.
+			{
+				queryType: 'Links',
+				beforeServerInstructions: [
+					{action: 'toServer_fromSosmObject', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap_arr'},
+				],
+				afterServerInstructions:[
+					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'links',
+						conditions: [{type: 'alwaysRun'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_link_<0>', columnNames: ['id_network']},
+							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromResult', nodeName: 'id_SIMap', format: '<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'Link', columnNames: []},
+							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
+							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'grey'},
+						],
+						classes: ['network'],
+						position: true,
+					},
+					//Draw edges from interfaces to links, if showInterfaces is true
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges', 
+						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_SystemInterface_<0>_Link_<1>', columnNames: ['id_SIMap','id_network']},
+							{action: 'fromResult', nodeName: 'source', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
+							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
+						],
+						classes: []
+					},
+					//Draw edges from systems to links, if showInterfaces is false
+					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges', 
+						conditions: [{type: '!checkLocalStorage', localStorageName: 'showInterfaces'}],
+						fields: [
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<0>_Link_<1>', columnNames: ['id_system','id_network']},
+							{action: 'fromResult', nodeName: 'source', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system', 'id_system']}, //System
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
+						],
+						classes: []
+					},
+				],
+			},
+		]
+	},
 }
 
 
@@ -1527,7 +1686,7 @@ const modals = {
 	interfacesToSystems: {
 		title: 'Assign Interfaces & Links to System',
 		formButtons: [
-			{type: 'delete', id: 'buttonDelete', label: 'Remove System', initialState: 'unlock'},
+			{type: 'delete', id: 'buttonDelete', label: 'Remove Interface', initialState: 'unlock'},
 			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
 			{type: 'cancel', id: 'buttonCancel', label: 'Close', initialState: 'unlock'},
 		], 
@@ -2501,7 +2660,7 @@ const modals = {
 	specificSystem: {
 		title: 'Title',
 		formButtons: [ 
-			{type: 'submit', id: 'buttonUpdate', label: 'Go', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonGo', label: 'Go', initialState: 'unlock'},
 			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
 		], 
 		formFields: [ 
@@ -2523,20 +2682,16 @@ const modals = {
 			},
 		],
 		events: [
-			{	//Change to system select
-				handlers: [{controlId: 'selectSystem', event: 'change'},],
-				instructions: [{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSystem', definitionName: 'id_system', dataAttr: 'id_system'}],
-				cleanup: [],
-			},
-			{	//Update system button clicked
-				handlers: [{controlId: 'buttonUpdate', event: 'click'},],
+			{	//Go button clicked
+				handlers: [{controlId: 'buttonGo', event: 'click'},],
 				instructions: [
 					{action: 'resetDefinition'},
-					{action: 'debug'},
 					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSystem', definitionName: 'id_system', dataAttr: 'id_system'},
 					{action: 'setDefinition_SingleValue_FromConstant', definitionName: 'graph', value: 'standard'},
 				],
 				cleanup: [
+					{action: 'setSessionStorageFromConstant', sessionStorageName: 'currentPage', value: 'specificSystem'},
+					{action: 'setSessionStorageFromDefinition', sessionStorageName: 'id_system', definitionName: 'id_system'},
 					{action: 'launchFunctionWithDefinition', functionName: 'commonGraph'},
 					{action: 'closeModal'},
 				],
