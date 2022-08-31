@@ -214,6 +214,7 @@ function commonModal_actions(definition, element, postData, result){
 		case 'setControl_SingleValue_AtSpecificArrayIndex':
 			if(element.arrayIndex >= 0){
 				//debug(1,'res', result[element.arrayIndex])
+				
 				setFormElement('#' + element.id, element, result[element.arrayIndex][element.columnName]) 
 			} else {
 				setFormElement('#' + element.id, element, result[element.columnName]) }

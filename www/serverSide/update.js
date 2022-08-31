@@ -96,7 +96,7 @@ exports.switch = (req,res) => {
 			if (req.body.id_interface){
 				queryString += sql.format(`UPDATE interfaces SET name = ?, description = ?, updateTime = ? WHERE interfaces.id_interface = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_interface]);
 			} else {
-				queryString += sql.format(`INSERT INTO interfaces (name, description, image, updateTime) VALUES (?,?,?,"tba.svg",?);`,[req.body.name, req.body.description, Date.now()]);
+				queryString += sql.format(`INSERT INTO interfaces (name, description, image, updateTime) VALUES (?,?,"tba.svg",?);`,[req.body.name, req.body.description, Date.now()]);
 			}
 			break;
 		case 'UpdateSystem':
