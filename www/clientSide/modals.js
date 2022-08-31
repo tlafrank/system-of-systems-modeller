@@ -9,7 +9,7 @@ async function commonModal(definition){
 	}
 
 	*/
-	debug(1, 'In CommonModal() with definition: ', definition)
+	debug(5, 'In CommonModal() with definition: ', definition)
 
 	//Build new modal
 	prepareModal2();
@@ -51,7 +51,7 @@ async function commonModal(definition){
 					definitionsFound = false
 				}
 			})
-			//debug(1, modals[definition.modal].iterations[i].onUndefined)
+			//debug(5, modals[definition.modal].iterations[i].onUndefined)
 			if(modals[definition.modal].iterations[i].continueOnUndefined){
 				definitionsFound = true
 			}
@@ -63,7 +63,7 @@ async function commonModal(definition){
 	
 		//Handle Events
 		for (var i = 0; i < modals[definition.modal].events.length; i++){ 
-			//debug(1, 'event for ', modals[definition.modal].events[i])
+			//debug(5, 'event for ', modals[definition.modal].events[i])
 			commonModal_event(definition, modals[definition.modal].events[i])
 		}
 
@@ -79,11 +79,11 @@ async function commonModal(definition){
 }
 
 async function commonModal_getData(definition, formData, postData){
-	//debug(1,definition)
-	debug(1, `Getting '${postData.type}' from the server (select.json):`)
+	//debug(5,definition)
+	debug(5, `Getting '${postData.type}' from the server (select.json):`)
 	
 	await $.post('select.json', postData, (result) => {
-		debug(2, postData, result);
+		debug(3, postData, result);
 
 		if (result.msg){
 			//An error was passed
@@ -102,20 +102,20 @@ async function commonModal_getData(definition, formData, postData){
 			})
 		}
 	})
-	//debug(1, definition)
+	//debug(5, definition)
 }
 
 function commonModal_event(definition, event){
-	//debug(1, 'In commonModal_event with definition:', definition)
-	//debug(1, 'In commonModal_event for '+ event.handler.controlId)
+	//debug(5, 'In commonModal_event with definition:', definition)
+	//debug(5, 'In commonModal_event for '+ event.handler.controlId)
 
 	//Create the event handler
 	event.handlers.forEach((handler) => {
 
 		$('#' + handler.controlId).on(handler.event, async (e) => {
-			//debug(1, 'event handler for ' + event.handler.controlId)
+			//debug(5, 'event handler for ' + event.handler.controlId)
 			//e.preventDefault();
-			//debug(1, e)
+			//debug(5, e)
 			
 			if (event.postType) {
 				var postData = {};
@@ -136,7 +136,7 @@ function commonModal_event(definition, event){
 						definition[element.definitionName] = e.currentTarget.dataset[element.dataAttr.toLowerCase()]
 						break;
 					case 'handleDrop':
-						debug(1, e)
+						debug(5, e)
 						const data = e.originalEvent.dataTransfer.getData("draggableElement");
 						$(e.currentTarget).append(document.getElementById(data))
 						break;
@@ -148,9 +148,9 @@ function commonModal_event(definition, event){
 			//Send to server
 			if (event.postType){
 				if (event.url == 'select'){
-					debug(1, `Sending '${postData.type}' to the server (select.json):`)
+					debug(5, `Sending '${postData.type}' to the server (select.json):`)
 					var result = await $.post("select.json", postData, (result) => {
-						debug(1, postData, result);
+						debug(5, postData, result);
 	
 						//Check the result																												Need work here
 						if (result.msg){ //An error was passed
@@ -160,9 +160,9 @@ function commonModal_event(definition, event){
 						return result;
 					});
 				} else {
-					debug(1, `Sending '${postData.type}' to the server (update.json):`)
+					debug(5, `Sending '${postData.type}' to the server (update.json):`)
 					var result = await $.post("update.json", postData, (result) => {
-						debug(1, postData, result);
+						debug(5, postData, result);
 	
 						//Check the result
 						if (result.msg){ //An error was passed
@@ -180,7 +180,7 @@ function commonModal_event(definition, event){
 							}
 						}
 	
-						//debug(1, 'definition', definition)
+						//debug(5, 'definition', definition)
 						return result;
 					});				
 				}
@@ -197,7 +197,7 @@ function commonModal_event(definition, event){
 }
 
 function commonModal_actions(definition, element, postData, result){
-	//debug(1, 'in commonModal_actions with element', element)
+	//debug(5, 'in commonModal_actions with element', element)
 	switch (element.action){
 		//Set controls
 		case 'setControl_MultipleValues':
@@ -213,14 +213,14 @@ function commonModal_actions(definition, element, postData, result){
 		case 'setControl_SingleValue_fromParamNoArray':
 		case 'setControl_SingleValue_AtSpecificArrayIndex':
 			if(element.arrayIndex >= 0){
-				//debug(1,'res', result[element.arrayIndex])
+				//debug(5,'res', result[element.arrayIndex])
 				
 				setFormElement('#' + element.id, element, result[element.arrayIndex][element.columnName]) 
 			} else {
 				setFormElement('#' + element.id, element, result[element.columnName]) }
 			break;
 		case 'setControl_SingleValue_AtSpecificArrayIndexFirstIndex':
-			//debug(1,result[element.arrayIndex][0])
+			//debug(5,result[element.arrayIndex][0])
 			if (typeof result[element.arrayIndex][0] !== 'undefined'){
 				setFormElement('#' + element.id, element, result[element.arrayIndex][0][element.columnName])
 			}
@@ -253,7 +253,7 @@ function commonModal_actions(definition, element, postData, result){
 				value2.push({tag: element})
 			})
 			setFormElement('#' + element.id, element, value2)
-			debug(1,value)
+			debug(5,value)
 
 
 			break;
@@ -385,10 +385,10 @@ function commonModal_actions(definition, element, postData, result){
 			$(`#${element.id}[data-${element.dataAttr}="${definition[element.definitionName]}"`).remove();
 			break;
 		case 'debug':
-			debug(1, 'In switch debug with definition: ', definition)
+			debug(5, 'In switch debug with definition: ', definition)
 			break;
 		default:
-			debug(1, `Switch default. Shouldn't make it here in commonModal_action with ${element.action} and definition`, definition)
+			debug(5, `Switch default. Shouldn't make it here in commonModal_action with ${element.action} and definition`, definition)
 	}
 
 }
@@ -407,7 +407,7 @@ function prepareModal2(){																							//Name to be fixed
  * @param {} message
  */
 function settingsModal(message){
-	debug(1, 'In settingsModal()')
+	debug(5, 'In settingsModal()')
 
 	//Prepare the modal
 	prepareModal('Settings');
@@ -441,12 +441,12 @@ function settingsModal(message){
 		settings.forEach((element) => {
 			
 			if (element.type != 'null' && element.type != 'heading'){
-				debug(1, getFormElement('#' + element.id, element))
+				debug(5, getFormElement('#' + element.id, element))
 				localStorage.setItem(element.id, getFormElement('#' + element.id, element))
 			}
 			
 		})
-		debug(1, localStorage)
+		debug(5, localStorage)
 
 
 		pageSwitch(sessionStorage.getItem('currentPage'));

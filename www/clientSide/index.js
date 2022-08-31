@@ -2,7 +2,7 @@
 var debugOn = false;
 debugOn = true;
 
-var debugLevel = 4;
+var debugLevel = 5;
 var cy = cytoscape();
 let selectedNode; //Holds the Node object which is selected by the user
 let modal; //Holds the object to provide modal setup information and the Node object being built
@@ -28,7 +28,7 @@ $(document).ready(function(){
 		}
 	})
 
-	debug(1, localStorage)
+	debug(5, localStorage)
 
 	pageSwitch();
   	selectedNode = new Node();
@@ -36,7 +36,7 @@ $(document).ready(function(){
 
 //Load the appropriate main pane data
 async function pageSwitch(page){
-	debug(1,`In pageSwitch() with page:`)
+	debug(5,`In pageSwitch() with page:`)
 
 	if (!page){
 		if (sessionStorage.getItem('currentPage') === null){
@@ -45,7 +45,7 @@ async function pageSwitch(page){
 			page = sessionStorage.getItem('currentPage');
 		}
 	}
-	debug(1, page)
+	debug(5, page)
 
 	switch (page){
 		case 'specificSystem':
@@ -89,7 +89,7 @@ async function pageSwitch(page){
 }
 
 async function listSummary(){
-	debug(1,'In listSummary()')
+	debug(5,'In listSummary()')
 
 	//Display the current filter tags
 	displayTags('#mainPaneContainer');
@@ -108,7 +108,7 @@ async function listSummary(){
 	await commonGraph({graph: 'standard', headless: true})
 	await commonGraph({graph: 'summary', headless: true})
 
-	debug(1, 'starting')
+	debug(5, 'starting')
 
 	sosm.stats.interfaces.forEach((element) => {
 		table += `<tr>
@@ -169,7 +169,7 @@ async function listIssues(){
 			table += `<td colspan="6" class="text-center align-middle"><a href="#" onclick="commonModal({modal: 'interfaceIssues', id_interface: '${element.id_interface}'})">No issues recorded</a></td>`
 		} else {
 			element.issues.forEach((element2) => {
-				//debug(1, element2)
+				//debug(5, element2)
 				if (element2.severity >= parseInt(localStorage.getItem('severityLevel'))){
 					table += `<td class="text-center">${element2.severity}</td>`
 					table += `<td><a href="#" onclick="commonModal({modal: 'interfaceIssues', id_interface: ${element2.id_interface}, id_interfaceIssue: '${element2.id_interfaceIssue}'})">${element2.name}</td>`
@@ -242,7 +242,7 @@ async function charts(){
 			plugins: { legend: { position: 'bottom'}}
 		}
 
-	debug(1, 'chartInterface', chartInterfaces)
+	debug(5, 'chartInterface', chartInterfaces)
 
 	const myChinterfaceChart = new Chart(document.getElementById('chartInterfaces').getContext('2d'), chartInterfaces)
 	
@@ -258,7 +258,7 @@ async function charts(){
 	await commonGraph({graph: 'issues', headless: true})
 
 	sosm.issues.forEach((element) => { //Iterate through each interface
-		//debug(1, element)
+		//debug(5, element)
 		issuesChartData.push({
 			label: element.name,
 			backgroundColor: getColor(colorIndex) + 'bb',
@@ -270,7 +270,7 @@ async function charts(){
 
 		//Produce graph data
 		element.issues.forEach((element2) => { //Iterate through each issue within the interface
-			//debug(1, element2)
+			//debug(5, element2)
 			if (element2.severity > 0){
 				issuesChartData[issuesChartData.length - 1].data.push({
 					x: element2.quantityAffected,
@@ -283,8 +283,8 @@ async function charts(){
 
 	})
 	
-	debug(1, 'issuesLabels', issuesLabels)
-	debug(1, 'data', issuesChartData)
+	debug(5, 'issuesLabels', issuesLabels)
+	debug(5, 'data', issuesChartData)
 
 	var chartIssues = {
 		type: 'bubble',
@@ -357,13 +357,13 @@ async function charts(){
 		postData.includedFilterTag = JSON.parse(localStorage.getItem('includedFilterTag'))
 		postData.excludedFilterTag = JSON.parse(localStorage.getItem('excludedFilterTag'))
 
-		debug(1, `Sending '${postData.type}' to the server (chart.json):`)
+		debug(5, `Sending '${postData.type}' to the server (chart.json):`)
 		await $.post("chart.json", postData, (result) => {
-			//debug(1, postData, result);
+			//debug(5, postData, result);
 
 			if (result.msg){
 				//An error was passed
-				debug(1, 'error', result.msg)
+				debug(5, 'error', result.msg)
 				//updateSystemLinksModal(id_system,{info: 'failure', msg: `There was an error. Check the console.`}, id_SIMap);
 			} else {
 				//Interface data
@@ -380,7 +380,7 @@ async function charts(){
 	
 	interfacesSeen.sort();
 	
-	debug(1, 'interfacesSeen before', interfacesSeen)
+	debug(5, 'interfacesSeen before', interfacesSeen)
 	var tempArr = [interfacesSeen[0]];
 	for (var i=0; i<interfacesSeen.length; i++){
 		if (tempArr[tempArr.length - 1] != interfacesSeen[i]){
@@ -395,15 +395,15 @@ async function charts(){
 	var postData2 = {
 		type: 'AllInterfaces',
 	}
-	debug(1, `Sending '${postData2.type}' to the server (select.json):`)
+	debug(5, `Sending '${postData2.type}' to the server (select.json):`)
 	$.post("select.json", postData2, (result) => {
-		debug(1, 'interface chart', postData2, result);
+		debug(5, 'interface chart', postData2, result);
 
 		if (result.msg){
 			//An error was passed
-			debug(1, 'error', result.msg)
+			debug(5, 'error', result.msg)
 		} else {
-			debug(1, 'fafddsf')
+			debug(5, 'fafddsf')
 			result.forEach((element) => {
 				if (interfacesSeen.includes(element.id_interface)){
 					datasets.push({
@@ -427,7 +427,7 @@ async function charts(){
 			plugins: { legend: { position: 'bottom'}}
 		}
 		const myChinterfaceChart = new Chart(document.getElementById('chartInterfaces').getContext('2d'), chartInterfaces)
-		//debug(1,data)
+		//debug(5,data)
 	});
 
 	//Produce the subsystems chart
@@ -440,11 +440,11 @@ async function charts(){
 
 	await processIssues();
 
-	//debug(1, 'issuesData', issuesData[0], issuesData[1])
-	//debug(1, 'example chart data', datasets[0])
+	//debug(5, 'issuesData', issuesData[0], issuesData[1])
+	//debug(5, 'example chart data', datasets[0])
 
 	issuesData.forEach((element) => { //Iterate through each interface
-		//debug(1, element)
+		//debug(5, element)
 		issuesChartData.push({
 			label: element.name,
 			backgroundColor: getColor(colorIndex) + 'bb',
@@ -456,7 +456,7 @@ async function charts(){
 
 		//Produce graph data
 		element.issues.forEach((element2) => { //Iterate through each issue within the interface
-			//debug(1, element2)
+			//debug(5, element2)
 			if (element2.severity > 0){
 				issuesChartData[issuesChartData.length - 1].data.push({
 					x: element2.quantityAffected,
@@ -469,8 +469,8 @@ async function charts(){
 
 	})
 	
-	debug(1, 'issuesLabels', issuesLabels)
-	debug(1, 'data', issuesChartData)
+	debug(5, 'issuesLabels', issuesLabels)
+	debug(5, 'data', issuesChartData)
 
 	var chartIssues = {
 		type: 'bubble',

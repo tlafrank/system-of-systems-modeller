@@ -103,7 +103,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
 							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
-							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'interfaces', default: 'grey'},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'interfaces', default: 'red'},
 						],
 						classes: ['small'],
 						position: true
@@ -140,7 +140,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
 							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
-							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'grey'},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'red'},
 						],
 						classes: ['network'],
 						position: true,
@@ -153,7 +153,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'source', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
 							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
 							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
-							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'red'},
 							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
 						classes: []
@@ -199,7 +199,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'nodeType', format: 'Organisation', columnNames: []},
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							//{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
-							//{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'grey'},
+							//{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'red'},
 						],
 						classes: ['square'],
 						position: true,
@@ -558,7 +558,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
 							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
-							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'interfaces', default: 'grey'},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'interfaces', default: 'red'},
 						],
 						classes: ['small'],
 						position: true
@@ -595,7 +595,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
 							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
-							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'grey'},
+							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'links', default: 'red'},
 						],
 						classes: ['network'],
 						position: true,
@@ -2242,7 +2242,7 @@ const modals = {
 		unlockOnChange: ['buttonUpdate'], 
 		iterations: [
 			{ 
-				type: 'AllTechnologies', 
+				type: 'AllTechnologies',
 				definitionFields: [],
 				continueOnUndefined: true,
 				instructions: [ 
@@ -2250,7 +2250,6 @@ const modals = {
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology', columnName: 'id_technology'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology'},
 					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'technology', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
-					
 				],
 			},
 			{

@@ -4,7 +4,13 @@ export SOSM_USER=sosmUser
 export SOSM_DB=db_sosm
 export SOSM_PASS=dnRk384!djrLdo}836w:
 
-read -p "Which port would you like to start the server on (Above 3000 recommended): " port
+
+if [ -z "$1" ]
+then
+  read -p "Which port would you like to start the server on (Above 3000 recommended): " port
+else
+  port="$1"
+fi
 
 export SOSM_PORT=$port
 

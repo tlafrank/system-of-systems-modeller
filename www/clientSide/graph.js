@@ -1,7 +1,7 @@
 var sosm
 
 async function commonGraph(definition){
-	debug(1, 'In commonGraph with definition', definition)
+	debug(5, 'In commonGraph with definition', definition)
 
 
 	$('#nodeDetailsTable').empty();
@@ -39,7 +39,7 @@ async function commonGraph(definition){
 					postData[element.columnName] = parseInt(localStorage.getItem(element.sourceName))
 					break;
 				case 'toServer_fromLocalStorage_arr':
-					debug(1,'is',localStorage.getItem(element.sourceName))
+					debug(5,'is',localStorage.getItem(element.sourceName))
 					if (localStorage.getItem(element.sourceName) !== ''){
 						var arr = JSON.parse(localStorage.getItem(element.sourceName))
 					} else {
@@ -75,10 +75,10 @@ async function commonGraph(definition){
 				case '':
 				break;
 				case 'debug':
-					debug(1, 'Debug:', element.message)
+					debug(5, 'Debug:', element.message)
 					break;
 				default:
-					debug(1, `Made it to commonGraph() beforeServerInstructions switch default with ${element.action}. Element:`, element)
+					debug(5, `Made it to commonGraph() beforeServerInstructions switch default with ${element.action}. Element:`, element)
 			}
 		})
 
@@ -86,9 +86,9 @@ async function commonGraph(definition){
 		if (typeof graph[definition.graph].iterations[i].queryType !== 'undefined'){
 			var result;
 			postData.type = graph[definition.graph].iterations[i].queryType
-			debug(1, `Getting '${postData.type}' from the server (${url}.json):`)
+			debug(5, `Getting '${postData.type}' from the server (${url}.json):`)
 			await $.post(`${url}.json`, postData, (result2) => {
-				debug(2, postData, result2);
+				debug(3, postData, result2);
 
 				if (result2.msg){
 					//An error was passed
@@ -106,7 +106,7 @@ async function commonGraph(definition){
 			switch (element.action){
 
 				case 'nodeOrEdge': //Prepare nodes or edges for adding to the cy graph
-					//debug(1, 'element is: ', element)
+					//debug(5, 'element is: ', element)
 					//Check the conditions to ensure that this particular result set should be added to the cy graph
 					if (checkConditions(element.conditions)){
 						//Process each row in the resultset
@@ -130,7 +130,13 @@ async function commonGraph(definition){
 									case 'fromConstant':
 										str = field.default
 										if (typeof row[field.columnName] !== 'undefined' && row[field.columnName] != null ){
-											str = categories[field.constantName].find(x => x.value == row[field.columnName]).color
+											try {
+												str = categories[field.constantName].find(x => x.value == row[field.columnName]).color
+											}
+											catch(err){
+												debug(2,'There was a recoverable error in graph.js due to a result not matching an expected constant value')
+											}
+											
 										}	
 										break;
 									case 'fromDefault':
@@ -210,9 +216,9 @@ async function commonGraph(definition){
 
 				// 	break;
 				// case 'buildGraphObject_edges':
-				// 	//debug(1, 'Checking', element.conditions)
+				// 	//debug(5, 'Checking', element.conditions)
 				// 	if (checkConditions(element.conditions)){
-				// 		//debug(1, 'executing')
+				// 		//debug(5, 'executing')
 				// 		result.forEach((edge) => { //Iterate through each edge in the result
 				// 			var tempEdge = {};
 				// 			tempEdge.group = 'edges';
@@ -230,7 +236,7 @@ async function commonGraph(definition){
 				// 						}
 				// 					}
 				// 				})
-				// 				//debug(1, edge)
+				// 				//debug(5, edge)
 				// 				tempEdge.data[field.nodeName] = str;
 				// 			})
 							
@@ -316,7 +322,7 @@ if(element.designation){
 					sosm.nodes[element.sosmNodesName].forEach((node) => {
 						sosm[element.sosmName].push(node.data[element.dataId])
 					})
-					//debug(1,'getSystemIds', sosm[element.sosmName])
+					//debug(5,'getSystemIds', sosm[element.sosmName])
 					break;
 				case 'getDataFromResult': //Get all the system ID's which are represented in sosm.nodes.systems
 					sosm[element.sosmName] = []
@@ -326,7 +332,7 @@ if(element.designation){
 						}
 						
 					})
-					//debug(1,'getSystemIds', sosm[element.sosmName])
+					//debug(5,'getSystemIds', sosm[element.sosmName])
 					break;
 				case 'removeFromArr':
 
@@ -347,15 +353,15 @@ if(element.designation){
 						res[element.columnName2] = node[element.columnName2]
 						sosm[element.sosmName].push(res)
 					})
-					//debug(1,'getSystemIds', sosm[element.sosmName])
+					//debug(5,'getSystemIds', sosm[element.sosmName])
 
 					break;
 				case 'buildSummaryObject_interfaces':
-					debug(1, 'In buildSummaryObject_interfaces')
+					debug(5, 'In buildSummaryObject_interfaces')
 					sosm.stats.interfaces = [];
 					var lastInterfaceId = 0;
 					for (var i = 0; i < result.length; i++){
-						debug(1, result[i])
+						debug(5, result[i])
 						if (result[i].id_interface > lastInterfaceId){//First occurrance of a new interface
 							lastInterfaceId = result[i].id_interface
 
@@ -483,15 +489,15 @@ break;
 case '':
 break;
 				case 'debug':
-					debug(1, 'Debug:', element.message)
+					debug(5, 'Debug:', element.message)
 					break;			
 				default:
-					debug(1, `Made it to commonGraph() afterServerInstructions switch default with ${element.action}. Element:`, element)
+					debug(5, `Made it to commonGraph() afterServerInstructions switch default with ${element.action}. Element:`, element)
 			}
 		})
 	}
 	
-	debug(1, 'SOSM', sosm)
+	debug(5, 'SOSM', sosm)
 
 
 	//Build the graph visualisation
@@ -518,16 +524,16 @@ break;
 
 		//Event: Node in graph selected
 		cy.on('tap', 'node', (evt) => { 
-			debug(1, evt.target._private.data)
+			debug(5, evt.target._private.data)
 			nodeSelected(evt.target); 
 		})
 
 		//Event: Node is dropped in graph/
 		//position info is undefined in the event for some reason, was hoping to use this to store position information in localStorage
 		cy.on('free', 'node', (evt) => { 
-			//debug(1, evt)
-			//debug(1,evt.target._private.position)
-			//debug(1,evt.target._private.data.nodeType)
+			//debug(5, evt)
+			//debug(5,evt.target._private.position)
+			//debug(5,evt.target._private.data.nodeType)
 			
 			if(localStorage.getItem('snapToGrid') == 1){ //Snap to grid (setting to be configured later)
 				evt.target._private.position.x = Math.round(evt.target._private.position.x/200) * 200
@@ -535,7 +541,7 @@ break;
 			}
 
 			if(localStorage.getItem('graphLayoutName') == 'preset'){ //Only set positions if set to preset
-				debug(1,`${evt.target._private.data.id} is free, position will be logged`)
+				debug(5,`${evt.target._private.data.id} is free, position will be logged`)
 
 				//Create the object if it doesnt already exist
 				if(typeof sosm.positions === 'undefined'){
@@ -545,12 +551,12 @@ break;
 				//Store dropped position
 				var index = -1;
 				if(sosm.positions.find(x => x.id == evt.target._private.data.id)){ //Position already reported, change existing object
-					//debug(1, 'Already exists, updating');
+					//debug(5, 'Already exists, updating');
 					index = sosm.positions.findIndex(x => x.id == evt.target._private.data.id);
 					sosm.positions[index].position = evt.target._private.position;
 
 				} else { //Doesnt exist
-					//debug(1, `Doesn't exist, creating`)
+					//debug(5, `Doesn't exist, creating`)
 					sosm.positions.push({
 						nodeType: evt.target._private.data.nodeType,
 						id: evt.target._private.data.id,
@@ -558,13 +564,13 @@ break;
 					})
 				}
 				savePositions()
-				//debug(1, 'sosm posn:', sosm.positions)				
+				//debug(5, 'sosm posn:', sosm.positions)				
 			}
 		})
 
 		//Event: Edge in graph selected
 		cy.on('tap', 'edge', (evt) => { 
-			//debug(1, evt.target)
+			//debug(5, evt.target)
 			edgeSelected(evt.target); 
 		})
 	}
@@ -590,7 +596,7 @@ function checkConditions(conditions, element){
 				}
 				break;
 			default:
-				debug(1, `Switch default. Shouldn't make it here in checkConditions()`);
+				debug(5, `Switch default. Shouldn't make it here in checkConditions()`);
 		}
 	})
 	return execute
@@ -611,7 +617,7 @@ function newCyX(){
 					if (sosmNetworkData[i].id_network == element.id_network){
 						
 						//Remove the element from the array
-						debug(1, 'removing', element)
+						debug(5, 'removing', element)
 						sosmNetworkData.splice(i,1);
 						i--;
 						

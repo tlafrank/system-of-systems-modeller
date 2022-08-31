@@ -226,7 +226,7 @@ function hideSelectedNodeButton(){
  * 
  */
 function hideNode(id, idNo, type){
-	debug(2,`Hiding ${id} of type ${type} with ID: ${idNo}`);
+	debug(3,`Hiding ${id} of type ${type} with ID: ${idNo}`);
 
 	//Remove clicked node from the graph
 	cy.remove(`[id = '${id}']`)

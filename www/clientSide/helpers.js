@@ -16,7 +16,7 @@ function defaultButtons(buttonList){
 				addButton('#mainModal .modal-footer', {type: 'close'});
 			break;			
 			default:
-				debug(1, 'Unknown button requested in defaultButton');
+				debug(5, 'Unknown button requested in defaultButton');
 		}
 	})
 }
@@ -56,7 +56,7 @@ function addIconButton($selector, image, name, data){
  * 
  */
 function nodeTable($selector, node){
-	debug(1, 'In nodeTable()');
+	debug(5, 'In nodeTable()');
 	debug(3, node);
 
 	var responseString = '<table id="nodeDetailsTable" class="table table-sm mx-1"><tbody>';
@@ -97,7 +97,19 @@ function debug(...msg){
 	if (typeof msg[0] === 'number'){
 		if (debugLevel >= msg[0]){
 			for (var i = 1; i < msg.length; i++){
-				console.log(msg[i]);
+				switch(msg[0]){
+					case 1:
+						console.error(msg[i])
+					break;
+					case 2:
+						console.warn(msg[i])
+					break;
+					case 3:
+						console.info(msg[i])
+					break;
+					default:
+						console.log(msg[i])
+				}				
 			}	
 		}
 	} else {
@@ -167,7 +179,7 @@ function getFormElement($selector, properties){
 		break;
 		case 'selectedButton':
 			var test = $($selector + ` button.btn-primary`).data(properties.attrName)
-			debug(1, 'test' + test);
+			debug(5, 'test' + test);
 			return test
 		break;
 		case 'droppable':
@@ -189,7 +201,7 @@ function getFormElement($selector, properties){
 					})
 				break;
 				default:
-					debug(1,'getFormElement droppable switch default. Shouldnt be here')
+					debug(5,'getFormElement droppable switch default. Shouldnt be here')
 			}
 			//Trim
 			if (dataString.length > 0){ dataString = dataString.substring(0,dataString.length - 1);	}
@@ -234,7 +246,7 @@ function getFormElement($selector, properties){
 			break;
 		case 'selectedImage':
 			var path = $($selector + ' button.btn-primary').data('image');
-			debug(1, path)
+			debug(5, path)
 			return path
 			break;
 		case 'radio':
@@ -266,7 +278,7 @@ function getFormElement($selector, properties){
  * @param  {} value
  */
 function setFormElement($selector, properties, value){
-	//debug(1, `setting: value of ${value} to:`, properties)
+	//debug(5, `setting: value of ${value} to:`, properties)
 	switch (properties.type){
 		case 'qtyYears':
 			if (value.length > 0){ //Entries exist
@@ -289,13 +301,13 @@ function setFormElement($selector, properties, value){
 			break;
 		case 'moveDroppableElements':
 			var sourceElements = document.querySelectorAll('#' + properties.sourceId + ' span');
-			//debug(1, 'moveDroppableElements', properties, 'val: ', value)
+			//debug(5, 'moveDroppableElements', properties, 'val: ', value)
 			if (value) {
 				value.forEach((element) => {
-					//debug(1, 'element', element)
+					//debug(5, 'element', element)
 					//Iterate through each source element and move to the target selector's .card-body
 					sourceElements.forEach((element2) => {
-						//debug(1, element2)
+						//debug(5, element2)
 
 						if (element2.dataset[properties.attr.name] == element[properties.attr.columnName]){
 							$($selector + ' .card-body').append(element2);
@@ -305,7 +317,7 @@ function setFormElement($selector, properties, value){
 			}
 			break;
 		case 'iconButtonSelected':
-			//debug(1, 'in iconButtonSelected', properties, 'value ' + value)
+			//debug(5, 'in iconButtonSelected', properties, 'value ' + value)
 
 			$($selector + ` button[data-${properties.attrName}="${value}"]`).addClass('btn-primary').removeClass('btn-secondary')
 			break;
@@ -321,11 +333,11 @@ function setFormElement($selector, properties, value){
 
 			break;
 		case 'chosenIconBySrc':
-			//debug(1, 'Selecting current icon: ' + value)
+			//debug(5, 'Selecting current icon: ' + value)
 			$($selector + ` img[src="${imagePath + value}"]`).parent().addClass('btn-primary').removeClass('btn-secondary')
 			break;
 		case 'iconButton':
-			//debug(1, 'iconButton', properties, value)
+			//debug(5, 'iconButton', properties, value)
 
 			var formElement = '';
 
@@ -355,18 +367,20 @@ function setFormElement($selector, properties, value){
 			}
 			break;
 		case 'select': //Assumes select has been filled previously and sets the value based on the passed attribute
-			//debug(1, 'in select', properties, value)
 			if(properties.dataAttr){
 				$($selector + ` option[data-${properties.dataAttr}="${value}"]`).prop('selected', true);
 			} else {
-				debug(1, 'in select correctly')
+				debug(5, 'in select correctly')
 				$($selector).val(value);
 			}
 			
-			if (value == ''){$($selector).empty();}
+			if (value == ''){
+				debug(2,`Something is trying to empty the select ${properties.id}`)
+				//$($selector).empty();
+			}
 			break;
 		case 'selectOptions': //Fills a select
-		debug(1, value)
+		debug(5, value)
 			if(properties.attr){
 				value.forEach((element) => {
 					$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName]}</option>`)
@@ -397,7 +411,7 @@ function setFormElement($selector, properties, value){
 			break;
 		case 'textList': //Comma separated list
 			var text = '';
-			//debug(1, 'in textList', value);
+			//debug(5, 'in textList', value);
 			value.forEach((element) => {text += element[properties.columnName] + ','})
 			$($selector).val(text.substring(0, text.length - 1))
 			break;
@@ -472,7 +486,7 @@ function setFormElement($selector, properties, value){
 			break;
 
 		default:
-			debug(1, `Switch default, shouldn't make it here in helpers.setFormElement() due to:`, properties)
+			debug(5, `Switch default, shouldn't make it here in helpers.setFormElement() due to:`, properties)
 	}
 }
 
@@ -858,7 +872,7 @@ function getReferenceURL(reference){
  */
 function dragStart(ev){
 	 // Add the target element's id to the data transfer object
-	 //debug(1, 'in dragstart', ev)
+	 //debug(5, 'in dragstart', ev)
 	 //ev.dataTransfer.setData("draggableElement", ev.target.id);
 	 ev.dataTransfer.setData("draggableElement", ev.target.id);
 }
@@ -934,7 +948,7 @@ function breadcrumbs($selector, details){
 			breadcrumbHtml += `<li class="breadcrumb-item"><a href="#" onclick="${element.module}(${paramData})">${element.name}</a></li>`;
 		}
 		*/
-		//debug(1, 'breadcrumb:', element)
+		//debug(5, 'breadcrumb:', element)
 
 		if (element.active){
 			breadcrumbHtml += `<li class="breadcrumb-item active" aria-current="page">${element.name}<li>`;
@@ -987,7 +1001,7 @@ function prepareModal(title, empty = true){
 async function populatePrimarySelect(callback, properties){
 
 	let subjectSelectExists = false;
-	//debug(1, form[properties.formReference][0].type)
+	//debug(5, form[properties.formReference][0].type)
 	//Only process a select if it appears as the first entry in the form's definition
 	if (form[properties.formReference][0].type == "select"){
 		var subjectSelect = `#${form[properties.formReference][0].id}`
@@ -1004,8 +1018,8 @@ async function populatePrimarySelect(callback, properties){
 	}
 
 	await $.post('select.json', postData, (result) => {
-		debug(2, 'Passed to select.json: ', postData);
-		debug(2, 'Response: ', result)
+		debug(3, 'Passed to select.json: ', postData);
+		debug(3, 'Response: ', result)
 
 		if (result.msg){
 			//An error was passed
@@ -1054,7 +1068,7 @@ async function populatePrimarySelect(callback, properties){
  * 
  */
  async function populateSelect($selector, postData, data, callback){
-	 debug(1,data)
+	 debug(5,data)
 
 	await $.post('select.json', postData, async (result) => {
 		debug('Passed to select.json: ', postData);
@@ -1068,7 +1082,7 @@ async function populatePrimarySelect(callback, properties){
 			
 			result.forEach((element) => {
 				if (data){
-					debug(1, element)
+					debug(5, element)
 					addFormElement($selector, {type: 'option', label: element.name, data: {name: data, value: element[data] }})
 				} else {
 					addFormElement($selector, {type: 'option', label: element.name})
@@ -1106,8 +1120,8 @@ function deleteEntry(callback, properties){
 	
 	//Submit the data
 	$.post('update.json', postData, (result) => {
-		debug(2,'Passed to update.json: ', postData);
-		debug(2,'Response: ', result)
+		debug(3,'Passed to update.json: ', postData);
+		debug(3,'Response: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -1138,7 +1152,7 @@ function saveEntry(callback, properties){
 	})
 
 	//Load any additional data into postData
-	debug(1,properties)
+	debug(5,properties)
 	if (properties.postData){
 		properties.postData.forEach((element) => {
 			postData[element.key] = element.value;
@@ -1147,8 +1161,8 @@ function saveEntry(callback, properties){
 
 	//Submit the data
 	$.post('update.json', postData, (result) => {
-		debug(2,'Passed to update.json: ', postData);
-		debug(2,'Response: ', result)
+		debug(3,'Passed to update.json: ', postData);
+		debug(3,'Response: ', result)
 
 		//Check the result
 		if (result.msg){
@@ -1188,7 +1202,7 @@ function lockControlsOnUpdate(formDetails, lock = true){
 			default:
 				if (element.onUpdate == 'lock'){
 					$(`#${element.id}`).prop('disabled', lock);
-					debug(1, 'update fired')
+					debug(5, 'update fired')
 				}				
 		}
 	})
@@ -1196,7 +1210,7 @@ function lockControlsOnUpdate(formDetails, lock = true){
 
 
 function updateEvents(formDetails, callback){
-	debug(1, 'In updateEvents XXX DONT MORE updateSlider')
+	debug(5, 'In updateEvents XXX DONT MORE updateSlider')
 	formDetails.forEach((element) => {
 		switch (element.type){
 			case 'text':
@@ -1215,7 +1229,7 @@ function updateEvents(formDetails, callback){
 			break;
 			case 'droppable':
 				$('#' + element.id).on('drop', () => {
-					debug(1,'drop fired')
+					debug(5,'drop fired')
 					callback(formDetails)
 					controlState(['#mainModalSubmit'],['#mainModalAddNew','#mainModalDelete'])
 				})
@@ -1341,7 +1355,7 @@ function updateSlider($selector, value){
  */
  function updatedWhen(t1, t2){
 	diff = Math.abs(t1-t2)/1000;
-	debug(1, diff)
+	debug(5, diff)
 	if (diff < 60){ return 'in the last minute'}
 	if (diff < 3600){ return Math.trunc(diff /60) + ' minutes ago'}
 	if (diff < 7200){ return 'an hour ago'}
