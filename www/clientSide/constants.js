@@ -52,6 +52,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'id', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system', 'id_system']},
 							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
 							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
+							{action: 'fromResult', nodeName: 'version', format: '<0>', columnNames: ['version']},
 							{action: 'fromResult_Name', nodeName: 'name', columnNames: ['name', 'version']},
 							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
 							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
@@ -226,7 +227,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_system']},
 							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
 							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
-							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['systemName']},
+							{action: 'fromResult_Name', nodeName: 'name', columnNames: ['name', 'version']},
 							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
 							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
 						],
@@ -295,7 +296,7 @@ const graph = {
 							//{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_system']},
 							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
 							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
-							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult_Name', nodeName: 'name', columnNames: ['name', 'version']},
 							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
 							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
 						],
@@ -406,7 +407,7 @@ const graph = {
 	},
 
 	summary: {
-		title: 'Standard Graph',
+		title: 'Summary',
 		iterations: [
 			{
 				queryType: 'QuantityOfInterfacesPerSystem',
@@ -2609,7 +2610,7 @@ const modals = {
 	},
 
 	specificSystem: {
-		title: 'Title',
+		title: 'Display Single System',
 		formButtons: [ 
 			{type: 'submit', id: 'buttonGo', label: 'Go', initialState: 'unlock'},
 			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
@@ -2626,7 +2627,7 @@ const modals = {
 				definitionFields: [], 
 				continueOnUndefined: true,
 				instructions: [ 
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectSystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions_MultipleFields', id: 'selectSystem', columnName: ['name','version'], attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system'},
 				],

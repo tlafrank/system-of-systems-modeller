@@ -215,7 +215,7 @@ exports.switch = (req,res) => {
 
 			#Get the systems present in the provided year
 			CREATE TEMPORARY TABLE systemsResult AS
-				SELECT DISTINCT a.id_system, name, image, a.quantity 
+				SELECT DISTINCT a.id_system, name, image, a.quantity, version 
 				FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
 				LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
 				ON a.id_system = b.id_system AND a.year < b.year
@@ -268,7 +268,7 @@ exports.switch = (req,res) => {
 				LEFT JOIN SIMap
 				ON systemsResult.id_system = SIMap.id_system);
 
-			SELECT DISTINCT t2.id_interface, t2.interfaceName, t2.id_interfaceIssue, t2.issueName, t2.issue, t2.resolution, t2.severity, systemsResult.id_system, systemsResult.name as systemName, systemsResult.quantity
+			SELECT DISTINCT t2.id_interface, t2.interfaceName, t2.id_interfaceIssue, t2.issueName, t2.issue, t2.resolution, t2.severity, systemsResult.id_system, systemsResult.name as systemName, systemsResult.version as systemVersion, systemsResult.quantity
 			FROM t3
 			LEFT JOIN t2
 			ON t3.id_interface = t2.id_interface
@@ -282,7 +282,7 @@ exports.switch = (req,res) => {
 			queryString += sql.format(`
 				SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 				SET @inputYear = ?;
-				SELECT interfaces.id_interface, a.id_system, systems.name AS systemName, systems.image AS systemImage, a.quantity AS qtySystems,  interfaces.name AS interfaceName, COUNT(SIMap.id_SIMap) AS qtyEachSystem
+				SELECT interfaces.id_interface, a.id_system, systems.name AS systemName, systems.image AS systemImage, version AS systemVersion,  a.quantity AS qtySystems,  interfaces.name AS interfaceName, COUNT(SIMap.id_SIMap) AS qtyEachSystem
 				FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
 				LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
 				ON a.id_system = b.id_system AND a.year < b.year

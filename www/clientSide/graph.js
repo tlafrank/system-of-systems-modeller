@@ -368,7 +368,7 @@ if(element.designation){
 					sosm.stats.interfaces = [];
 					var lastInterfaceId = 0;
 					for (var i = 0; i < result.length; i++){
-						debug(5, result[i])
+						//debug(5, result[i])
 						if (result[i].id_interface > lastInterfaceId){//First occurrance of a new interface
 							lastInterfaceId = result[i].id_interface
 
@@ -380,14 +380,16 @@ if(element.designation){
 								totalInterfaces: result[i].qtySystems * result[i].qtyEachSystem,
 								systems: [{
 									id_system: result[i].id_system,
-									name: result[i].systemName
+									name: result[i].systemName,
+									version: result[i].systemVersion
 								}]
 							}
+
 							sosm.stats.interfaces.push(tempObj)
 						} else { //Additional occurrances of the same interface
 							sosm.stats.interfaces[sosm.stats.interfaces.length - 1].systemsCount ++;
 							sosm.stats.interfaces[sosm.stats.interfaces.length - 1].totalInterfaces += result[i].qtySystems * result[i].qtyEachSystem;
-							sosm.stats.interfaces[sosm.stats.interfaces.length - 1].systems.push({id_system: result[i].id_system, name: result[i].systemName})
+							sosm.stats.interfaces[sosm.stats.interfaces.length - 1].systems.push({id_system: result[i].id_system, name: result[i].systemName, version: result[i].systemVersion})
 						}
 					}
 
@@ -440,7 +442,7 @@ if(element.designation){
 						}
 
 						if (result[i].id_system != null){ //No issues recorded against this interface
-							sosm.issues[j].issues[issuesTracker].systems.push({id_system: result[i].id_system, name: result[i].systemName})
+							sosm.issues[j].issues[issuesTracker].systems.push({id_system: result[i].id_system, name: result[i].systemName, version: result[i].systemVersion})
 							if (result[i].quantity > 0){
 								sosm.issues[j].issues[issuesTracker].quantityAffected += parseInt(result[i].quantity)	
 							}			

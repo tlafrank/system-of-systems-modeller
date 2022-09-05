@@ -109,14 +109,24 @@ async function listSummary(){
 	await commonGraph({graph: 'summary', headless: true})
 
 	debug(5, 'starting')
+	debug(5, sosm)
 
 	sosm.stats.interfaces.forEach((element) => {
+
 		table += `<tr>
 			<td scope="row"><a href="#" onclick="commonModal({modal: 'interfaces', id_interface: ${element.id_interface}});">${element.name}</a></td>
 			<td class="">${element.totalInterfaces}</td>
 			<td>${element.systemsCount}</td><td>`
 		element.systems.forEach((element2) => {
-			table += systemButton(element2.id_system, element2.name)
+
+			var name = '';
+			if (element2.version === null || element2.version === ''){
+				name = element2.name
+			} else {
+				name = element2.name + ` [${element2.version}]`
+			}
+
+			table += systemButton(element2.id_system, name)
 		})	
 		table += `</td></tr>`
 	})
@@ -183,7 +193,15 @@ async function listIssues(){
 					
 					table += `<td>`
 					element2.systems.forEach((element3) => {
-						table += systemButton(element3.id_system, element3.name)
+						var name = '';
+						if (element3.version === null || element3.version === ''){
+							name = element3.name
+						} else {
+							name = element3.name + ` [${element3.version}]`
+						}
+
+
+						table += systemButton(element3.id_system, name)
 					})	
 					table += `</td></tr>`
 				} else {
