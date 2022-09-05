@@ -42,7 +42,7 @@ exports.switch = (req,res) => {
 			} else {
 				queryString += sql.format(`SET @inputYear = ?;`, req.body.year)
 				queryString += sql.format(`
-					SELECT a.id_system, name, image, a.quantity, category
+					SELECT a.id_system, name, image, a.quantity, category, version
 					FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
 					LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
 					ON a.id_system = b.id_system AND a.year < b.year

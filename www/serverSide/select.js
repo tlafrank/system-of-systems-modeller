@@ -29,6 +29,12 @@ exports.switch = (req,res) => {
 			debug(1, 'In SystemsAssignedToOrgDetail. Not sure if this is valuable') 
 			queryString += sql.format('SELECT * FROM OSMap WHERE id_OSMap = ?;', req.body.id_OSMap)
 			break;
+		case 'AllFamilies':
+			queryString += sql.format('SELECT * FROM families;')
+			break;
+		case 'SingleFamily':
+			queryString += sql.format('SELECT * FROM families WHERE id_family = ?;', req.body.id_family)
+			break;
 		case 'PrimarySystems': //Those systems which are not children of other systems
 			debug(1, 'PrimarySystems is depricated')
 		case 'AllSystems': //Get all systems (which are not subsystems), ordered by name			
@@ -337,6 +343,7 @@ exports.switch = (req,res) => {
 				case 'SingleTechnology':
 				case 'System':
 				case 'SystemInterface':
+				case 'SingleFamily':
 					res.json(result[0])
 					break;
 				case 'SpecificInterfaceIssue':

@@ -204,7 +204,11 @@ function commonModal_actions(definition, element, postData, result){
 		case 'setControl_MultipleValues_EntireArray':
 		case 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes': //An array of objects is returned and needs to be iterated through. Generally for populating selects and droppable elements
 		case 'setControl_MultipleValues_AtSpecificArrayIndex':
-			if(element.arrayIndex >= 0){setFormElement('#' + element.id, element, result[element.arrayIndex]) } else {setFormElement('#' + element.id, element, result)}
+			if(element.arrayIndex >= 0){
+				setFormElement('#' + element.id, element, result[element.arrayIndex]) 
+			} else {
+				setFormElement('#' + element.id, element, result)
+			}
 			break;
 		case 'setControl_MultipleValues_fromConstant':
 			setFormElement('#' + element.id, element, window.categories[element.constantName])

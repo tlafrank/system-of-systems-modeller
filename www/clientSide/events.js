@@ -264,7 +264,7 @@ function hideNode(id, idNo, type){
  * 
  */
  function nodeSelected(eventTarget){
-	debug(1,'In nodeSelected()')
+	debug(5,'In nodeSelected()')
 
 	//Hide the node if the hide nodes toggle button is enabled
 	if (hideNodes){

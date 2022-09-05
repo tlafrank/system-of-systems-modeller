@@ -3,11 +3,9 @@ var sosm
 async function commonGraph(definition){
 	debug(5, 'In commonGraph with definition', definition)
 
-
 	$('#nodeDetailsTable').empty();
 	$('#pageTitle').text(`SOS Model ${parseInt(localStorage.getItem('activeYear'))}`)
 
-	
 	for(var i = 0; i < graph[definition.graph].iterations.length; i++){
 
 		const postData = {}
@@ -39,7 +37,6 @@ async function commonGraph(definition){
 					postData[element.columnName] = parseInt(localStorage.getItem(element.sourceName))
 					break;
 				case 'toServer_fromLocalStorage_arr':
-					debug(5,'is',localStorage.getItem(element.sourceName))
 					if (localStorage.getItem(element.sourceName) !== ''){
 						var arr = JSON.parse(localStorage.getItem(element.sourceName))
 					} else {
@@ -124,6 +121,16 @@ async function commonGraph(definition){
 										str = field.format
 										for (var i = 0; i < field.columnNames.length; i++){
 											str = str.replace(`<${i}>`, row[field.columnNames[i]])
+										}
+										break;
+									case 'fromResult_Name':
+										if (row[field.columnNames[1]] === null || row[field.columnNames[1]] === ''){
+											str = row[field.columnNames[0]]
+										} else {
+											str = row[field.columnNames[0]] + ` [${row[field.columnNames[1]]}]`
+										}
+										for (var i = 0; i < field.columnNames.length; i++){
+											str = str.replace(`<${i}>`, )
 										}
 										
 										break;
@@ -499,7 +506,6 @@ break;
 	
 	debug(5, 'SOSM', sosm)
 
-
 	//Build the graph visualisation
 	if(!definition.headless){
 		//Setup the graph 
@@ -516,10 +522,8 @@ break;
 		cy.add(sosm.nodes.edges);
 
 		//Draw the graph
-
 		cy.layout(cyLayout()).run();
 		
-
 		selectedNode = new Node();
 
 		//Event: Node in graph selected
@@ -529,15 +533,11 @@ break;
 		})
 
 		//Event: Node is dropped in graph/
-		//position info is undefined in the event for some reason, was hoping to use this to store position information in localStorage
 		cy.on('free', 'node', (evt) => { 
-			//debug(5, evt)
-			//debug(5,evt.target._private.position)
-			//debug(5,evt.target._private.data.nodeType)
 			
 			if(localStorage.getItem('snapToGrid') == 1){ //Snap to grid (setting to be configured later)
-				evt.target._private.position.x = Math.round(evt.target._private.position.x/200) * 200
-				evt.target._private.position.y = Math.round(evt.target._private.position.y/200) * 200
+				evt.target._private.position.x = Math.round(evt.target._private.position.x/snapToGridDistance) * snapToGridDistance
+				evt.target._private.position.y = Math.round(evt.target._private.position.y/snapToGridDistance) * snapToGridDistance
 			}
 
 			if(localStorage.getItem('graphLayoutName') == 'preset'){ //Only set positions if set to preset

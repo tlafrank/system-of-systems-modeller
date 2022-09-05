@@ -30,6 +30,7 @@ exports.switch = (req,res) => {
 		case 'DeleteLink': queryString += sql.format(`DELETE FROM networks WHERE id_network = ?`,[req.body.id_network]); break;
 		case 'DeleteNetworkFromInterface': queryString += sql.format(`DELETE FROM SINMap WHERE id_SINMap = ?`,[req.body.id_SINMap]); break;
 		case 'DeleteInterfaceIssue': queryString += sql.format(`DELETE FROM interfaceIssues WHERE id_interfaceIssue = ?`,[req.body.id_interfaceIssue]); break;
+		case 'DeleteFamily': queryString += sql.format(`DELETE FROM families WHERE id_family = ?`,[req.body.id_family]); break;
 		case 'DeleteDataExchange':
 			if (req.body.id_dataExchange > 0) { //Update existing system
 				//Update system details
@@ -99,6 +100,13 @@ exports.switch = (req,res) => {
 				queryString += sql.format(`INSERT INTO interfaces (name, description, image, updateTime) VALUES (?,?,"tba.svg",?);`,[req.body.name, req.body.description, Date.now()]);
 			}
 			break;
+		case 'UpdateFamily':
+				if (req.body.id_family) {
+					queryString += sql.format(`UPDATE families SET name = ?, description = ? WHERE id_family = ?;`, [req.body.name, req.body.description, req.body.id_family]);
+				} else {
+					queryString += sql.format(`INSERT INTO families (name, description) VALUES (?,?);`, [req.body.name, req.body.description]);
+				}
+			break;
 		case 'UpdateSystem':
 			//Manage tag list
 			var tagArr = req.body.tags.split(',');
@@ -106,7 +114,7 @@ exports.switch = (req,res) => {
 				
 			if (req.body.id_system) { //Update existing system
 				//Update system details
-				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, category = ?, updateTime = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.id_system]);
+				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, category = ?, updateTime = ?, version = ?, id_family = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family, req.body.id_system]);
 	
 				//Delete existing tags
 				queryString += sql.format(`DELETE FROM tags WHERE id_system = ?;`, req.body.id_system)
@@ -118,7 +126,7 @@ exports.switch = (req,res) => {
 	
 			} else { //Add new system
 				
-				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem) VALUES (?,?,?,?,?,?,0);`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now()]);
+				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem, version, id_family) VALUES (?,?,?,?,?,?,0,?,?);`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family]);
 				queryString += sql.format(`SET @insertID = LAST_INSERT_ID();`)
 	
 				//Add new tags

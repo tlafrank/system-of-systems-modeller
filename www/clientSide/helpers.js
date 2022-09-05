@@ -380,10 +380,26 @@ function setFormElement($selector, properties, value){
 			}
 			break;
 		case 'selectOptions': //Fills a select
-		debug(5, value)
+			//sdebug(5, value)
 			if(properties.attr){
 				value.forEach((element) => {
 					$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName]}</option>`)
+				})
+			} else {
+				value.forEach((element) => {
+					$($selector).append(`<option>${element}</option>`)
+				})
+			}
+			break;
+		case 'selectOptions_MultipleFields': //Fills a select, with multiple values
+			//sdebug(5, value)
+			if(properties.attr){
+				value.forEach((element) => {
+					if (element[properties.columnName[1]] === null || element[properties.columnName[1]] === ''){
+						$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName[0]]}</option>`)
+					} else {
+						$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName[0]]} [${element[properties.columnName[1]]}]</option>`)
+					}
 				})
 			} else {
 				value.forEach((element) => {

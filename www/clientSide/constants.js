@@ -52,7 +52,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'id', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system', 'id_system']},
 							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
 							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
-							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromResult_Name', nodeName: 'name', columnNames: ['name', 'version']},
 							{action: 'fromResult', nodeName: 'filename', format: './images/<0>', columnNames: ['image']},
 							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'category', constantName: 'systems', default: 'black'},
 						],
@@ -635,21 +635,7 @@ const graph = {
 
 
 
-/**
- * @description Labels for the issue severity. Uncomment if privateConstants.js is not used
- * 
- */
-/*
-const severityLabels = [
-	{index: 0, label: 'Information', description: 'Non-issue. For information only.'},
-	{index: 1, label: 'Notice', description: 'For notice and tracking only.'},
-	{index: 2, label: 'Warning', description: 'An issue that is isolated to a small subset of the overall system.'},
-	{index: 3, label: 'Error', description: 'An issue that has a limited impact on the overall system.'},
-	{index: 4, label: 'Critical', description: 'An issue that has a wide impact on the overall system.'},
-	{index: 5, label: 'Alert', description: 'An issue that has a detrimental impact on the overall system.'},
-	{index: 6, label: 'Emergency', description: 'An issue that renders the overall system inoperable.'},
-];
-*/
+
 
 const graphTable = {
 	System: [
@@ -674,16 +660,43 @@ const graphTable = {
 const cyStyle = [ // the stylesheet for the graph
 	{ selector: 'node',
 		style: {
-			'width': '600px',
-			'background-width': '591px',
-			'height': '600px',
-			'background-height': '591px',
+			'width': '200px',
+			'background-width': '200px',
+			'height': '200px',
+			'background-height': '200px',
 			'background-color': 'white',
 			'background-fit': 'none',
 			'label': 'data(name)',
-			//'border-color': 'black',
-			'border-width': '15px',
-			'font-size': '80px',
+			'border-color': 'red',
+			'border-width': '4px',
+			'font-size': '26px',
+		}
+	},
+	{
+		selector: 'node[proposed = "1"]',
+		style: {
+			'border-style': 'dashed',
+			//'border-width': 3,
+			//'border-dash-pattern': [10,50],
+			//'border-opacity': 0.5,
+			//'border-color': 'grey',
+		}
+	},
+	{ selector: '.small',
+		style: {
+			'width': '100px',
+			'background-width': '95px',
+			'height': '100px',
+			'background-height': '95px',
+		}
+	},
+	{ selector: '.network',
+		style: {
+			'width': '100px',
+			'background-width': '105px',
+			'height': '100px',
+			'background-height': '105px',
+			'shape': 'round-octagon',
 		}
 	},
 	{ selector: '[filename]',
@@ -696,59 +709,16 @@ const cyStyle = [ // the stylesheet for the graph
 		'border-color': 'data(lineColor)',
 	}
 	},
-	{
-		selector: 'edge[linkCategory = "alternate"]',
-		style: {
-			'line-style': 'dashed',
-			'line-opacity': 0.8,
-			'line-dash-pattern': [25,25],
-		}
-	},
-	{
-		selector: 'node[proposed = "1"]',
-		style: {
-			//'border-style': 'dashed',
-			//'border-dash-pattern': [25,25],
-			//'border-opacity': 0.5,
-			'border-color': 'grey',
-		}
-	},
-
-	{ selector: '.network',
-		style: {
-			'width': '300px',
-			'background-width': '320px',
-			'height': '300px',
-			'background-height': '320px',
-			'shape': 'round-octagon',
-		}
-	},
-	// { selector: '.interface',
-	// 	style: {
-	// 		'width': '300px',
-	// 		'background-width': '300px',
-	// 		'height': '300px',
-	// 		'background-height': '300px',
-	// 		'border-color': 'black',
-	// 	}
-	// },
-
-	{ selector: '.critical', style: { 'background-color': 'red' }},
-	{ selector: '.warning', style: { 'background-color': '#ffcc00' }},
-	{ selector: '.notice', style: { 'background-color': '#33cc33' }},
-
-	{ selector: '.red', style: { 'line-color': 'red'}},
-	{ selector: '.blue', style: { 'line-color': 'blue'}},
-	{ selector: '.amber', style: { 'line-color': 'orange'}},
 
 	{
 		selector: 'edge',
 		style: {
-			'width': 15,
+			'width': 4,
 			'line-color': 'data(lineColor)',
 			'curve-style': 'bezier',
 		}
 	},
+	
 	{
 		selector: 'edge[name]',
 		style: {
@@ -762,6 +732,23 @@ const cyStyle = [ // the stylesheet for the graph
 			'text-background-opacity': 1,
 		}
 	},
+	{
+		selector: 'edge[linkCategory = "alternate"]',
+		style: {
+			'line-style': 'dashed',
+			'line-opacity': 0.7,
+			'line-dash-pattern': [25,25],
+		}
+	},
+	{ selector: '.critical', style: { 'background-color': 'red' }},
+	{ selector: '.warning', style: { 'background-color': '#ffcc00' }},
+	{ selector: '.notice', style: { 'background-color': '#33cc33' }},
+
+	{ selector: '.red', style: { 'line-color': 'red'}},
+	{ selector: '.blue', style: { 'line-color': 'blue'}},
+	{ selector: '.amber', style: { 'line-color': 'orange'}},
+
+
 	{
 		selector: '.subordinateSystem',
 		style: {
@@ -782,14 +769,7 @@ const cyStyle = [ // the stylesheet for the graph
 			'text-border-color': 'purple',
 		}
 	},
-	{ selector: '.small',
-		style: {
-			'width': '300px',
-			'background-width': '280px',
-			'height': '300px',
-			'background-height': '280px',
-		}
-	},
+
 	{
 		selector: '.square',
 		style: {
@@ -804,23 +784,6 @@ const cyStyle = [ // the stylesheet for the graph
 			'text-valign':'center',
 		}
 	},
-	// {
-	// 	selector: '.proposed',
-	// 	style: {
-	// 		'line-style': 'dashed',
-	// 		'line-color': 'grey',
-	// 		'border-style': 'dashed',
-	// 		'border-color': 'grey',
-	// 	}
-	// },
-
-	// {
-	// 	selector: '.dashed',
-	// 	style: {
-	// 		'line-style': 'dashed',
-	// 		'line-opacity': 0.8,
-	// 	}
-	// },
 ];
 
 
@@ -829,7 +792,7 @@ function cyLayout(){
 		name: localStorage.getItem('graphLayoutName'),
 		rows: localStorage.getItem('graphLayoutRows'),
 		animate: localStorage.getItem('graphLayoutAnimate'),
-		idealEdgeLength: 1000,
+		idealEdgeLength: 200,
 	}
 	return obj
 }
@@ -857,36 +820,7 @@ const colors = [//Cyclic array for chart colur selection
 //var colorNames = ['red','green','blue','black','orange' ]
 
 
-/**
- * @description Contains the categories for assigning colors to the various systems, interfaces and links (nodes and edges). Uncomment and
- * populate if these are not contained elsewhere. (i.e. privateConstants.js)
- *  
- */
-/*
 
-var categories = { //Must stay var to be found within the window object
-	systems:[
-		{title: 'Red', value: '', color: 'red'},
-		{title: 'Green', value: '', color: 'green'},
-		{title: 'Blue', value: '', color: 'blue'},
-	],
-	interfaces:[
-		{title: 'Red', value: '', color: 'red'},
-		{title: 'Green', value: '', color: 'green'},
-		{title: 'Blue', value: '', color: 'blue'},
-	],
-	links:[
-		{title: 'Red', value: '', color: 'red'},
-		{title: 'Green', value: '', color: 'green'},
-		{title: 'Blue', value: '', color: 'blue'},
-	],
-	technology: [ 
-		{title: 'Red', value: '', color: 'red'},
-		{title: 'Green', value: '', color: 'green'},
-		{title: 'Blue', value: '', color: 'blue'},
-	],
-}
-*/
 
 const graphLayoutNames = ['cose', 'breadthfirst', 'circle', 'concentric', 'grid', 'random', 'fcose', 'preset'];
 const defaultLandingPageOptions = ['standard', 'summary', 'issues'];
@@ -1334,6 +1268,7 @@ const modals = {
 		title: 'Systems', //The title of the modal to display at the top of the modal
 		formButtons: [ //The buttons to insert at the bottom of the modal
 			{type: 'info', id: 'buttonNew', label: 'New System', initialState: 'unlock'},
+			//{type: 'info', id: 'buttonClone', label: 'Clone System', initialState: 'unlock'},
 			{type: 'delete', id: 'buttonDelete', label: 'Remove System', initialState: 'unlock'},
 			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
 			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
@@ -1343,6 +1278,8 @@ const modals = {
 			{ type: 'img', id: 'imageSystem', columnName: 'image'},
 			{ type: 'heading', id: 'headingSystemName', align: 'center'},
 			{ type: 'text', id: 'textSystemName', label: 'Name'},
+			{ type: 'select', id: 'selectFamily', label: 'Family'},
+			{ type: 'text', id: 'textVersion', label: 'Version'},
 			{ type: 'textarea', id: 'textSystemDescription', label: 'Description' },
 			{ type: 'select', id: 'selectCategory', label: 'Category'},
 			{ type: 'text', id: 'textSystemReferences', label: 'System Block Diagram Reference', append: {
@@ -1359,6 +1296,8 @@ const modals = {
 		],
 		monitorChanges: [//The ID of the controls to monitor for changes
 			{id: 'textSystemName', on: 'input'},
+			{id: 'selectFamily', on: 'change'},
+			{id: 'textVersion', on: 'input'},
 			{id: 'textSystemDescription', on: 'input'},
 			{id: 'textSystemReferences', on: 'input'},
 			{id: 'textSystemTags', on: 'input'},
@@ -1372,10 +1311,18 @@ const modals = {
 				definitionFields: [],
 				continueOnUndefined: true,
 				instructions: [
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectSystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions_MultipleFields', id: 'selectSystem', columnName: ['name','version'], attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system'},
 					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'systems', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
+				],
+			},
+			{ //Get the all the families
+				type: 'AllFamilies',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectFamily', columnName: 'name', attr: {name: 'id_family', columnName: 'id_family'} },
 				],
 			},
 			{ //Get specific system details
@@ -1387,6 +1334,8 @@ const modals = {
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'imageSystem', type: 'image', columnName: 'image'},
 					{action: 'setDefinition_SingleValue_AtSpecificArrayIndex', id: 'image', arrayIndex: 0, columnName: 'image'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemName', type: 'text', columnName: 'name'},
+					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectFamily', dataAttr: 'id_family', columnName: 'id_family'},
+					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textVersion', type: 'text', columnName: 'version'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemDescription', type: 'text', columnName: 'description'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemReferences', type: 'text', columnName: 'reference'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
@@ -1421,6 +1370,7 @@ const modals = {
 					{action: 'deleteDefinitionValue', definitionName: 'id_system'},
 					{action: 'emptyControl', type: 'heading', id: 'headingSystemName'},
 					{action: 'emptyControl', type: 'text', id: 'textSystemName'},
+					{action: 'emptyControl', type: 'text', id: 'textVersion'},
 					{action: 'emptyControl', type: 'text', id: 'textSystemDescription'},
 					{action: 'emptyControl', type: 'image', id: 'imageSystem'},
 					{action: 'emptyControl', type: 'text', id: 'textSystemReferences'},
@@ -1434,7 +1384,9 @@ const modals = {
 				postType: 'UpdateSystem',
 				instructions: [
 					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
-					{action: 'toServer_ControlValue', id: 'textSystemName', type: 'text', columnName: 'name'}, //Change id to controlId eventually
+					{action: 'toServer_ControlValue', id: 'textSystemName', type: 'text', columnName: 'name'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectFamily', columnName: 'id_family', dataAttr: 'id_family'},
+					{action: 'toServer_ControlValue', id: 'textVersion', type: 'text', columnName: 'version'},
 					{action: 'toServer_ControlValue', id: 'imageSystem',  type: 'image', columnName: 'image'},
 					{action: 'toServer_ControlValue', id: 'textSystemDescription',  type: 'text', columnName: 'description'},
 					{action: 'toServer_ControlValue', id: 'textSystemReferences',  type: 'text', columnName: 'reference'},
@@ -2697,6 +2649,150 @@ const modals = {
 			},
 		]
 	},
+
+	families: {
+		title: 'Families',
+		formButtons: [ 
+			{type: 'info', id: 'buttonNew', label: 'New Family', initialState: 'unlock'},
+			{type: 'delete', id: 'buttonDelete', label: 'Delete Family', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{ type: 'select', id: 'selectFamily', label: 'System Families'},
+			{ type: 'text', id: 'textFamilyName', label: 'Name'},
+			{ type: 'textarea', id: 'textFamilyDescription', label: 'Description' },
+		],
+		monitorChanges: [
+			{id: 'textFamilyName', on: 'input'},
+			{id: 'textFamilyDescription', on: 'input'},
+		],
+		lockOnChange: ['buttonDelete','buttonNew','selectFamily'],
+		unlockOnChange: ['buttonUpdate'],
+		iterations: [
+			{ 
+				type: 'AllFamilies',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectFamily', columnName: 'name', attr: {name: 'id_family', columnName: 'id_family'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectFamily', definition: 'id_family', dataAttr: 'id_family', columnName: 'id_family'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectFamily', definition: 'id_family', dataAttr: 'id_family'},
+				],
+			},
+			{
+				type: 'SingleFamily', 
+				definitionFields: ['id_family'],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_SingleValue', type: 'text', id: 'textFamilyName', columnName: 'name'},
+					{action: 'setControl_SingleValue', type: 'text', id: 'textFamilyDescription', columnName: 'description'},
+				],
+			},
+		],
+		events: [
+			
+			{	//Change to family select
+				handlers: [{controlId: 'selectFamily', event: 'change'},], 
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectFamily', definitionName: 'id_family', dataAttr: 'id_family'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+			{	//Add New family button
+				handlers: [{controlId: 'buttonNew', event: 'click'},], 
+				instructions: [
+					{action: 'deleteDefinitionValue', definitionName: 'id_family'},
+					{action: 'emptyControl', type: 'select', id: 'selectFamily'},
+					{action: 'emptyControl', type: 'text', id: 'textFamilyName'},
+					{action: 'emptyControl', type: 'text', id: 'textFamilyDescription'},
+					{action: 'lockControls'}					
+				],
+				cleanup: [],
+			},
+			{	//Delete button
+				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
+				postType: 'DeleteFamily', 
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_family', columnName: 'id_family'},
+				],
+				cleanup: [
+					{action: 'deleteDefinition', definitionName: 'id_family'},
+					{action: 'reload'},
+				],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdateFamily',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_family', columnName: 'id_family'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textFamilyName', columnName: 'name'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textFamilyDescription', columnName: 'description'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_family'},
+					{action: 'reload'},
+				],
+			},
+			{	//Close buttton
+				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+		]
+	},
 }
 
+/**
+ * @description The size of the grid to snap to
+ */
+const snapToGridDistance = 80
 
+
+/**
+ * @description Contains the categories for assigning colors to the various systems, interfaces and links (nodes and edges).
+ * To stay a variable so that it can be found within the window object as well as be replaced by privateConstants.js, if required.
+ *  
+ */
+/*
+var categories = { //Must stay var to be found within the window object
+	systems:[
+		{title: 'Red', value: '', color: 'red'},
+		{title: 'Green', value: '', color: 'green'},
+		{title: 'Blue', value: '', color: 'blue'},
+	],
+	interfaces:[
+		{title: 'Red', value: '', color: 'red'},
+		{title: 'Green', value: '', color: 'green'},
+		{title: 'Blue', value: '', color: 'blue'},
+	],
+	links:[
+		{title: 'Red', value: '', color: 'red'},
+		{title: 'Green', value: '', color: 'green'},
+		{title: 'Blue', value: '', color: 'blue'},
+	],
+	technology: [ 
+		{title: 'Red', value: '', color: 'red'},
+		{title: 'Green', value: '', color: 'green'},
+		{title: 'Blue', value: '', color: 'blue'},
+	],
+}
+*/
+
+/**
+ * @description Labels for the issue severity. To stay a variable so it can be replaced by privateConstants.js, if required.
+ * 
+ */
+/*
+const severityLabels = [
+	{index: 0, label: 'Information', description: 'Non-issue. For information only.'},
+	{index: 1, label: 'Notice', description: 'For notice and tracking only.'},
+	{index: 2, label: 'Warning', description: 'An issue that is isolated to a small subset of the overall system.'},
+	{index: 3, label: 'Error', description: 'An issue that has a limited impact on the overall system.'},
+	{index: 4, label: 'Critical', description: 'An issue that has a wide impact on the overall system.'},
+	{index: 5, label: 'Alert', description: 'An issue that has a detrimental impact on the overall system.'},
+	{index: 6, label: 'Emergency', description: 'An issue that renders the overall system inoperable.'},
+];
+*/
