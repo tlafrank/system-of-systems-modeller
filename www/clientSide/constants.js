@@ -1269,7 +1269,7 @@ const modals = {
 		title: 'Systems', //The title of the modal to display at the top of the modal
 		formButtons: [ //The buttons to insert at the bottom of the modal
 			{type: 'info', id: 'buttonNew', label: 'New System', initialState: 'unlock'},
-			//{type: 'info', id: 'buttonClone', label: 'Clone System', initialState: 'unlock'},
+			{type: 'info', id: 'buttonClone', label: 'Clone System', initialState: 'unlock'},
 			{type: 'delete', id: 'buttonDelete', label: 'Remove System', initialState: 'unlock'},
 			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
 			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
@@ -1393,6 +1393,17 @@ const modals = {
 					{action: 'toServer_ControlValue', id: 'textSystemReferences',  type: 'text', columnName: 'reference'},
 					{action: 'toServer_ControlValue', id: 'textSystemTags',  type: 'text', columnName: 'tags'},
 					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},
+					{action: 'reload'}
+				],
+			},
+			{	//Clone system button clicked
+				handlers: [{controlId: 'buttonClone', event: 'click'},],
+				postType: 'CloneSystem',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
 				],
 				cleanup: [
 					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},

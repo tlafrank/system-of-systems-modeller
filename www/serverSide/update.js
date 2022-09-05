@@ -1,4 +1,4 @@
-const { format } = require('./db');
+const { format, query } = require('./db');
 const sql = require('./db');
 
 let debugLevel = 7;
@@ -20,6 +20,41 @@ exports.switch = (req,res) => {
 
 
 	switch (req.body.type){
+		//Clone system
+		case 'CloneSystem':
+			//Clone the system
+
+			queryString += sql.format(`
+				SET @id_system = ?;
+				SET @name = CONCAT((SELECT name FROM systems WHERE id_system = @id_system), '_clone');
+				SELECT @name;
+				
+				INSERT INTO systems (name, id_family, version, image, category, isSubsystem, distributedSubsystem, description, reference, updateTime)
+					SELECT @name, id_family, version, image, category, isSubsystem, distributedSubsystem, description, reference, UNIX_TIMESTAMP()
+					FROM systems
+					WHERE id_system = @id_system;
+				SET @new_id_system = last_insert_id();`, req.body.id_system)
+
+			//Clone the quantities
+			queryString += sql.format(`
+				INSERT INTO quantities (id_system, year, quantity)
+					SELECT @new_id_system, year, quantity
+					FROM quantities
+				WHERE id_system = @id_system;`)
+
+			//Clone the interfaces
+			queryString += sql.format(`
+				INSERT INTO SIMap (id_system, id_interface, isProposed, name, description, category)
+					SELECT @new_id_system, id_interface, isProposed, name, description, category
+					FROM SIMap
+				WHERE id_system = @id_system;`)
+			
+			//Clone the links
+
+
+			break;
+		
+		
 		//Simple Deletes
 		case 'DeleteOrganisation':	queryString += sql.format(`DELETE FROM organisation WHERE id_organisation = ?;`, req.body.id_organisation);	break;
 		case 'DeleteSystem': queryString += sql.format(`DELETE FROM systems WHERE id_system = ?;`, req.body.id_system); break;
