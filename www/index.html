@@ -64,13 +64,22 @@
 
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 			<ul class="navbar-nav mr-auto">
-
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Supporting Info</a>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<!---->
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('families')">System Families</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('parties')">Parties</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('poc')">Points of Contact</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('cimMap')">CIM Mapping</a></li>
+					</ul>
+				</li>
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">System</a>
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 						<!---->
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('systems')">Systems</a></li>
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('families')">System Families</a></li>
+						
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('subsystems')">Subsystems</a></li>
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('mapSystems')">System Relationships</a></li>
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('interfaces')">Interfaces</a></li>

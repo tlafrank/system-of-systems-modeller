@@ -66,6 +66,8 @@ exports.switch = (req,res) => {
 		case 'DeleteNetworkFromInterface': queryString += sql.format(`DELETE FROM SINMap WHERE id_SINMap = ?`,[req.body.id_SINMap]); break;
 		case 'DeleteInterfaceIssue': queryString += sql.format(`DELETE FROM interfaceIssues WHERE id_interfaceIssue = ?`,[req.body.id_interfaceIssue]); break;
 		case 'DeleteFamily': queryString += sql.format(`DELETE FROM families WHERE id_family = ?`,[req.body.id_family]); break;
+		case 'DeleteParty': queryString += sql.format(`DELETE FROM parties WHERE id_party = ?`,[req.body.id_party]); break;
+		case 'DeletePoc': queryString += sql.format(`DELETE FROM poc WHERE id_poc = ?`,[req.body.id_poc]); break;
 		case 'DeleteDataExchange':
 			if (req.body.id_dataExchange > 0) { //Update existing system
 				//Update system details
@@ -113,6 +115,24 @@ exports.switch = (req,res) => {
 			break;
 
 		//Simple Updates / Insertions
+		case 'UpdateCimMap':
+			queryString += sql.format(`DELETE FROM cimMap WHERE id_system = ?;`,[req.body.id_system]);
+			queryString += sql.format(`INSERT INTO cimMap (id_system, cimName, updateTime) VALUES (?,?,?);`,[req.body.id_system, req.body.cimName, Date.now()]);
+			break;
+		case 'UpdatePoc':
+			if (req.body.id_party){
+				queryString += sql.format(`UPDATE poc SET name = ?, email = ?, updateTime = ? WHERE poc.id_poc = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_party]);
+			} else {
+				queryString += sql.format(`INSERT INTO poc (name, email, updateTime) VALUES (?,?,?);`,[req.body.name, req.body.email, Date.now()]);
+			}
+			break;
+		case 'UpdateParty':
+			if (req.body.id_party){
+				queryString += sql.format(`UPDATE parties SET name = ?, description = ?, updateTime = ? WHERE parties.id_party = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_party]);
+			} else {
+				queryString += sql.format(`INSERT INTO parties (name, description, updateTime) VALUES (?,?,?);`,[req.body.name, req.body.description, Date.now()]);
+			}
+			break;
 		case 'UpdateSIMap':
 			//queryString += sql.format(`UPDATE SIMap SET isProposed = ?, name = ?, description = ? WHERE SIMap.id_SIMap = ?;`,[req.body.isProposed, req.body.name, req.body.description, req.body.id_SIMap]);
 			queryString += sql.format(`UPDATE SIMap SET name = ?, description = ?, category = ?, isProposed = ? WHERE SIMap.id_SIMap = ?;`,[req.body.name, req.body.description, req.body.category, req.body.isProposed, req.body.id_SIMap]);

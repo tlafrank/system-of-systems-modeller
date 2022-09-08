@@ -214,6 +214,51 @@ function savePNG(){
 }
 
 /**
+ * @description 
+ * 
+ */
+ async function saveCimCsv(){
+	//
+	debug(1, 'In saveCimCsv()', sosm)
+	
+	var postData = {
+		type: 'CimExport'
+	}
+
+	await $.post('select.json', postData, (result) => {
+		debug(3, postData, result);
+
+		var csv = '';
+
+		if (result.msg){
+			//An error was passed
+			definition.message = {info: 'failure', msg: `There was an error. Check the console.`};
+			definition.continue = false;
+		} else {
+			//Populate the form's fields
+			debug(5, 'CimExportIsIn') 
+
+			var csv = `"id_system","familyName","systemName","version","cimName","year","quantity"\n`
+			result.forEach((row) => {
+				csv += `"${row.id_system}","${row.familyName}","${row.systemName}","${row.version}","${row.cimName}","${row.year}","${row.quantity}"\n`
+			})
+			
+			var hiddenElement = document.createElement('a');
+			hiddenElement.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(csv);
+			hiddenElement.target = '_blank';
+			hiddenElement.download = 'sosm.csv';
+			hiddenElement.click();
+
+
+		}
+	})
+
+
+
+}
+
+
+/**
  * @description User clicks the button to hide the currently selected node from the graph
  * 
  */

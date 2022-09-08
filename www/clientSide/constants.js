@@ -1304,7 +1304,7 @@ const modals = {
 			{id: 'textSystemTags', on: 'input'},
 			{id: 'selectCategory', on: 'change'},
 		],
-		lockOnChange: ['selectSystem','buttonNew','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces','buttonSystemRelationships'], //The ID of the controls to lock when editing an object
+		lockOnChange: ['selectSystem','buttonNew','buttonClone','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces','buttonSystemRelationships'], //The ID of the controls to lock when editing an object
 		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
 		iterations: [ //The objects to process in order to fetch information from the server and insert into the form controls
 			{ //Get the all the systems
@@ -1976,7 +1976,7 @@ const modals = {
 		title: 'System Quantities',
 		formButtons: [
 			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'unlock'},
-			{type: 'cancel', id: 'buttonCancel', label: 'Cancel', initialState: 'unlock'},
+			{type: 'cancel', id: 'buttonCancel', label: 'Close', initialState: 'unlock'},
 		], 
 		formFields: [ 
 			{ type: 'img', id: 'imageSystem', columnName: 'image'},
@@ -2564,6 +2564,7 @@ const modals = {
 			},
 		]
 	},
+
 	export: {
 		title: 'Export Data',
 		formButtons: [ 
@@ -2574,8 +2575,8 @@ const modals = {
 			{ type: 'buttons', buttons: [
 				{ id: 'exportPNG', label: 'Export PNG'},
 				{ id: 'exportJPG', label: 'Export JPG'},
-				//{ id: 'exportSVG', label: 'Export SVG'}, //cytoscape SVG output is inadequate. TBC
 				{ id: 'exportCSV', label: 'Export CSV'},
+				{ id: 'exportCim', label: 'CIM Export'},
 			]},
 		],
 		monitorChanges: [],
@@ -2601,10 +2602,10 @@ const modals = {
 				],
 			},
 			{
-				handlers: [{controlId: 'exportSVG', event: 'click'}, ],
+				handlers: [{controlId: 'exportCim', event: 'click'}, ],
 				instructions: [],
 				cleanup: [
-					{action: 'launchFunction', functionName: 'saveSVG'},
+					{action: 'launchFunction', functionName: 'saveCimCsv'},
 					{action: 'closeModal'},
 				],
 			},
@@ -2695,7 +2696,7 @@ const modals = {
 			{
 				type: 'SingleFamily', 
 				definitionFields: ['id_family'],
-				continueOnUndefined: true,
+				continueOnUndefined: false,
 				instructions: [ 
 					{action: 'setControl_SingleValue', type: 'text', id: 'textFamilyName', columnName: 'name'},
 					{action: 'setControl_SingleValue', type: 'text', id: 'textFamilyDescription', columnName: 'description'},
@@ -2745,6 +2746,258 @@ const modals = {
 				],
 				cleanup: [
 					{action: 'setDefinition_FromResultInsert', definitionName: 'id_family'},
+					{action: 'reload'},
+				],
+			},
+			{	//Close buttton
+				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+		]
+	},
+
+	parties: {
+		title: 'Parties', //The title of the modal to display at the top of the modal
+		formButtons: [ //The buttons to insert at the bottom of the modal
+			{type: 'info', id: 'buttonNew', label: 'New Party', initialState: 'unlock'},
+			{type: 'delete', id: 'buttonDelete', label: 'Delete Party', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ //The empty controls to insert in the modal
+			{ type: 'select', id: 'selectParty', label: 'All Parties'},
+			{ type: 'text', id: 'textPartyName', label: 'Name'},
+			{ type: 'textarea', id: 'textPartyDescription', label: 'Description' },
+		],
+		monitorChanges: [ //The ID of the controls to monitor for changes
+			{id: 'textPartyName', on: 'input'},
+			{id: 'textPartyDescription', on: 'input'},
+		], 
+		lockOnChange: ['buttonDelete','buttonNew','selectParty'],
+		unlockOnChange: ['buttonUpdate'],
+		iterations: [
+			{ 
+				type: 'AllParties',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectParty', columnName: 'name', attr: {name: 'id_party', columnName: 'id_party'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectParty', definition: 'id_party', dataAttr: 'id_party', columnName: 'id_party'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectParty', definition: 'id_party', dataAttr: 'id_party'},
+				],
+			},
+			{
+				type: 'SingleParty', 
+				definitionFields: ['id_party'],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_SingleValue', type: 'text', id: 'textPartyName', columnName: 'name'},
+					{action: 'setControl_SingleValue', type: 'text', id: 'textPartyDescription', columnName: 'description'},
+				],
+			},
+		],
+		events: [
+			{	//Change to all parties select
+				handlers: [{controlId: 'selectParty', event: 'change'},], 
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectParty', definitionName: 'id_party', dataAttr: 'id_party'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+			{	//Add New party button
+				handlers: [{controlId: 'buttonNew', event: 'click'},], 
+				instructions: [
+					{action: 'deleteDefinitionValue', definitionName: 'id_party'},
+					{action: 'emptyControl', type: 'select', id: 'selectParty'},
+					{action: 'emptyControl', type: 'text', id: 'textPartyName'},
+					{action: 'emptyControl', type: 'text', id: 'textPartyDescription'},
+					{action: 'lockControls'}					
+				],
+				cleanup: [],
+			},
+			{	//Delete button
+				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
+				postType: 'DeleteParty', 
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_party', columnName: 'id_party'},
+				],
+				cleanup: [
+					{action: 'deleteDefinition', definitionName: 'id_party'},
+					{action: 'reload'},
+				],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdateParty',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_party', columnName: 'id_party'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textPartyName', columnName: 'name'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textPartyDescription', columnName: 'description'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_party'},
+					{action: 'reload'},
+				],
+			},
+			{	//Close buttton
+				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+		]
+	},
+
+	poc: {
+		title: 'Points of contact', //The title of the modal to display at the top of the modal
+		formButtons: [ //The buttons to insert at the bottom of the modal
+			{type: 'info', id: 'buttonNew', label: 'New POC', initialState: 'unlock'},
+			{type: 'delete', id: 'buttonDelete', label: 'Delete POC', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ //The empty controls to insert in the modal
+			{ type: 'select', id: 'selectPoc', label: 'All Parties'},
+			{ type: 'text', id: 'textPocName', label: 'Name'},
+			{ type: 'text', id: 'textPocEmail', label: 'Email' },
+		],
+		monitorChanges: [ //The ID of the controls to monitor for changes
+			{id: 'textPocName', on: 'input'},
+			{id: 'textPocEmail', on: 'input'},
+		], 
+		lockOnChange: ['buttonDelete','buttonNew','selectPoc'],
+		unlockOnChange: ['buttonUpdate'],
+		iterations: [
+			{ 
+				type: 'AllPocs',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectPoc', columnName: 'name', attr: {name: 'id_poc', columnName: 'id_poc'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectPoc', definition: 'id_poc', dataAttr: 'id_poc', columnName: 'id_poc'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectPoc', definition: 'id_poc', dataAttr: 'id_poc'},
+				],
+			},
+			{
+				type: 'SinglePoc', 
+				definitionFields: ['id_poc'],
+				continueOnUndefined: false,
+				instructions: [ 
+					{action: 'setControl_SingleValue', type: 'text', id: 'textPocName', columnName: 'name'},
+					{action: 'setControl_SingleValue', type: 'text', id: 'textPocEmail', columnName: 'email'},
+				],
+			},
+		],
+		events: [
+			{	//Change to all parties select
+				handlers: [{controlId: 'selectPoc', event: 'change'},], 
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectPoc', definitionName: 'id_poc', dataAttr: 'id_poc'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+			{	//Add New party button
+				handlers: [{controlId: 'buttonNew', event: 'click'},], 
+				instructions: [
+					{action: 'deleteDefinitionValue', definitionName: 'id_poc'},
+					{action: 'emptyControl', type: 'select', id: 'selectPoc'},
+					{action: 'emptyControl', type: 'text', id: 'textPocName'},
+					{action: 'emptyControl', type: 'text', id: 'textPocEmail'},
+					{action: 'lockControls'}					
+				],
+				cleanup: [],
+			},
+			{	//Delete button
+				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
+				postType: 'DeletePoc', 
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_poc', columnName: 'id_poc'},
+				],
+				cleanup: [
+					{action: 'deleteDefinition', definitionName: 'id_poc'},
+					{action: 'reload'},
+				],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdatePoc',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_poc', columnName: 'id_poc'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textPocName', columnName: 'name'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textPocEmail', columnName: 'email'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_poc'},
+					{action: 'reload'},
+				],
+			},
+			{	//Close buttton
+				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+		]
+	},
+
+	cimMap: {
+		title: 'Map systems to CIM', //The title of the modal to display at the top of the modal
+		formButtons: [ //The buttons to insert at the bottom of the modal
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ //The empty controls to insert in the modal
+			{ type: 'select', id: 'selectSystem', label: 'All Systems'},
+			{ type: 'text', id: 'textCimName', label: 'Name'},
+		],
+		monitorChanges: [ //The ID of the controls to monitor for changes
+		{id: 'textCimName', on: 'input'},
+
+		], 
+		lockOnChange: ['selectSystem'],
+		unlockOnChange: ['buttonUpdate'],
+		iterations: [
+			{ 
+				type: 'AllSystems',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions_MultipleFields', id: 'selectSystem', columnName: ['name','version'], attr: {name: 'id_system', columnName: 'id_system'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system'},
+				],
+			},
+			{
+				type: 'SingleCim',
+				definitionFields: ['id_system'],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_SingleValue', type: 'text', id: 'textCimName', columnName: 'cimName'},
+				],
+			},
+		],
+		events: [
+			{	//Change to all systems select
+				handlers: [{controlId: 'selectSystem', event: 'change'},], 
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSystem', definitionName: 'id_system', dataAttr: 'id_system'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdateCimMap',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textCimName', columnName: 'cimName'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},
 					{action: 'reload'},
 				],
 			},

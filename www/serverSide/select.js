@@ -29,6 +29,21 @@ exports.switch = (req,res) => {
 			debug(1, 'In SystemsAssignedToOrgDetail. Not sure if this is valuable') 
 			queryString += sql.format('SELECT * FROM OSMap WHERE id_OSMap = ?;', req.body.id_OSMap)
 			break;
+		case 'SingleCim':
+			queryString += sql.format('SELECT * FROM cimMap WHERE cimMap.id_system = ?;', req.body.id_system)
+			break;
+		case 'AllPocs':
+			queryString += sql.format('SELECT * FROM poc;')
+			break;
+		case 'SinglePoc':
+			queryString += sql.format('SELECT * FROM poc WHERE id_poc = ?;', req.body.id_poc)
+			break;
+		case 'AllParties':
+			queryString += sql.format('SELECT * FROM parties;')
+			break;
+		case 'SingleParty':
+			queryString += sql.format('SELECT * FROM parties WHERE id_party = ?;', req.body.id_party)
+			break;
 		case 'AllFamilies':
 			queryString += sql.format('SELECT * FROM families;')
 			break;
@@ -42,7 +57,7 @@ exports.switch = (req,res) => {
 				SELECT * 
 				FROM systems 
 				WHERE systems.isSubsystem = false 
-				ORDER BY name;`);
+				ORDER BY name, version;`);
 			break;
 		case 'System':
 			debug(1, `Req.body.type of type 'System' called. Update to 'SingleSystem'`)
@@ -239,7 +254,19 @@ exports.switch = (req,res) => {
 				ON systems.id_system = OSMap.id_system
 				WHERE OSMap.id_organisation = ?;`, [req.body.id_organisation])
 			break;
-		case '':
+		case 'CimExport':
+			
+			queryString = sql.format(`
+				SELECT systems.id_system, families.name AS familyName, systems.name AS systemName, systems.version, cimMap.cimName, quantities.year, quantities.quantity
+				FROM systems
+				LEFT JOIN families
+				ON families.id_family = systems.id_family
+				LEFT JOIN cimMap
+				ON cimMap.id_system = systems.id_system
+				LEFT JOIN quantities
+				ON quantities.id_system = systems.id_system;`)
+
+
 
 		break;
 		case '':
@@ -344,7 +371,15 @@ exports.switch = (req,res) => {
 				case 'System':
 				case 'SystemInterface':
 				case 'SingleFamily':
-					res.json(result[0])
+				case 'SingleParty':
+				case 'SinglePoc':
+				case 'SingleCim':
+					if (result[0] !== undefined){
+						res.json(result[0])
+					} else {
+						res.json([])
+					}
+					
 					break;
 				case 'SpecificInterfaceIssue':
 					res.json([result[1], result[2]]);

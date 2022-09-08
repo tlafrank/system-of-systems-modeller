@@ -181,3 +181,59 @@
 
 	-- Add a version column to the system
 	ALTER TABLE systems ADD COLUMN `version` VARCHAR(60) AFTER `id_family`;
+
+	
+-- V1.0.8 (See package.json)
+-- Added the CIM mapping table
+	CREATE TABLE IF NOT EXISTS `db_sosm`.`cimMap` (
+		`id_cimMap` INT NOT NULL AUTO_INCREMENT,
+		`id_system` INT NOT NULL,
+		`cimName` VARCHAR(60) NOT NULL,
+		`updateTime` BIGINT,
+		PRIMARY KEY (`id_cimMap`),
+		INDEX `id_cimMap_idx` (`id_cimMap` ASC) VISIBLE,
+		INDEX `id_system_idx` (`id_system` ASC) VISIBLE,
+		CONSTRAINT `fk_cimMap_systems`
+			FOREIGN KEY (`id_system`)
+			REFERENCES `db_sosm`.`systems` (`id_system`)
+			ON DELETE CASCADE
+			ON UPDATE NO ACTION)
+	ENGINE = InnoDB;
+
+-- Added the parties table
+	--The parties table lists the department responsible for the system
+	CREATE TABLE IF NOT EXISTS `db_sosm`.`parties` (
+		`id_party` INT NOT NULL AUTO_INCREMENT,
+		`name` VARCHAR(60) NOT NULL,
+		`description` LONGTEXT NULL COMMENT 'A brief description of the party',
+		`updateTime` BIGINT,
+		PRIMARY KEY (`id_party`))
+	ENGINE = InnoDB;
+
+-- Map the system to the party
+	ALTER TABLE systems ADD COLUMN `id_responsibleParty` INT AFTER `reference`;
+	ALTER TABLE systems ADD INDEX `id_responsibleParty_idx` (`id_responsibleParty` ASC) VISIBLE;
+	ALTER TABLE systems ADD CONSTRAINT `fk_systems_parties`
+		FOREIGN KEY (`id_responsibleParty`)
+		REFERENCES `db_sosm`.`parties` (`id_party`)
+		ON DELETE SET NULL
+		ON UPDATE NO ACTION;
+
+-- Add a POC details table
+	CREATE TABLE IF NOT EXISTS `db_sosm`.`poc` (
+		`id_poc` INT NOT NULL AUTO_INCREMENT,
+		`name` VARCHAR(60) NOT NULL,
+		`email` VARCHAR(128),
+		`updateTime` BIGINT,
+		PRIMARY KEY (`id_poc`))
+	ENGINE = InnoDB;
+
+-- Map the POC tables to the system
+	ALTER TABLE systems ADD COLUMN `id_poc` INT AFTER `id_responsibleParty`;
+	ALTER TABLE systems ADD INDEX `id_poc_idx` (`id_poc` ASC) VISIBLE;
+	ALTER TABLE systems ADD CONSTRAINT `fk_systems_poc`
+		FOREIGN KEY (`id_poc`)
+		REFERENCES `db_sosm`.`poc` (`id_poc`)
+		ON DELETE SET NULL
+		ON UPDATE NO ACTION;
+
