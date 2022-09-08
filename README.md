@@ -1,12 +1,13 @@
 # system-of-systems-modeller
-System-of-systems-modeller (SOSM) is a NodeJS-based web app supported by an SQL database (MySQL) which allows a user to model nodes, their interfaces and the ways in which they connect. SOSM uses a number of client-side JS libraries which attempts to provide a clean UI, whilst also providing a clear graphical representation of the system, or the particular view of the system that the user is currently interested in.
+System-of-systems-modeller (SOSM) is a NodeJS-based web app supported by an SQL database (MySQL) which allows a user to model nodes, their interfaces and the ways in which they connect (links). SOSM uses a number of client-side JS libraries which attempts to provide a clean UI, whilst also providing a clear graphical representation of the system, or the particular view of the system that the user is currently interested in.
 
 ## SOSM Terms
 SOSM defines the following terms:
-- Subsystem. The systems which make up the greater system.
-- Interface. The means by which a platform (system) connects to other platforms (systems).
-- Network. The link established between two or more interfaces.
-- Feature. The technology used by a network as well as the technology that can be implemented by an interface.
+- System. The systems which make up the greater system. Systems form the primary nodes of the standard graph.
+- Subsystems. Systems might be fitted with a selection of specific subsystems.
+- Interface. The means by which a system connects to other systems.
+- Link. The link established between two or more interfaces. This was formally referred to as a network, and some references to network may still exist.
+- Technology. The technology implemented by an interface as well as the technology that links use to communicate.
 
 ## SOSM Dependencies
 SOSM requires a number of external dependencies to function. Client side external dependencies can be found within /www/index.html. Client side external dependencies include:
@@ -21,3 +22,6 @@ Server-side dependencies include
 - NodeJS (12.21.0)
 - NPM. With packages:
 -- MySQL2
+
+## Deployment
+When deploying the database, the user should write /sql/deploySchema.sql to the database, followed by /sql/schemaUpdates.sql. This will get the database schema up to what the remainder of the code requires. When pulling an update, the user should check the existing version of SOSM (as detailed in /www/package.json) with the latest, and apply only the updates necessary from /sql/schemaUpdates.sql.
