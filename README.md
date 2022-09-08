@@ -16,6 +16,7 @@ SOSM requires a number of external dependencies to function. Client side externa
 - Cytoscape JS (3.21.0)
 - JQuery (3.5.1)
 - ChartJS (3.7.1)
+- Popper (1.14.7)
 
 Server-side dependencies include
 - MySQL (8.0.27)
@@ -23,5 +24,8 @@ Server-side dependencies include
 - NPM. With packages:
 -- MySQL2
 
-## Deployment
+## Initial Deployment
 When deploying the database, the user should write /sql/deploySchema.sql to the database, followed by /sql/schemaUpdates.sql. This will get the database schema up to what the remainder of the code requires. When pulling an update, the user should check the existing version of SOSM (as detailed in /www/package.json) with the latest, and apply only the updates necessary from /sql/schemaUpdates.sql.
+
+Some instances of SOSM may required tailored data, which is captured in a privateConstants.js file. If you do not have this file, uncomment the relevant object definitions in constants.js (i.e. severityLabels, categories)
+
