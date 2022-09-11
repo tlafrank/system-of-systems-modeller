@@ -1383,3 +1383,11 @@ function updateSlider($selector, value){
 	if (diff < 62899200){ return ' over a year ago'}
 	if (diff => 62899200){ return Math.trunc(diff /62899200) + ' years ago'}
 }
+
+function generateSystemName(name, version){
+	if (version === undefined || version === null || version === ''){
+		return name
+	} else {
+		return `${name} [${version}]`
+	}
+}

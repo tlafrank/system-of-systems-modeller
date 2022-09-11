@@ -120,8 +120,8 @@ exports.switch = (req,res) => {
 			queryString += sql.format(`INSERT INTO cimMap (id_system, cimName, updateTime) VALUES (?,?,?);`,[req.body.id_system, req.body.cimName, Date.now()]);
 			break;
 		case 'UpdatePoc':
-			if (req.body.id_party){
-				queryString += sql.format(`UPDATE poc SET name = ?, email = ?, updateTime = ? WHERE poc.id_poc = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_party]);
+			if (req.body.id_poc){
+				queryString += sql.format(`UPDATE poc SET name = ?, email = ?, updateTime = ? WHERE poc.id_poc = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_poc]);
 			} else {
 				queryString += sql.format(`INSERT INTO poc (name, email, updateTime) VALUES (?,?,?);`,[req.body.name, req.body.email, Date.now()]);
 			}
@@ -169,7 +169,8 @@ exports.switch = (req,res) => {
 				
 			if (req.body.id_system) { //Update existing system
 				//Update system details
-				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, category = ?, updateTime = ?, version = ?, id_family = ? WHERE id_system = ?;`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family, req.body.id_system]);
+				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, category = ?, updateTime = ?, version = ?, id_family = ?, id_poc = ? WHERE id_system = ?;`, 
+					[req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family, req.body.id_poc, req.body.id_system]);
 	
 				//Delete existing tags
 				queryString += sql.format(`DELETE FROM tags WHERE id_system = ?;`, req.body.id_system)
@@ -181,7 +182,8 @@ exports.switch = (req,res) => {
 	
 			} else { //Add new system
 				
-				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem, version, id_family) VALUES (?,?,?,?,?,?,0,?,?);`, [req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family]);
+				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem, version, id_family, id_poc) VALUES (?,?,?,?,?,?,0,?,?,?);`, 
+					[req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family, req.body.id_poc]);
 				queryString += sql.format(`SET @insertID = LAST_INSERT_ID();`)
 	
 				//Add new tags

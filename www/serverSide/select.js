@@ -265,13 +265,19 @@ exports.switch = (req,res) => {
 				ON cimMap.id_system = systems.id_system
 				LEFT JOIN quantities
 				ON quantities.id_system = systems.id_system;`)
-
-
-
-		break;
-		case '':
-
-		break;
+			break;
+		case 'Pocs':
+			queryString = sql.format(`
+				SELECT systems.id_system, systems.name AS systemName, systems.version, poc.id_poc, poc.name AS pocName, poc.email
+				FROM systems
+				LEFT JOIN poc
+				ON systems.id_poc = poc.id_poc
+				WHERE systems.id_poc IS NOT NULL
+				ORDER BY poc.name ASC;
+				SELECT systems.id_system, systems.name AS systemName, systems.version
+				FROM systems
+				WHERE systems.id_poc IS NULL;`)
+			break;
 		case '':
 
 		break;

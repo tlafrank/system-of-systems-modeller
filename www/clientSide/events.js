@@ -219,14 +219,14 @@ function savePNG(){
  */
  async function saveCimCsv(){
 	//
-	debug(1, 'In saveCimCsv()', sosm)
+	debug(5, 'In saveCimCsv()', sosm)
 	
 	var postData = {
 		type: 'CimExport'
 	}
 
 	await $.post('select.json', postData, (result) => {
-		debug(3, postData, result);
+		debug(5, postData, result);
 
 		var csv = '';
 

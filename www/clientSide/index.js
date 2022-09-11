@@ -85,6 +85,14 @@ async function pageSwitch(page){
 			$('#mainPaneContainer').empty();
 			$('#pageTitle').text(`Summary Charts`)
 			charts();
+		break;
+		case 'pocs':
+			sessionStorage.setItem('currentPage', 'pocs');
+			$('#mainPaneContainer').empty();
+			$('#pageTitle').text(`System POCs`)
+			pocs();
+		break;
+
 	}
 }
 
@@ -323,6 +331,135 @@ async function charts(){
 	
 	
 	
+}
+
+
+/**
+ * @description A page to show the systems assigned to each POC, or those systems not assigned
+ */
+async function pocs(){
+	debug(5, 'In pocs()')
+	
+	//Prepare the page
+
+	//Build the table
+	var table = `<table class="table table-sm table-striped"><thead>
+	<tr>
+		<th scope="col" class="align-middle">POC</th>
+		<th scope="col" class="align-middle">Responsible Systems</th>
+	</tr>
+	</thead>
+	<tbody><tr>`
+
+
+	var postData = {
+		type: 'Pocs'
+	}
+
+	await $.post('select.json', postData, (result) => {
+		debug(5, postData, result);
+
+
+		if (result.msg){
+			//An error was passed
+			//definition.message = {info: 'failure', msg: `There was an error. Check the console.`};
+			//definition.continue = false;
+		} else {
+
+			var pocArr = []
+			var lastPoc
+			
+
+			result[0].forEach((row) => {
+				//Check if this row is assigned to the same person as the other
+				if( row.id_poc === lastPoc ){
+					//Just add the system
+					pocArr[pocArr.length - 1].systems.push({systemName: row.systemName, version: row.version, id_system: row.id_system})
+
+				} else {
+					//Add a new row and the system
+					pocArr.push({ id_poc: row.id_poc, pocName: row.pocName, systems: [ {systemName: row.systemName, version: row.version, id_system: row.id_system} ]})
+					
+				}
+
+				lastPoc = row.id_poc
+			})
+
+			debug(5, pocArr)
+
+			pocArr.forEach((row) => {
+				table += `<tr><td><a href="#" onclick="">${row.pocName}</a></td><td>`
+				row.systems.forEach((system) => {
+					table += systemButton(system.id_system, `${system.systemName} [${system.version}]`)
+				})
+				table += `</td></tr>`
+			})
+
+			//Handle systems which are not allocated a POC
+			table += `<tr><td>No POC Allocated</td><td>`
+			result[1].forEach((row) => {
+				table += systemButton(row.id_system, generateSystemName(row.systemName, row.version))
+			})
+			table += `</td></tr>`
+			for (var i = 0; i<result[1].length; i++)  {
+
+
+
+				/*
+				if (lastPoc !== result[0][i].id_poc){
+					//Handle a null
+					debug(5, 'lastPoc is ' + lastPoc)
+					if (result[i].id_poc === null){
+						table += `<tr><td class="align-middle"><a href="#" >NULL</a></td><td>`
+					} else {
+						table += `<tr><td class="align-middle"><a href="#" onclick="commonModal({modal: 'interfaces', id_interface: '${result[i].id_poc}'})">${result[i].pocName}</a></td><td>`
+					}
+
+				} else {
+					//Just add the system
+					
+
+				}
+				lastPoc = result[i].id_poc
+
+				/*
+
+				table += `<tr><td rowspan="${rowspan}" class="align-middle"><a href="#" onclick="commonModal({modal: 'interfaces', id_interface: '${element.id_interface}'})">${element.name}</a></td>`
+
+				table += `<td class="text-center">${element2.severity}</td>`
+				table += `<td><a href="#" onclick="commonModal({modal: 'interfaceIssues', id_interface: ${element2.id_interface}, id_interfaceIssue: '${element2.id_interfaceIssue}'})">${element2.name}</td>`
+				table += `<td>${element2.issue}</td>`
+				table += `<td>${element2.resolution}</td>`
+				if (element2.quantityAffected == 0) {
+					table += `<td>Nil</td>`
+				} else {
+					table += `<td>${element2.quantityAffected}</td>`
+				}
+				
+				table += `<td>`
+				element2.systems.forEach((element3) => {
+					var name = '';
+					if (element3.version === null || element3.version === ''){
+						name = element3.name
+					} else {
+						name = element3.name + ` [${element3.version}]`
+					}
+
+
+					table += systemButton(element3.id_system, name)
+				})	
+				table += `</td></tr>`
+				table += `<td colspan="6" class="text-center align-middle"><a href="#" onclick="commonModal({modal: 'interfaceIssues', id_interface: '${element.id_interface}'})">Issue below the set severity threshold</a></td></tr>`
+				table += `</tr>`
+				*/
+
+				
+			}
+
+			table += `</tbody></table>`
+			$('#mainPaneContainer').append(table);
+		}
+	})
 }
 
 

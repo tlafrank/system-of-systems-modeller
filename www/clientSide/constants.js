@@ -1287,6 +1287,7 @@ const modals = {
 				id: 'systemReferenceDropZone', label: '&#8595'
 			} },
 			{ type: 'text', id: 'textSystemTags', label: 'Tag List (Comma separated)'},
+			{ type: 'select', id: 'selectPocs', label: 'Point of Contact'},
 			{ type: 'buttons', buttons: [
 				{ id: 'buttonIcons', label: 'Choose Icon'},
 				{ id: 'buttonSystemQuantities', label: 'Map Systems to Years'},
@@ -1303,6 +1304,7 @@ const modals = {
 			{id: 'textSystemReferences', on: 'input'},
 			{id: 'textSystemTags', on: 'input'},
 			{id: 'selectCategory', on: 'change'},
+			{id: 'selectPocs', on: 'change'},
 		],
 		lockOnChange: ['selectSystem','buttonNew','buttonClone','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces','buttonSystemRelationships'], //The ID of the controls to lock when editing an object
 		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
@@ -1326,6 +1328,14 @@ const modals = {
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectFamily', columnName: 'name', attr: {name: 'id_family', columnName: 'id_family'} },
 				],
 			},
+			{ //Get the all the pocs
+				type: 'AllPocs',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectPocs', columnName: 'name', attr: {name: 'id_poc', columnName: 'id_poc'} },
+				],
+			},
 			{ //Get specific system details
 				type: 'SingleSystem_WithTags',
 				definitionFields: ['id_system'],
@@ -1341,9 +1351,12 @@ const modals = {
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemReferences', type: 'text', columnName: 'reference'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_MultipleValues_AtSpecificArrayIndex', arrayIndex: 1, id: 'textSystemTags', type: 'textList', columnName: 'tag'},
+					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectPocs', dataAttr: 'id_poc', columnName: 'id_poc'},
 					{action: 'setControl_Focus', id: 'selectSystem'}
+
 				]
 			}
+
 		],
 		events: [
 			{	//System quantities button clicked
@@ -1393,6 +1406,8 @@ const modals = {
 					{action: 'toServer_ControlValue', id: 'textSystemReferences',  type: 'text', columnName: 'reference'},
 					{action: 'toServer_ControlValue', id: 'textSystemTags',  type: 'text', columnName: 'tags'},
 					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectPocs', columnName: 'id_poc', dataAttr: 'id_poc'},
+
 				],
 				cleanup: [
 					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},
