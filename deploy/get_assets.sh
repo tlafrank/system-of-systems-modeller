@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 #Used to fetch the contents of the www/src folder.
 
@@ -43,6 +44,12 @@ https://unpkg.com/cose-base/cose-base.js
 
 https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js
 )
+
+# Move to the www folder
+# move to script directory for relative references to be correct
+cd $(dirname $(readlink -f $0))
+cd ../www
+
 
 mkdir -p ./src
 
