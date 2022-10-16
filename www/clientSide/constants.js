@@ -23,11 +23,11 @@ const graph = {
 		//Naming Convention
 		//System Nodes: 					g1_node_system_<id_system>_<id_system>
 		//Subsystem Nodes: 					g1_node_system_<id_system>_<id_system>
-		//SystemInterface Nodes: 			g1_node_systemInterface_<id_SIMap>
-		//Link Nodes: 						g1_node_link_<id_SINMap>
-		//System-System Interface Edges: 	g1_edge_System_<id_system>_SystemInterface_<id_SIMap>
-		//System-Link Edges: 				g1_edge_System_<id_system>_Link_<id_SINMap>
-		//SystemInterface-Link Edges: 		g1_edge_SystemInterface_<id_SIMap>_Link_<id_network>
+		//SystemInterface Nodes: 			g1_node_systemInterface_<id_ISMap>
+		//Link Nodes: 						g1_node_link_<id_SILMap>
+		//System-System Interface Edges: 	g1_edge_System_<id_system>_SystemInterface_<id_ISMap>
+		//System-Link Edges: 				g1_edge_System_<id_system>_Link_<id_SILMap>
+		//SystemInterface-Link Edges: 		g1_edge_SystemInterface_<id_ISMap>_Link_<id_link>
 
 
 		iterations: [
@@ -97,9 +97,9 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'interfaces',
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_systemInterface_<0>', columnNames: ['id_ISMap']},
 							{action: 'fromResult', nodeName: 'id_interface', format: '<0>', columnNames: ['id_interface']},
-							{action: 'fromResult', nodeName: 'id_SIMap', format: '<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id_ISMap', format: '<0>', columnNames: ['id_ISMap']},
 							{action: 'fromResult', nodeName: 'nodeType', format: 'SystemInterface', columnNames: []},
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
@@ -112,15 +112,15 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges',
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<id_system>_SystemInterface_<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<id_system>_SystemInterface_<0>', columnNames: ['id_ISMap']},
 							{action: 'fromResult', nodeName: 'source', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system','id_system']}, //System
-							{action: 'fromResult', nodeName: 'target', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_systemInterface_<0>', columnNames: ['id_ISMap']}, //SystemInterface
 							{action: 'fromDefault', nodeName: 'lineColor', default: 'black'},
 						],
 						classes: []
 					},
 
-					{action: 'getDataFromResult', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap'}
+					{action: 'getDataFromResult', sosmName: 'id_ISMap_arr', columnName: 'id_ISMap'}
 				]			
 			},
 
@@ -128,15 +128,15 @@ const graph = {
 			{
 				queryType: 'Links',
 				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap_arr'},
+					{action: 'toServer_fromSosmObject', sosmName: 'id_ISMap_arr', columnName: 'id_ISMap_arr'},
 				],
 				afterServerInstructions:[
 					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'links',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_node_link_<0>', columnNames: ['id_network']},
-							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
-							{action: 'fromResult', nodeName: 'id_SIMap', format: '<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_link_<0>', columnNames: ['id_link']},
+							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
+							{action: 'fromResult', nodeName: 'id_ISMap', format: '<0>', columnNames: ['id_ISMap']},
 							{action: 'fromResult', nodeName: 'nodeType', format: 'Link', columnNames: []},
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
@@ -150,11 +150,11 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges', 
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_SystemInterface_<0>_Link_<1>', columnNames: ['id_SIMap','id_network']},
-							{action: 'fromResult', nodeName: 'source', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
-							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
-							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
-							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'red'},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_SystemInterface_<0>_Link_<1>', columnNames: ['id_ISMap','id_link']},
+							{action: 'fromResult', nodeName: 'source', format: 'g1_node_systemInterface_<0>', columnNames: ['id_ISMap']}, //SystemInterface
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_link']}, //Link
+							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
+							{action: 'fromResult', nodeName: 'lineColor', format: '<0>', columnNames: ['technologyCategoryColour']},
 							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
 						classes: []
@@ -163,12 +163,12 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges', 
 						conditions: [{type: '!checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<0>_Link_<1>', columnNames: ['id_system','id_network']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<0>_Link_<1>', columnNames: ['id_system','id_link']},
 							{action: 'fromResult', nodeName: 'source', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system', 'id_system']}, //System
-							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
-							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_network']},
-							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
-							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_link']}, //Link
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_link']},
+							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
+							{action: 'fromResult', nodeName: 'lineColor', format: '<0>', columnNames: ['technologyCategoryColour']},
 							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
 						classes: []
@@ -273,11 +273,11 @@ const graph = {
 		//System Nodes: 					g2_node_system_<id_system>
 		//Subsystem Nodes: 					g2_node_system_<id_system>
 		//System-Subsystem Edges:			g2_edge_System_<id_system>_Subsystem_<id_SMap>
-		//SystemInterface Nodes: 			g2_node_systemInterface_<id_SIMap>
-		//Link Nodes: 						g2_node_link_<id_SINMap>
-		//System-System Interface Edges: 	g2_edge_System_<id_system>_SystemInterface_<id_SIMap>
-		//System-Link Edges: 				g2_edge_System_<id_system>_Link_<id_SINMap>
-		//SystemInterface-Link Edges: 		g2_edge_SystemInterface_<id_SIMap>_Link_<id_network>
+		//SystemInterface Nodes: 			g2_node_systemInterface_<id_ISMap>
+		//Link Nodes: 						g2_node_link_<id_SILMap>
+		//System-System Interface Edges: 	g2_edge_System_<id_system>_SystemInterface_<id_ISMap>
+		//System-Link Edges: 				g2_edge_System_<id_system>_Link_<id_SILMap>
+		//SystemInterface-Link Edges: 		g2_edge_SystemInterface_<id_ISMap>_Link_<id_link>
 		title: 'Distributed Subsystem Graph',
 		iterations: [
 
@@ -389,11 +389,12 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'links',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g2_edge_System_System_<0>_<1>', columnNames: ['id_AMap', 'id_network']},
+							//{action: 'fromResult', nodeName: 'id', format: 'g2_edge_System_System_<0>_<1>', columnNames: ['id_AMap', 'id_link']},
+							{action: 'fromResult', nodeName: 'id', format: 'g2_edge_System_System_<0>', columnNames: ['id_link']},
 							{action: 'fromResult', nodeName: 'source', format: 'g2_node_system_<0>', columnNames: ['source']},
 							{action: 'fromResult', nodeName: 'target', format: 'g2_node_system_<0>', columnNames: ['destination']},
-							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_SINMap']},
-							{action: 'fromResult', nodeName: 'id_SINMap', format: '<0>', columnNames: ['id_SINMap']},
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_SILMap']},
+							{action: 'fromResult', nodeName: 'id_SILMap', format: '<0>', columnNames: ['id_SILMap']},
 							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
 							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
@@ -479,11 +480,11 @@ const graph = {
 		//Naming Convention
 		//System Nodes: 					g1_node_system_<id_system>_<id_system>
 		//Subsystem Nodes: 					g1_node_system_<id_system>_<id_system>
-		//SystemInterface Nodes: 			g1_node_systemInterface_<id_SIMap>
-		//Link Nodes: 						g1_node_link_<id_SINMap>
-		//System-System Interface Edges: 	g1_edge_System_<id_system>_SystemInterface_<id_SIMap>
-		//System-Link Edges: 				g1_edge_System_<id_system>_Link_<id_SINMap>
-		//SystemInterface-Link Edges: 		g1_edge_SystemInterface_<id_SIMap>_Link_<id_network>
+		//SystemInterface Nodes: 			g1_node_systemInterface_<id_ISMap>
+		//Link Nodes: 						g1_node_link_<id_SILMap>
+		//System-System Interface Edges: 	g1_edge_System_<id_system>_SystemInterface_<id_ISMap>
+		//System-Link Edges: 				g1_edge_System_<id_system>_Link_<id_SILMap>
+		//SystemInterface-Link Edges: 		g1_edge_SystemInterface_<id_ISMap>_Link_<id_link>
 
 
 		iterations: [
@@ -552,9 +553,9 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'interfaces',
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_systemInterface_<0>', columnNames: ['id_ISMap']},
 							{action: 'fromResult', nodeName: 'id_interface', format: '<0>', columnNames: ['id_interface']},
-							{action: 'fromResult', nodeName: 'id_SIMap', format: '<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id_ISMap', format: '<0>', columnNames: ['id_ISMap']},
 							{action: 'fromResult', nodeName: 'nodeType', format: 'SystemInterface', columnNames: []},
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
@@ -567,15 +568,15 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges',
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<id_system>_SystemInterface_<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<id_system>_SystemInterface_<0>', columnNames: ['id_ISMap']},
 							{action: 'fromResult', nodeName: 'source', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system','id_system']}, //System
-							{action: 'fromResult', nodeName: 'target', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_systemInterface_<0>', columnNames: ['id_ISMap']}, //SystemInterface
 							{action: 'fromDefault', nodeName: 'lineColor', default: 'black'},
 						],
 						classes: []
 					},
 
-					{action: 'getDataFromResult', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap'}
+					{action: 'getDataFromResult', sosmName: 'id_ISMap_arr', columnName: 'id_ISMap'}
 				]			
 			},
 
@@ -583,15 +584,15 @@ const graph = {
 			{
 				queryType: 'Links',
 				beforeServerInstructions: [
-					{action: 'toServer_fromSosmObject', sosmName: 'id_SIMap_arr', columnName: 'id_SIMap_arr'},
+					{action: 'toServer_fromSosmObject', sosmName: 'id_ISMap_arr', columnName: 'id_ISMap_arr'},
 				],
 				afterServerInstructions:[
 					{action: 'nodeOrEdge', group: 'nodes', sosmNodeName: 'links',
 						conditions: [{type: 'alwaysRun'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_node_link_<0>', columnNames: ['id_network']},
-							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
-							{action: 'fromResult', nodeName: 'id_SIMap', format: '<0>', columnNames: ['id_SIMap']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_node_link_<0>', columnNames: ['id_link']},
+							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
+							{action: 'fromResult', nodeName: 'id_ISMap', format: '<0>', columnNames: ['id_ISMap']},
 							{action: 'fromResult', nodeName: 'nodeType', format: 'Link', columnNames: []},
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
 							{action: 'fromResult', nodeName: 'proposed', format: '<0>', columnNames: ['isProposed']},
@@ -605,10 +606,10 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges', 
 						conditions: [{type: 'checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_SystemInterface_<0>_Link_<1>', columnNames: ['id_SIMap','id_network']},
-							{action: 'fromResult', nodeName: 'source', format: 'g1_node_systemInterface_<0>', columnNames: ['id_SIMap']}, //SystemInterface
-							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
-							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_SystemInterface_<0>_Link_<1>', columnNames: ['id_ISMap','id_link']},
+							{action: 'fromResult', nodeName: 'source', format: 'g1_node_systemInterface_<0>', columnNames: ['id_ISMap']}, //SystemInterface
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_link']}, //Link
+							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
 							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
 							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
@@ -618,11 +619,11 @@ const graph = {
 					{action: 'nodeOrEdge', group: 'edges', sosmNodeName: 'edges', 
 						conditions: [{type: '!checkLocalStorage', localStorageName: 'showInterfaces'}],
 						fields: [
-							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<0>_Link_<1>', columnNames: ['id_system','id_network']},
+							{action: 'fromResult', nodeName: 'id', format: 'g1_edge_System_<0>_Link_<1>', columnNames: ['id_system','id_link']},
 							{action: 'fromResult', nodeName: 'source', format: 'g1_node_system_<0>_<1>', columnNames: ['id_system', 'id_system']}, //System
-							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_network']}, //Link
-							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_network']},
-							{action: 'fromResult', nodeName: 'id_network', format: '<0>', columnNames: ['id_network']},
+							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_link']}, //Link
+							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_link']},
+							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
 							{action: 'fromConstant', nodeName: 'lineColor', columnName: 'technologyCategory', constantName: 'technology', default: 'black'},
 							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
@@ -1066,7 +1067,8 @@ const modals = {
 				definitionFields: ['id_system'],
 				continueOnUndefined: true,
 				instructions: [
-					{action: 'setControl_SingleValue', id: 'headingSystemName', type: 'heading', columnName: 'name'},
+					//{action: 'setControl_SingleValue', id: 'headingSystemName', type: 'heading', columnName: 'name'},
+					{action: 'setControl_MultipleValues', id: 'headingSystemName', type: 'headingMultiple', columnName: ['name','version']},
 					{action: 'setControl_SingleValue', id: 'imageSystem', type: 'image', columnName: 'image'},
 				]
 			},
@@ -1293,6 +1295,7 @@ const modals = {
 				{ id: 'buttonSystemQuantities', label: 'Map Systems to Years'},
 				{ id: 'buttonUpdateSystemInterfaces', label: 'Attach Interfaces & Connect Links'},
 				{ id: 'buttonSystemRelationships', label: 'System Relationships'},
+				{ id: 'buttonParameters', label: 'System Parameters'},
 			]}
 
 		],
@@ -1334,6 +1337,7 @@ const modals = {
 				continueOnUndefined: true,
 				instructions: [
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectPocs', columnName: 'name', attr: {name: 'id_poc', columnName: 'id_poc'} },
+					
 				],
 			},
 			{ //Get specific system details
@@ -1341,9 +1345,10 @@ const modals = {
 				definitionFields: ['id_system'],
 				continueOnUndefined: true,
 				instructions: [
-					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'headingSystemName', type: 'heading', columnName: 'name'},
+					
+					{action: 'setControl_MultipleValues', arrayIndex: 0, id: 'headingSystemName', type: 'headingMultiple', columnName: ['name','version']},
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'imageSystem', type: 'image', columnName: 'image'},
-					{action: 'setDefinition_SingleValue_AtSpecificArrayIndex', id: 'image', arrayIndex: 0, columnName: 'image'},
+					{action: 'setDefinition_SingleValue_AtSpecificArrayIndex', arrayIndex: 0, id: 'image', columnName: 'image',},
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemName', type: 'text', columnName: 'name'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectFamily', dataAttr: 'id_family', columnName: 'id_family'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textVersion', type: 'text', columnName: 'version'},
@@ -1352,8 +1357,8 @@ const modals = {
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_MultipleValues_AtSpecificArrayIndex', arrayIndex: 1, id: 'textSystemTags', type: 'textList', columnName: 'tag'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectPocs', dataAttr: 'id_poc', columnName: 'id_poc'},
-					{action: 'setControl_Focus', id: 'selectSystem'}
-
+					{action: 'setControl_Focus', id: 'selectSystem'},
+					
 				]
 			}
 
@@ -1382,6 +1387,7 @@ const modals = {
 				handlers: [{controlId: 'buttonNew', event: 'click'},],
 				instructions: [
 					{action: 'deleteDefinitionValue', definitionName: 'id_system'},
+					{action: 'emptyControl', type: 'select', id: 'selectSystem'},
 					{action: 'emptyControl', type: 'heading', id: 'headingSystemName'},
 					{action: 'emptyControl', type: 'text', id: 'textSystemName'},
 					{action: 'emptyControl', type: 'text', id: 'textVersion'},
@@ -1452,12 +1458,18 @@ const modals = {
 			},
 			{	//Attach interfaces button
 				handlers: [{controlId: 'buttonUpdateSystemInterfaces', event: 'click'},],
-				instructions: [
-
-				],
+				instructions: [	],
 				cleanup: [
 					{action: 'modalDefinitionToBreadcrumb'},
 					{action: 'newModal', modal: 'interfacesToSystems'},
+				],
+			},
+			{	//Parameters modal
+				handlers: [{controlId: 'buttonParameters', event: 'click'},],
+				instructions: [],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'parameters'},
 				],
 			},
 		]
@@ -1646,7 +1658,7 @@ const modals = {
 					{action: 'toServer_ControlValue', type: 'selectedImage', id: 'containerIcons', columnName: 'image'},
 					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
 					{action: 'toServer_DefinitionValue', definitionName: 'id_interface', columnName: 'id_interface'},
-					{action: 'toServer_DefinitionValue', definitionName: 'id_network', columnName: 'id_network'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_link', columnName: 'id_link'},
 				],
 				cleanup: [ //Post server instructions
 					{action: 'returnToLastModal'},
@@ -1683,7 +1695,6 @@ const modals = {
 			{ type: 'droppable2', id: 'containerCompatibleLinks', label: 'Compatible Links'},
 			{ type: 'droppable2', id: 'containerPrimaryLinks', label: 'Primary Links'},
 			{ type: 'droppable2', id: 'containerAlternateLinks', label: 'Alternate Links'},
-			{ type: 'droppable2', id: 'containerIncapableLinks', label: 'Incapable Links'},
 		],
 		monitorChanges: [
 			{id: 'textSystemInterfaceName', on: 'input'},
@@ -1700,7 +1711,7 @@ const modals = {
 				continueOnUndefined: true,
 				instructions: [
 					{action: 'setControl_SingleValue', type: 'image', id: 'imageSystem', columnName: 'image'},
-					{action: 'setControl_SingleValue', type: 'heading', id: 'headingSystemName', columnName: 'name'},
+					{action: 'setControl_MultipleValues', id: 'headingSystemName', type: 'headingMultiple', columnName: ['name','version']},
 				],
 			},
 			{ 
@@ -1716,24 +1727,23 @@ const modals = {
 				definitionFields: ['id_system'],
 				continueOnUndefined: true,
 				instructions: [
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'iconButton', id: 'containerAssignedInterfaces', columnName: 'name', attr: {name: 'id_SIMap', columnName: 'id_SIMap'}},
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textSystemInterfaceName', definition: 'id_SIMap', columnName: 'SIName'},
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textSystemInterfaceDescription', definition: 'id_SIMap', columnName: 'description'},
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'checkbox', id: 'chkIsProposed', definition: 'id_SIMap', columnName: 'isProposed'},
-					{action: 'setControl_SingleValue_fromDefinitionIfExists', type: 'iconButtonSelected', id: 'containerAssignedInterfaces', attrName: 'id_SIMap', definitionName: 'id_SIMap'},
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'iconButton', id: 'containerAssignedInterfaces', columnName: 'name', attr: {name: 'id_ISMap', columnName: 'id_ISMap'}},
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textSystemInterfaceName', definition: 'id_ISMap', columnName: 'SIName'},
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textSystemInterfaceDescription', definition: 'id_ISMap', columnName: 'description'},
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'checkbox', id: 'chkIsProposed', definition: 'id_ISMap', columnName: 'isProposed'},
+					{action: 'setControl_SingleValue_fromDefinitionIfExists', type: 'iconButtonSelected', id: 'containerAssignedInterfaces', attrName: 'id_ISMap', definitionName: 'id_ISMap'},
 					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'systems', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
 					
 				],
 			},
 			{	//Populate the droppables
 				type: 'SpecificSystemInterfaceAndLinks',
-				definitionFields: ['id_SIMap'],
+				definitionFields: ['id_ISMap'],
 				continueOnUndefined: false,
 				instructions: [
-					{action: 'setControl_MultipleValues', arrayIndex: 1, type: 'droppableElements', id: 'containerCompatibleLinks', columnName: 'name', attr: {name: 'id_network', columnName: 'id_network'}},
-					{action: 'setControl_MultipleValues', arrayIndex: 2, type: 'moveDroppableElements', id: 'containerPrimaryLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
-					{action: 'setControl_MultipleValues', arrayIndex: 3, type: 'moveDroppableElements', id: 'containerAlternateLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
-					{action: 'setControl_MultipleValues', arrayIndex: 4, type: 'moveDroppableElements', id: 'containerIncapableLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
+					{action: 'setControl_MultipleValues', arrayIndex: 1, type: 'droppableElements', id: 'containerCompatibleLinks', columnName: 'name', attr: {name: 'id_link', columnName: 'id_link'}},
+					{action: 'setControl_MultipleValues', arrayIndex: 2, type: 'moveDroppableElements', id: 'containerPrimaryLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_link', attr: {name: 'id_link', columnName: 'id_link'}},
+					{action: 'setControl_MultipleValues', arrayIndex: 3, type: 'moveDroppableElements', id: 'containerAlternateLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_link', attr: {name: 'id_link', columnName: 'id_link'}},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 				],
 			},
@@ -1743,8 +1753,8 @@ const modals = {
 				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
 				postType: 'DeleteInterfaceFromSystem',
 				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_SIMap', columnName: 'id_SIMap'},
-					{action: 'deleteDefinitionValue', definitionName: 'id_SIMap'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_ISMap', columnName: 'id_ISMap'},
+					{action: 'deleteDefinitionValue', definitionName: 'id_ISMap'},
 				],
 				cleanup: [
 					{action: 'reload'},
@@ -1755,8 +1765,8 @@ const modals = {
 				postType: 'SpecificSystemInterfaceAndLinks',
 				url: 'select',
 				instructions: [
-					{action: 'setDefinition_FromClickedButton', definitionName: 'id_SIMap', dataAttr: 'id_simap'},
-					{action: 'toServer_DefinitionValue', definitionName: 'id_SIMap', columnName: 'id_SIMap'},
+					{action: 'setDefinition_FromClickedButton', definitionName: 'id_ISMap', dataAttr: 'id_ISMap'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_ISMap', columnName: 'id_ISMap'},
 					{action: 'resetButtonClasses', id: 'containerAssignedInterfaces'},
 					{action: 'setButtonClassesCurrentTarget', id: 'containerAssignedInterfaces'},
 				],
@@ -1764,15 +1774,13 @@ const modals = {
 					{action: 'emptyControl', type: 'droppableElements', id: 'containerCompatibleLinks'},
 					{action: 'emptyControl', type: 'droppableElements', id: 'containerPrimaryLinks'},
 					{action: 'emptyControl', type: 'droppableElements', id: 'containerAlternateLinks'},
-					{action: 'emptyControl', type: 'droppableElements', id: 'containerIncapableLinks'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'text', id: 'textSystemInterfaceName', columnName: 'name'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'text', id: 'textSystemInterfaceDescription', columnName: 'description'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'checkbox', id: 'chkIsProposed', columnName: 'isProposed'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
-					{action: 'setControl_MultipleValues', arrayIndex: 1, type: 'droppableElements', id: 'containerCompatibleLinks', columnName: 'name', attr: {name: 'id_network', columnName: 'id_network'}},
-					{action: 'setControl_MultipleValues', arrayIndex: 2, type: 'moveDroppableElements', id: 'containerPrimaryLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
-					{action: 'setControl_MultipleValues', arrayIndex: 3, type: 'moveDroppableElements', id: 'containerAlternateLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
-					{action: 'setControl_MultipleValues', arrayIndex: 4, type: 'moveDroppableElements', id: 'containerIncapableLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_network', attr: {name: 'id_network', columnName: 'id_network'}},
+					{action: 'setControl_MultipleValues', arrayIndex: 1, type: 'droppableElements', id: 'containerCompatibleLinks', columnName: 'name', attr: {name: 'id_link', columnName: 'id_link'}},
+					{action: 'setControl_MultipleValues', arrayIndex: 2, type: 'moveDroppableElements', id: 'containerPrimaryLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_link', attr: {name: 'id_link', columnName: 'id_link'}},
+					{action: 'setControl_MultipleValues', arrayIndex: 3, type: 'moveDroppableElements', id: 'containerAlternateLinks', sourceId: 'containerCompatibleLinks', dataAttr: 'id_link', attr: {name: 'id_link', columnName: 'id_link'}},
 				],
 			},
 			{	//Assign Interface to System button clicked
@@ -1789,9 +1797,9 @@ const modals = {
 			},
 			{	//Update System Interface details
 				handlers: [{controlId: 'buttonUpdate', event: 'click'}], 
-				postType: 'UpdateSIMap',
+				postType: 'UpdateInterfaceToSystemMap',
 				instructions: [ 
-					{action: 'toServer_DefinitionValue', definitionName: 'id_SIMap', columnName: 'id_SIMap'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_ISMap', columnName: 'id_ISMap'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textSystemInterfaceName',  columnName: 'name'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textSystemInterfaceDescription', columnName: 'description'},
 					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkIsProposed', columnName: 'isProposed'},
@@ -1811,16 +1819,14 @@ const modals = {
 					{controlId: 'containerCompatibleLinks div', event: 'drop'},
 					{controlId: 'containerPrimaryLinks div', event: 'drop'},
 					{controlId: 'containerAlternateLinks div', event: 'drop'},
-					{controlId: 'containerIncapableLinks div', event: 'drop'},
 				],
 				postType: 'AssignLinksToSystemInterface',
 				instructions: [
 					{action: 'preventDefault'},
 					{action: 'handleDrop'},
-					{action: 'toServer_ControlValue', type: 'dropTargetContents', id: 'containerPrimaryLinks', dataAttr: 'id_network', columnName: 'primaryLinks'},
-					{action: 'toServer_ControlValue', type: 'dropTargetContents', id: 'containerAlternateLinks', dataAttr: 'id_network', columnName: 'alternateLinks'},
-					{action: 'toServer_ControlValue', type: 'dropTargetContents', id: 'containerIncapableLinks', dataAttr: 'id_network', columnName: 'incapableLinks'},
-					{action: 'toServer_DefinitionValue', definitionName: 'id_SIMap', columnName: 'id_SIMap'},
+					{action: 'toServer_ControlValue', type: 'dropTargetContents', id: 'containerPrimaryLinks', dataAttr: 'id_link', columnName: 'primaryLinks'},
+					{action: 'toServer_ControlValue', type: 'dropTargetContents', id: 'containerAlternateLinks', dataAttr: 'id_link', columnName: 'alternateLinks'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_ISMap', columnName: 'id_ISMap'},
 				],
 				cleanup: [],
 			},
@@ -1829,7 +1835,6 @@ const modals = {
 					{controlId: 'containerCompatibleLinks div', event: 'dragover'},
 					{controlId: 'containerPrimaryLinks div', event: 'dragover'},
 					{controlId: 'containerAlternateLinks div', event: 'dragover'},
-					{controlId: 'containerIncapableLinks div', event: 'dragover'},
 				],
 				instructions: [{action: 'preventDefault'},],
 				cleanup: [],
@@ -1890,7 +1895,7 @@ const modals = {
 				type: 'AllTechnologies', 
 				definitionFields: [], 
 				instructions: [ 
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'droppableElements', id: 'availableTechnologies', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'droppableElements', id: 'availableTechnologies', arrayIndex: 0, columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
 				],
 			},
 			{	//Get technologies associated with the selected interface and move to the appropriate container
@@ -1927,6 +1932,7 @@ const modals = {
 				handlers: [{controlId: 'buttonNew', event: 'click'},],
 				instructions: [
 					{action: 'deleteDefinitionValue', definitionName: 'id_interface'},
+					{action: 'emptyControl', type: 'select', id: 'selectInterfaces'},
 					{action: 'emptyControl', type: 'heading', id: 'headingInterfaceName'},
 					{action: 'emptyControl', type: 'text', id: 'textInterfaceName'},
 					{action: 'emptyControl', type: 'text', id: 'textInterfaceDescription'},
@@ -2012,7 +2018,8 @@ const modals = {
 				definitionFields: ['id_system'],
 				continueOnUndefined: true,
 				instructions: [ 
-					{action: 'setControl_SingleValue', id: 'headingSystemName', type: 'heading', columnName: 'name'},
+					//{action: 'setControl_SingleValue', id: 'headingSystemName', type: 'heading', columnName: 'name'},
+					{action: 'setControl_MultipleValues', id: 'headingSystemName', type: 'headingMultiple', columnName: ['name','version']},
 					{action: 'setControl_SingleValue', id: 'imageSystem', type: 'image', columnName: 'image'},
 				],
 			},
@@ -2101,21 +2108,21 @@ const modals = {
 				definitionFields: [],
 				continueOnUndefined: true,
 				instructions: [ 
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectTechnology', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', arrayIndex: 0, id: 'selectTechnology', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
 				],
 			},
 			{ 
 				type: 'AllLinks', 
 				definitionFields: [], 
 				instructions: [ 
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectLinks', columnName: 'name', attr: {name: 'id_network', columnName: 'id_network'} },
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectLinks', definition: 'id_network', dataAttr: 'id_network', columnName: 'id_network'},
-					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectLinks', definition: 'id_network', dataAttr: 'id_network'},
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectLinks', columnName: 'name', attr: {name: 'id_link', columnName: 'id_link'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectLinks', definition: 'id_link', dataAttr: 'id_link', columnName: 'id_link'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectLinks', definition: 'id_link', dataAttr: 'id_link'},
 				],
 			},
 			{ 
 				type: 'Link',
-				definitionFields: ['id_network'], 
+				definitionFields: ['id_link'], 
 				instructions: [ 
 					{action: 'setControl_SingleValue', type: 'image', id: 'imageLinks', columnName: 'image'},
 					{action: 'setDefinition_SingleValue_fromParamNoArray', definitionName: 'image', columnName: 'image'},
@@ -2134,7 +2141,7 @@ const modals = {
 			{	//Change to link select
 				handlers: [{controlId: 'selectLinks', event: 'change'},], 
 				instructions: [
-					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectLinks', definitionName: 'id_network', dataAttr: 'id_network'}
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectLinks', definitionName: 'id_link', dataAttr: 'id_link'}
 				],
 				cleanup: [
 					{action: 'reload'},
@@ -2151,7 +2158,7 @@ const modals = {
 			{	//Add New link button
 				handlers: [{controlId: 'buttonNew', event: 'click'},],
 				instructions: [
-					{action: 'deleteDefinitionValue', definitionName: 'id_network'},
+					{action: 'deleteDefinitionValue', definitionName: 'id_link'},
 					{action: 'emptyControl', type: 'select', id: 'selectLinks'},
 					{action: 'emptyControl', type: 'heading', id: 'headingLinks'},
 					{action: 'emptyControl', type: 'text', id: 'textLinkName'},
@@ -2167,10 +2174,10 @@ const modals = {
 				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
 				postType: 'DeleteLink', 
 				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_network', columnName: 'id_network'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_link', columnName: 'id_link'},
 				],
 				cleanup: [
-					{action: 'deleteDefinition', definitionName: 'id_network'},
+					{action: 'deleteDefinition', definitionName: 'id_link'},
 					{action: 'reload'},
 				],
 			},
@@ -2178,7 +2185,7 @@ const modals = {
 				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
 				postType: 'UpdateLink', 
 				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_network', columnName: 'id_network'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_link', columnName: 'id_link'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textLinkName', columnName: 'name'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textLinkDesignation', columnName: 'designation'},
 					{action: 'toServer_ControlValue', type: 'select', id: 'selectTechnology', columnName: 'id_technology', dataAttr: 'id_technology'},
@@ -2186,7 +2193,7 @@ const modals = {
 					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
 				],
 				cleanup: [
-					{action: 'setDefinition_FromResultInsert', definitionName: 'id_network'},
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_link'},
 					{action: 'reload'},
 				],
 			},
@@ -2224,11 +2231,11 @@ const modals = {
 				type: 'AllTechnologies',
 				definitionFields: [],
 				continueOnUndefined: true,
-				instructions: [ 
-					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectTechnologies', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology', columnName: 'id_technology'},
+				instructions: [
+					{action: 'setControl_MultipleValues', type: 'selectOptions', arrayIndex: 0, id: 'selectTechnologies', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', arrayIndex: 0, id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology', columnName: 'id_technology'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology'},
-					{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'technology', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
+					{action: 'setControl_MultipleValues', type: 'selectOptions', arrayIndex: 1, id: 'selectCategory', columnName: 'name', attr: {name: 'id_techCategory', columnName: 'id_techCategory'} },
 				],
 			},
 			{
@@ -2238,7 +2245,7 @@ const modals = {
 				instructions: [ 
 					{action: 'setControl_SingleValue', type: 'text', id: 'textTechnologyName', columnName: 'name'},
 					{action: 'setControl_SingleValue', type: 'text', id: 'textTechnologyDescription', columnName: 'description'},
-					{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
+					{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'id_techCategory', columnName: 'id_techCategory'},
 				],
 			},
 		],
@@ -2282,7 +2289,7 @@ const modals = {
 					{action: 'toServer_DefinitionValue', definitionName: 'id_technology', columnName: 'id_technology'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textTechnologyName', columnName: 'name'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textTechnologyDescription', columnName: 'description'},
-					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'id_techCategory', dataAttr: 'id_techCategory'},
 				],
 				cleanup: [
 					{action: 'setDefinition_FromResultInsert', definitionName: 'id_technology'},
@@ -3023,6 +3030,415 @@ const modals = {
 			},
 		]
 	},
+
+	techCategories: {
+		title: 'Technology Categories',
+		formButtons: [ 
+			{type: 'info', id: 'buttonNew', label: 'New Technology Category', initialState: 'unlock'},
+			{type: 'delete', id: 'buttonDelete', label: 'Delete Technology Category', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{ type: 'select', id: 'selectTechCategory', label: 'All Technology Categories'},
+			{ type: 'text', id: 'textTechCategoryName', label: 'Name'},
+			{ type: 'select', id: 'selectTechCategoryColour', label: 'Assigned Colour' },
+		],
+		monitorChanges: [
+			{id: 'textTechCategoryName', on: 'input'},
+			{id: 'selectTechCategoryColour', on: 'change'},
+		],
+		lockOnChange: ['buttonDelete','buttonNew','selectTechCategory'],
+		unlockOnChange: ['buttonUpdate'],
+		iterations: [
+			{ 
+				type: 'AllTechCategories',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectTechCategory', columnName: 'name', attr: {name: 'id_techCategory', columnName: 'id_techCategory'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectTechCategory', definition: 'id_techCategory', dataAttr: 'id_techCategory', columnName: 'id_techCategory'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectTechCategory', definition: 'id_techCategory', dataAttr: 'id_techCategory'},
+					{action: 'setControl_Colours', type: 'selectOptions', id: 'selectTechCategoryColour'},
+				],
+			},
+			{
+				type: 'SingleTechCategory', 
+				definitionFields: ['id_techCategory'],
+				continueOnUndefined: false,
+				instructions: [ 
+					{action: 'setControl_SingleValue', type: 'text', id: 'textTechCategoryName', columnName: 'name'},
+					{action: 'setControl_SingleValue', type: 'select', id: 'selectTechCategoryColour', columnName: 'colour'},
+				],
+			},
+		],
+		events: [
+			{	//Change to all tech categories select
+				handlers: [{controlId: 'selectTechCategory', event: 'change'},], 
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectTechCategory', definitionName: 'id_techCategory', dataAttr: 'id_techCategory'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+			{	//Add New Tech Category button
+				handlers: [{controlId: 'buttonNew', event: 'click'},], 
+				instructions: [
+					{action: 'deleteDefinitionValue', definitionName: 'id_techCategory'},
+					{action: 'emptyControl', type: 'select', id: 'selectTechCategory'},
+					{action: 'emptyControl', type: 'text', id: 'textTechCategoryName'},
+					{action: 'lockControls'}
+				],
+				cleanup: [],
+			},
+			{	//Delete button
+				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
+				postType: 'DeleteTechCategory', 
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_techCategory', columnName: 'id_techCategory'},
+				],
+				cleanup: [
+					{action: 'deleteDefinition', definitionName: 'id_techCategory'},
+					{action: 'reload'},
+				],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdateTechCategory',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_techCategory', columnName: 'id_techCategory'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textTechCategoryName', columnName: 'name'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectTechCategoryColour', columnName: 'colour'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_techCategory'},
+					{action: 'reload'},
+				],
+			},
+			{	//Close buttton
+				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+		]
+	},
+
+	paramDefinition: {
+		title: 'Define Parameters',
+		formButtons: [ 
+			{type: 'info', id: 'buttonNew', label: 'New Parameter', initialState: 'unlock'},
+			{type: 'delete', id: 'buttonDelete', label: 'Delete Parameter', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'cancel', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{ type: 'select', id: 'selectParamGroup', label: 'Parameter Group'},
+			{ type: 'select', id: 'selectParamDefinition', label: 'Parameter'},
+			{ type: 'text', id: 'textParamName', label: 'Parameter Name'},
+			{ type: 'select', id: 'selectParamType', label: 'Parameter Type'},
+			{ type: 'textarea', id: 'textParamOptions', label: 'Parameter Options'},
+			{ type: 'checkbox', id: 'chkApplicableToSystem', label: 'Applicable to System'},
+			{ type: 'checkbox', id: 'chkApplicableToInterface', label: 'Applicable to Interface'},
+			{ type: 'checkbox', id: 'chkApplicableToLink', label: 'Applicable to Link'},
+			{ type: 'checkbox', id: 'chkApplicableToTechnology', label: 'Applicable to Technology'},
+			
+
+			{ type: 'buttons', buttons: [
+				{ id: 'buttonParamGroups', label: 'Parameter Groups'},
+			]}
+			//{ type: 'select', id: 'selectTechCategoryColour', label: 'Assigned Colour' },
+		],
+		monitorChanges: [
+			{id: 'textParamName', on: 'input'},
+			{id: 'textParamOptions', on: 'input'},
+			{id: 'selectParamType', on: 'change'},
+			{id: 'chkApplicableToSystem', on: 'change'},
+			{id: 'chkApplicableToInterface', on: 'change'},
+			{id: 'chkApplicableToLink', on: 'change'},
+			{id: 'chkApplicableToTechnology', on: 'change'},
+		],
+		lockOnChange: ['buttonDelete','buttonNew','selectParamGroup','selectParamDefinition'],
+		unlockOnChange: ['buttonUpdate'],
+		iterations: [
+			{ //Populate fixed controls
+				definitionFields: [],
+				continueOnUndefined: false,
+				instructions: [
+					//Populate selectParamType
+					{action: 'setControl_FromList', type: 'selectOptions', id: 'selectParamType', attr: {name: 'paramType', columnName: 'value'}, columnName: 'title',
+					list: [
+						{title: 'Single Option', value: 'singleOption'},
+						{title: 'Multiple Options', value: 'multiOption'},
+						{title: 'True/False', value: 'boolean'},
+						{title: 'Free Text', value: 'freeText'},
+						{title: 'Number', value: 'number'},
+					]},
+
+				]
+			},
+			{ 
+				//Load the parameter groups
+				type: 'AllParamGroups',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectParamGroup', columnName: 'name', attr: {name: 'id_paramGroup', columnName: 'id_paramGroup'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectParamGroup', definition: 'id_paramGroup', dataAttr: 'id_paramGroup', columnName: 'id_paramGroup'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectParamGroup', definition: 'id_paramGroup', dataAttr: 'id_paramGroup'},
+				],
+			},
+			{
+				//Load the parameter definitions which exist within the parameter group
+				type: 'ParamDefinitionsWithinGroup', 
+				definitionFields: ['id_paramGroup'],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectParamDefinition', columnName: 'name', attr: {name: 'id_paramDefinition', columnName: 'id_paramDefinition'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectParamDefinition', definition: 'id_paramDefinition', dataAttr: 'id_paramDefinition', columnName: 'id_paramDefinition'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectParamDefinition', definition: 'id_paramDefinition', dataAttr: 'id_paramDefinition'},
+				],
+			},
+			{ //Get specific parameter definition details
+				type: 'SingleParamDefinition',
+				definitionFields: ['id_paramDefinition'],
+				continueOnUndefined: false,
+				instructions: [
+					{action: 'setControl_SingleValue', type: 'text', id: 'textParamName', columnName: 'name'},
+					{action: 'setControl_SingleValue', type: 'text', id: 'textParamOptions', columnName: 'options'},
+					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToSystem', columnName: 'applicableToSystem'},
+					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToInterface', columnName: 'applicableToInterface'},
+					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToLink', columnName: 'applicableToLink'},
+					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToTechnology', columnName: 'applicableToTechnology'},
+					{action: 'setControl_SingleValue', type: 'select', id: 'selectParamType', dataAttr: 'paramType', columnName: 'paramType'},
+					{action: 'showHideControls_ifValueEquals', id: 'selectParamType', type: 'select', dataAttr: 'paramType', dataAttrValues: ['boolean','freeText','number'], controlsToHide: ['textParamOptions'], controlsToShow: []},
+					{action: 'showHideControls_ifValueEquals', id: 'selectParamType', type: 'select', dataAttr: 'paramType', dataAttrValues: ['singleOption','multiOption'], controlsToHide: [], controlsToShow: ['textParamOptions']},
+
+				]
+			}
+		],
+		events: [
+			{	//Change to parameter type select
+				handlers: [{controlId: 'selectParamType', event: 'change'},],
+				instructions: [
+					{action: 'showHideControls_ifValueEquals', id: 'selectParamType', type: 'select', dataAttr: 'paramType', dataAttrValues: ['boolean','freeText','number'], controlsToHide: ['textParamOptions'], controlsToShow: []},
+					{action: 'showHideControls_ifValueEquals', id: 'selectParamType', type: 'select', dataAttr: 'paramType', dataAttrValues: ['singleOption','multiOption'], controlsToHide: [], controlsToShow: ['textParamOptions']},
+				],
+				cleanup: [],
+			},
+			
+			{	//Param Group button
+				handlers: [{controlId: 'buttonParamGroups', event: 'click'},], 
+				instructions: [],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'paramGroupDefinition'},
+				],
+			},
+			{	//Change to parameter group select
+				handlers: [{controlId: 'selectParamGroup', event: 'change'},], 
+				instructions: [
+					{action: 'setDefinition_SingleValue_FromConstant', definitionName: 'id_paramDefinition', value: null},
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectParamGroup', definitionName: 'id_paramGroup', dataAttr: 'id_paramGroup'},
+					
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+			{	//Change to parameter definition select
+				handlers: [{controlId: 'selectParamDefinition', event: 'change'},], 
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectParamDefinition', definitionName: 'id_paramDefinition', dataAttr: 'id_paramDefinition'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+			{	//Add New parameter definition button
+				handlers: [{controlId: 'buttonNew', event: 'click'},], 
+				instructions: [
+					{action: 'deleteDefinitionValue', definitionName: 'id_paramDefinition'},
+					{action: 'emptyControl', type: 'select', id: 'selectParamDefinition'},
+					{action: 'emptyControl', type: 'text', id: 'textParamName'},
+					{action: 'lockControls'}
+				],
+				cleanup: [],
+			},
+			
+			{	//Delete button
+				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
+				postType: 'DeleteParamDefinition', 
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_paramDefinition', columnName: 'id_paramDefinition'},
+				],
+				cleanup: [
+					{action: 'deleteDefinition', definitionName: 'id_paramDefinition'},
+					{action: 'reload'},
+				],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdateParamDefinition',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_paramGroup', columnName: 'id_paramGroup'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_paramDefinition', columnName: 'id_paramDefinition'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textParamName', columnName: 'name'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectParamType', dataAttr: 'paramType', columnName: 'paramType'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textParamOptions', columnName: 'options'},
+					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToSystem', columnName: 'applicableToSystem'},
+					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToInterface', columnName: 'applicableToInterface'},
+					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToLink', columnName: 'applicableToLink'},
+					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToTechnology', columnName: 'applicableToTechnology'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_paramDefinition'},
+					{action: 'reload'},
+				],
+			},
+			{	//Close buttton
+				handlers: [{controlId: 'buttonClose', event: 'click'},], 
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+		]
+	},
+
+	paramGroupDefinition: {
+		title: 'Define Group Parameter',
+		formButtons: [ 
+			{type: 'info', id: 'buttonNew', label: 'New Parameter Group', initialState: 'unlock'},
+			{type: 'delete', id: 'buttonDelete', label: 'Delete Parameter Group', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'cancel', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{ type: 'select', id: 'selectParamGroup', label: 'Parameter Group'},
+			{ type: 'text', id: 'textParamGroupName', label: 'Parameter Group Name'},
+		],
+		monitorChanges: [
+			//{id: 'selectParamGroup', on: 'change'},
+			{id: 'textParamGroupName', on: 'input'},
+		],
+		lockOnChange: ['buttonDelete','buttonNew','selectParamGroup'],
+		unlockOnChange: ['buttonUpdate'],
+		iterations: [
+			{ 
+				type: 'AllParamGroups',
+				definitionFields: [],
+				continueOnUndefined: true,
+				instructions: [ 
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectParamGroup', columnName: 'name', attr: {name: 'id_paramGroup', columnName: 'id_paramGroup'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectParamGroup', definition: 'id_paramGroup', dataAttr: 'id_paramGroup', columnName: 'id_paramGroup'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectParamGroup', definition: 'id_paramGroup', dataAttr: 'id_paramGroup'},
+					//Populate name
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textParamGroupName', definition: 'id_paramGroup', dataAttr: 'id_paramGroup', columnName: 'name'},
+				],
+			},
+		],
+		events: [
+			{	//Add New Parameter Group
+				handlers: [{controlId: 'buttonNew', event: 'click'},], 
+				instructions: [
+					{action: 'deleteDefinitionValue', definitionName: 'id_paramGroup'},
+					{action: 'emptyControl', type: 'select', id: 'selectParamGroup'},
+					{action: 'emptyControl', type: 'text', id: 'textParamGroupName'},
+					{action: 'lockControls'}
+				],
+				cleanup: [],
+			},
+			{	//Change to all param groups select
+				handlers: [{controlId: 'selectParamGroup', event: 'change'},], 
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectParamGroup', definitionName: 'id_paramGroup', dataAttr: 'id_paramGroup'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},	
+			{	//Delete button
+				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
+				postType: 'DeleteParamGroup', 
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_paramGroup', columnName: 'id_paramGroup'},
+				],
+				cleanup: [
+					{action: 'deleteDefinition', definitionName: 'id_paramGroup'},
+					{action: 'reload'},
+				],
+			},
+				
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdateParamGroup',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_paramGroup', columnName: 'id_paramGroup'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textParamGroupName', columnName: 'name'},
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_techCategory'},
+					{action: 'reload'},
+				],
+			},
+			{	//Close buttton
+				handlers: [{controlId: 'buttonClose', event: 'click'},], 
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+		]
+	},
+
+	parameters: {
+		title: 'Parameters',
+		formButtons: [ 
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'cancel', id: 'buttonCancel', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{type: 'container', id: 'params'}
+		],
+		monitorChanges: [
+			{id: 'params', on: 'any'},
+			//{id: 'container', on: 'change'},
+		],
+		lockOnChange: [],
+		unlockOnChange: ['buttonUpdate'], 
+		iterations: [
+			{
+				type: 'ParamsForSystem', 
+				definitionFields: ['id_system'], 
+				continueOnUndefined: false,
+				instructions: [
+					//{action: ''},
+					{action: 'setControl_MultipleValues_AtSpecificArrayIndex', type: 'params', id: 'params'},
+				],
+			},
+		],
+		events: [
+			{	//Cancel button
+				handlers: [{controlId: 'buttonCancel', event: 'click'},],  
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdateParams',
+				instructions: [
+
+					//Working here
+					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
+					//{action: 'toServer_DefinitionValue', definitionName: 'id_paramDefinition', columnName: 'id_paramDefinition'},
+					{action: 'toServer_ControlValue', type: 'params', id: 'params', columnName: 'params'},
+
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_paramDefinition'},
+					{action: 'reload'},
+				],
+			},
+		]
+	},
+
 }
 
 /**
@@ -3031,35 +3447,163 @@ const modals = {
 const snapToGridDistance = 80
 
 
+
+
 /**
- * @description Contains the categories for assigning colors to the various systems, interfaces and links (nodes and edges).
- * To stay a variable so that it can be found within the window object as well as be replaced by privateConstants.js, if required.
- *  
+ * @description The available CSS colour names. Commented out ones are not able to be processed by cytoscape.
  */
-/*
-var categories = { //Must stay var to be found within the window object
-	systems:[
-		{title: 'Red', value: '', color: 'red'},
-		{title: 'Green', value: '', color: 'green'},
-		{title: 'Blue', value: '', color: 'blue'},
-	],
-	interfaces:[
-		{title: 'Red', value: '', color: 'red'},
-		{title: 'Green', value: '', color: 'green'},
-		{title: 'Blue', value: '', color: 'blue'},
-	],
-	links:[
-		{title: 'Red', value: '', color: 'red'},
-		{title: 'Green', value: '', color: 'green'},
-		{title: 'Blue', value: '', color: 'blue'},
-	],
-	technology: [ 
-		{title: 'Red', value: '', color: 'red'},
-		{title: 'Green', value: '', color: 'green'},
-		{title: 'Blue', value: '', color: 'blue'},
-	],
-}
-*/
+const CSS_COLOUR_NAMES = [
+	"AliceBlue",
+	"AntiqueWhite",
+	"Aqua",
+	"Aquamarine",
+	"Azure",
+	"Beige",
+	"Bisque",
+	"Black",
+	"BlanchedAlmond",
+	"Blue",
+	"BlueViolet",
+	"Brown",
+	"BurlyWood",
+	"CadetBlue",
+	"Chartreuse",
+	"Chocolate",
+	"Coral",
+	"CornflowerBlue",
+	"Cornsilk",
+	"Crimson",
+	"Cyan",
+	"DarkBlue",
+	"DarkCyan",
+	"DarkGoldenRod",
+	"DarkGray",
+	"DarkGrey",
+	"DarkGreen",
+	"DarkKhaki",
+	"DarkMagenta",
+	"DarkOliveGreen",
+	"DarkOrange",
+	"DarkOrchid",
+	"DarkRed",
+	"DarkSalmon",
+	"DarkSeaGreen",
+	"DarkSlateBlue",
+	"DarkSlateGray",
+	"DarkSlateGrey",
+	"DarkTurquoise",
+	"DarkViolet",
+	"DeepPink",
+	"DeepSkyBlue",
+	"DimGray",
+	"DimGrey",
+	"DodgerBlue",
+	"FireBrick",
+	"FloralWhite",
+	"ForestGreen",
+	"Fuchsia",
+	"Gainsboro",
+	"GhostWhite",
+	"Gold",
+	"GoldenRod",
+	"Gray",
+	"Grey",
+	"Green",
+	"GreenYellow",
+	"HoneyDew",
+	"HotPink",
+	"IndianRed",
+	"Indigo",
+	"Ivory",
+	"Khaki",
+	"Lavender",
+	"LavenderBlush",
+	"LawnGreen",
+	"LemonChiffon",
+	"LightBlue",
+	"LightCoral",
+	"LightCyan",
+	"LightGoldenRodYellow",
+	"LightGray",
+	"LightGrey",
+	"LightGreen",
+	"LightPink",
+	"LightSalmon",
+	"LightSeaGreen",
+	"LightSkyBlue",
+	"LightSlateGray",
+	"LightSlateGrey",
+	"LightSteelBlue",
+	"LightYellow",
+	"Lime",
+	"LimeGreen",
+	"Linen",
+	"Magenta",
+	"Maroon",
+	"MediumAquaMarine",
+	"MediumBlue",
+	"MediumOrchid",
+	"MediumPurple",
+	"MediumSeaGreen",
+	"MediumSlateBlue",
+	"MediumSpringGreen",
+	"MediumTurquoise",
+	"MediumVioletRed",
+	"MidnightBlue",
+	"MintCream",
+	"MistyRose",
+	"Moccasin",
+	"NavajoWhite",
+	"Navy",
+	"OldLace",
+	"Olive",
+	"OliveDrab",
+	"Orange",
+	"OrangeRed",
+	"Orchid",
+	"PaleGoldenRod",
+	"PaleGreen",
+	"PaleTurquoise",
+	"PaleVioletRed",
+	"PapayaWhip",
+	"PeachPuff",
+	"Peru",
+	"Pink",
+	"Plum",
+	"PowderBlue",
+	"Purple",
+	//"RebeccaPurple",
+	"Red",
+	"RosyBrown",
+	"RoyalBlue",
+	"SaddleBrown",
+	"Salmon",
+	"SandyBrown",
+	"SeaGreen",
+	"SeaShell",
+	"Sienna",
+	"Silver",
+	"SkyBlue",
+	"SlateBlue",
+	"SlateGray",
+	"SlateGrey",
+	"Snow",
+	"SpringGreen",
+	"SteelBlue",
+	"Tan",
+	"Teal",
+	"Thistle",
+	"Tomato",
+	"Turquoise",
+	"Violet",
+	"Wheat",
+	"White",
+	"WhiteSmoke",
+	"Yellow",
+	"YellowGreen",
+  ];
+
+
 
 /**
  * @description Labels for the issue severity. To stay a variable so it can be replaced by privateConstants.js, if required.

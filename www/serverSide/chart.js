@@ -77,11 +77,11 @@ exports.switch = (req,res) => {
 		queryString += sql.format(`
 		SELECT systemsResult.quantity, interfaces.name, interfaces.id_interface, SUM(systemsResult.quantity) AS interfaceQty
 		FROM systemsResult
-		LEFT JOIN SIMap
-		ON systemsResult.id_system = SIMap.id_system
+		LEFT JOIN InterfaceToSystemMap
+		ON systemsResult.id_system = InterfaceToSystemMap.id_system
 		LEFT JOIN interfaces
-		ON SIMap.id_interface = interfaces.id_interface
-		WHERE SIMap.id_SIMap IS NOT NULL
+		ON InterfaceToSystemMap.id_interface = interfaces.id_interface
+		WHERE InterfaceToSystemMap.id_ISMap IS NOT NULL
 		GROUP BY id_interface
 		ORDER BY interfaces.id_interface;`)
 
@@ -100,43 +100,26 @@ exports.switch = (req,res) => {
 
 	if (!queryString){ res.json({msg: 'There was an error executing the query (select.json)', err: 'No queryString was developed.'}) }
 
-	queryString = queryString.trim();
-	let re = /\n\s\s+/gi;
-	queryString = queryString.replace(re,'\n\t')
-
-	debug(2,'Query:  ' + queryString);
-	execute;
-
-	var execute = executeQuery(queryString)
-
-		.then((result) => {
-			switch (req.body.type){
-				case 'InterfaceQuantitiesInYear':
-					res.json(result[4])
-				break;
-				default:
-					res.json(result) 
-			}
-
-			
-		})
-		.catch((err) => {
-			debug(3,err);
-			if (debugLevel == 7){
-				res.json({msg: 'There was an error executing the query (select.json)', err: err})
-			} else {
-				res.json({msg: 'There was an error executing the query (select.json)'})
-			}
-		});
-}
 
 
-var executeQuery = (queryString) => new Promise((resolve,reject) => {
-	//Submit the query to the database
-	sql.query(queryString, (err,res) => {
-		if (err) { 
-			reject(err);
+	debug(7,'Query:  ' + queryString);
+
+
+	sql.execute(queryString).then((result) => {
+		switch (req.body.type){
+			case 'InterfaceQuantitiesInYear':
+				res.json(result[4])
+			break;
+			default:
+				res.json(result) 
 		}
-		resolve(res);
-	})    
-}) 
+	})
+	.catch((err) => {
+		debug(3,err);
+		if (debugLevel == 7){
+			res.json({msg: 'There was an error executing the query (select.json)', err: err})
+		} else {
+			res.json({msg: 'There was an error executing the query (select.json)'})
+		}
+	});
+}

@@ -16,9 +16,9 @@ const tableList = [
 	'systems',
 	'technologies',
 	'interfaces',
-	'networks',
-	'SIMap',
-	'SINMap',
+	'links',
+	'InterfaceToSystemMap',
+	'SystemInterfaceToLinkMap',
 	'TIMap',
 	'quantities',
 	'interfaceIssues',
@@ -29,7 +29,11 @@ const tableList = [
 	'OMap',
 	'OSMap',
 	'SMap',
-	'AMap'
+	'AMap',
+	'cimMap',
+	'parties',
+	'families',
+	'technologyCategories'
 ];
 
 exports.run = (req,res) => {

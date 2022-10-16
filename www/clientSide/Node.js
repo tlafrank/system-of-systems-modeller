@@ -94,8 +94,8 @@ class Node {
 			this.name = node.interfaceName;
 			this.image = node.interfaceImage;
 			this.description = node.description;
-			this.id_SIMap = node.id_SIMap;
-			this.idNo = node.id_SIMap;
+			this.id_ISMap = node.id_ISMap;
+			this.idNo = node.id_ISMap;
 			this.systemName = node.systemName;
 			this.systemImage = node.systemImage;
 			this.id_interface = node.id_interface;
@@ -116,8 +116,8 @@ class Node {
 
 		if (node.type == 'Link'){
 			standardSet();
-			this.id_network = node.id_network;
-			this.idNo = node.id_network;
+			this.id_link = node.id_link;
+			this.idNo = node.id_link;
 			this.id_feature = node.id_feature;
 			this.featureName = node.featureName;
 		}
@@ -152,7 +152,7 @@ class Node {
 		}
 
 		if (this.type == "Network" ){
-			if (this.id_network) { data.id_network = this.id_network } //Indicates this should be considered an update, not an insert
+			if (this.id_link) { data.id_link = this.id_link } //Indicates this should be considered an update, not an insert
 			data.image = this.node.image;
 			data.id_feature = this.features[0];
 		}
@@ -184,7 +184,7 @@ class Node {
 
 		if (this.type == "SystemInterface"){	//Removed "Interface"
 			data.push(
-				//{ label: 'Node ID', value: this.id_SIMap },
+				//{ label: 'Node ID', value: this.id_ISMap },
 				{ label: 'Interface Name', value: this.name },
 				{ label: 'Installed In', value: this.systemName },
 				//{ label: 'Node Type', value: this.type },
@@ -195,7 +195,7 @@ class Node {
 
 		if (this.type == "Link"){
 			data.push(
-				//{ label: 'Node ID', value: this.id_network },
+				//{ label: 'Node ID', value: this.id_link },
 				{ label: 'Network Name', value: this.name },
 				{ label: 'Node Type', value: this.type },
 				{ label: 'Implemented Feature', value: this.featureName },

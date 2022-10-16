@@ -170,6 +170,63 @@ function addButton($selector, button){
  */
 function getFormElement($selector, properties){
 	switch (properties.type){
+		case 'params':
+			//Get all the controls which are located within the provided #id (should be a <div>)
+
+/*
+					{title: 'Single Option', value: 'singleOption'},
+						{title: 'Multiple Options', value: 'multiOption'},
+						{title: 'True/False', value: 'boolean'},
+						{title: 'Free Text', value: 'freeText'},
+						{title: 'Number', value: 'number'},
+*/
+
+			const resultArr = []
+
+			const singleOption = document.querySelectorAll(`${$selector} select:not([multiple])`)
+			const multiOption = document.querySelectorAll(`${$selector} select[multiple]`)
+			const boolean = document.querySelectorAll(`${$selector} input[type="checkbox"]`)
+			const freeText = document.querySelectorAll(`${$selector} input[type="text"]`)
+			//const number = document.querySelectorAll(`${$selector} input[type="text"]`)
+
+			debug(5, multiOption);
+
+			//Handle all singleOption controls
+			singleOption.forEach((control) => {
+				if (control.value == ''){ control.value = null}
+				resultArr.push({id_paramDefinition: control.dataset.id_paramdefinition, value: control.value})
+			})
+
+			//Handle all multiOption controls
+			multiOption.forEach((control) => {
+				var selectedOptions = []
+				debug(5, 'multiOption:', control.options)
+				//Iterate through each option to determine which ones are selected
+				for (var i=0; i<control.options.length; i++){
+					if (control.options[i].selected == true){
+						selectedOptions.push(control.options[i].value)
+					}
+				}
+
+				resultArr.push({id_paramDefinition: control.dataset.id_paramdefinition, value: selectedOptions.join(',')})
+			})
+
+			//Handle all boolean controls
+			boolean.forEach((control) => {
+				debug(5, 'boolean', control, control.checked)
+				//if (control. == ''){ control.value = null}
+				resultArr.push({id_paramDefinition: control.dataset.id_paramdefinition, value: control.checked})
+			})
+
+			//Handle all freeText controls
+			freeText.forEach((control) => {
+				if (control.value == ''){ control.value = null}
+				resultArr.push({id_paramDefinition: control.dataset.id_paramdefinition, value: control.value})
+			})
+
+
+			return resultArr
+		break;
 		case 'qtyYears':
 			var qtyArr = []
 			for (var i = 0; i < $($selector + ' [id^=formYears]').length; i++){
@@ -280,6 +337,134 @@ function getFormElement($selector, properties){
 function setFormElement($selector, properties, value){
 	//debug(5, `setting: value of ${value} to:`, properties)
 	switch (properties.type){
+		case 'params': //Populate the provided container (a div) with parameter definitions and associated values, if they exist
+			debug(5, 'in setFormElement params')
+
+			var currentGroup = 0
+
+			$($selector).append('<form>')
+
+			for(var i = 0; i < value.length; i++){
+
+				//Check if this row indicates a new parameter group
+				if (currentGroup != value[i].id_paramGroup){
+					//Create the heading for this group
+					$(`${$selector} form`).append(`<h4>${value[i].groupName}</h4>`)
+
+					//Store the new parameter group id
+					currentGroup = value[i].id_paramGroup
+				}
+
+				//Add the parameter name, relevent control and current values to the modal
+				switch (value[i].paramType){
+					case 'boolean':
+
+						$(`${$selector} form`).append(`
+						<fieldset class="form-group row">
+							<legend class="col-form-label col-sm-4 float-sm-left pt-0">${value[i].paramName}</legend>
+							<div class="col-sm-8">
+						  		<div class="form-check form-check-inline">
+									<input class="form-check-input" type="checkbox" name="boolean_${value[i].id_paramDefinition}" id="boolean_${value[i].id_paramDefinition}" data-id_paramDefinition="${value[i].id_paramDefinition}">
+								</div>
+							</div>
+					 	</fieldset>`)
+						
+						//Set the controls
+						if (value[i].value !== null){
+							//Set the control
+							if (value[i].value === "true"){
+								$(`#boolean_${value[i].id_paramDefinition}`).prop('checked', 'true')
+							}
+						}
+
+						break;
+					case 'freeText':
+					case 'number':
+						$(`${$selector} form`).append(`
+						<div class="form-group row">
+							<label for="freeText_${value[i].id_paramDefinition}" class="col-sm-4 col-form-label">${value[i].paramName}</label>
+							<div class="col-sm-8">
+								<input type="text" class="form-control" id="freeText_${value[i].id_paramDefinition}" data-id_paramDefinition="${value[i].id_paramDefinition}">
+							</div>
+						</div>`)
+
+						//Set the control
+						if (value[i].value !== null){
+							//Set the control
+							$(`#freeText_${value[i].id_paramDefinition}`).val(value[i].value)
+						}
+						break;
+					
+					case 'singleOption':
+						//debug(5, 'in singleOption with', value[i])
+						$(`${$selector} form`).append(`
+						<div class="form-group row">
+							<label for="singleOption_${value[i].id_paramDefinition}" class="col-sm-4 col-form-label">${value[i].paramName}</label>
+							<div class="col-sm-8">
+								<select class="form-control" id="singleOption_${value[i].id_paramDefinition}" data-id_paramDefinition="${value[i].id_paramDefinition}"></select>
+							</div>
+						</div>`)
+
+						//Populate the available options
+						var options = value[i].options.split(',')
+
+						$(`#singleOption_${value[i].id_paramDefinition}`).append(`<option value="null"></option>`)
+						options.forEach((option) => {
+							$(`#singleOption_${value[i].id_paramDefinition}`).append(`<option value="${option}">${option}</option>`)
+						})
+
+						//Set the control
+						if (value[i].value !== null){
+							$(`#singleOption_${value[i].id_paramDefinition}`).val(value[i].value)
+						} else {
+							$(`#singleOption_${value[i].id_paramDefinition}`).val("null")
+						}
+
+						break;
+					case 'multiOption':
+						//debug(5, 'in multiOption with', value[i])
+						$(`${$selector} form`).append(`
+						<div class="form-group row">
+							<label for="multiOption_${value[i].id_paramDefinition}" class="col-sm-4 col-form-label">${value[i].paramName}</label>
+							<div class="col-sm-8">
+								<select multiple class="form-control" id="multiOption_${value[i].id_paramDefinition}" data-id_paramDefinition="${value[i].id_paramDefinition}"></select>
+							</div>
+						</div>`)
+
+						//Populate the available options
+						var options = value[i].options.split(',')
+
+						options.forEach((option) => {
+							$(`#multiOption_${value[i].id_paramDefinition}`).append(`<option value="${option}">${option}</option>`)
+						})
+
+						//Set the control
+						if (value[i].value !== null){
+							var controlValues = value[i].value.split(',')
+
+							$(`multiOption_${value[i].id_paramDefinition}`).val(controlValues)
+
+							controlValues.forEach((controlValue) => {
+								debug(5, 'trying to select ' + controlValue)
+								$(`#multiOption_${value[i].id_paramDefinition} option[value='${controlValue}']`).prop('selected', true)
+								//$("#strings option[value='" + e + "']").prop("selected", true);
+							})							
+						}
+
+
+						break;
+					
+
+						break;
+					default:
+						debug(5, 'in default with', value[i])
+						break;
+				}
+				
+				
+			}
+
+			break;
 		case 'qtyYears':
 			if (value.length > 0){ //Entries exist
 				for (var i = 0; i < value.length; i++){
@@ -380,7 +565,7 @@ function setFormElement($selector, properties, value){
 			}
 			break;
 		case 'selectOptions': //Fills a select
-			//sdebug(5, value)
+			//debug(5, value)
 			if(properties.attr){
 				value.forEach((element) => {
 					$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName]}</option>`)
@@ -389,6 +574,11 @@ function setFormElement($selector, properties, value){
 				value.forEach((element) => {
 					$($selector).append(`<option>${element}</option>`)
 				})
+			}
+			
+			//Disable the select if there were no values passed
+			if (value.length == 0){
+				$($selector).prop('disabled', true)
 			}
 			break;
 		case 'selectOptions_MultipleFields': //Fills a select, with multiple values
@@ -411,6 +601,17 @@ function setFormElement($selector, properties, value){
 			if (!properties.noUpdate){
 				$($selector).text(value)
 			}
+			break;
+		case 'headingMultiple':
+			debug(5, value)
+			if (value[properties.columnName[1]] === null || value[properties.columnName[1]] === ''){
+				$($selector).text(`${value[properties.columnName[0]]}`)
+			} else {
+				$($selector).text(`${value[properties.columnName[0]]} [${value[properties.columnName[1]]}]`)
+			}
+
+			
+				
 			break;
 		case 'slider':
 			if(value == ''){ value = 0 }
@@ -926,7 +1127,7 @@ function breadcrumbs($selector, details){
 		break;
 		case 'Network':
 			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
-			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_SIMap', value: details.id_SIMap }]})
+			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_ISMap', value: details.id_ISMap }]})
 			breadcrumbArr.push({ name: 'Map Links', active: true, data: []})
 		break;
 		case 'UpdateNetwork':
@@ -934,7 +1135,7 @@ function breadcrumbs($selector, details){
 		break;
 		case 'IssuesSystemInterface':
 			breadcrumbArr.push({ name: 'System', active: false, module: 'updateSystemModal', data: [{ key: 'id_system', value: details.id_system }]})
-			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_SIMap', value: details.id_SIMap }]})
+			breadcrumbArr.push({ name: 'System Interface', active: false, module: 'updateSystemInterfacesModal', data: [{ key: 'id_system', value: details.id_system },{ key: 'id_ISMap', value: details.id_ISMap }]})
 			breadcrumbArr.push({ name: 'Issue', active: true, data: []})
 		break;
 		case 'Quantities':
@@ -1298,12 +1499,12 @@ function updateEvents(formDetails, callback){
 }
 
 
-function placeInterfaceButtons($selector, row, id_system, id_SIMap, callback){
+function placeInterfaceButtons($selector, row, id_system, id_ISMap, callback){
 	//Create the button element for each interface installed into the system
-	addIconButton($selector, row.image, row.name, {name: 'id_SIMap', value: row.id_SIMap});
+	addIconButton($selector, row.image, row.name, {name: 'id_ISMap', value: row.id_ISMap});
 
 	//Select the interface if it matches
-	if (id_SIMap == row.id_SIMap){
+	if (id_ISMap == row.id_ISMap){
 		$($selector + ' button:last-of-type').removeClass('btn-secondary').addClass('btn-primary');
 	}
 
@@ -1314,11 +1515,11 @@ function placeInterfaceButtons($selector, row, id_system, id_SIMap, callback){
 		$($selector + ' button').removeClass("btn-primary").addClass("btn-secondary");
 		$(event.currentTarget).removeClass('btn-secondary').addClass('btn-primary');
 
-		//Update the system object with the in-focus id_SIMap
-		//id_SIMap = parseInt($(event.currentTarget).attr('data-id_SIMap'));
+		//Update the system object with the in-focus id_ISMap
+		//id_ISMap = parseInt($(event.currentTarget).attr('data-id_ISMap'));
 
 		//Populate the additional details
-		callback(id_system, null, row.id_SIMap)
+		callback(id_system, null, row.id_ISMap)
 	});
 }
 

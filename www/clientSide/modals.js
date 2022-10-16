@@ -37,6 +37,7 @@ async function commonModal(definition){
 	//Get the data from the server to display in the modal
 	if (definition.continue){
 		for (var i = 0; i < modals[definition.modal].iterations.length; i++){
+
 			//Populate the fields
 			var postData = { 
 				type: modals[definition.modal].iterations[i].type
@@ -56,9 +57,20 @@ async function commonModal(definition){
 				definitionsFound = true
 			}
 
+			if (modals[definition.modal].iterations[i].type === undefined){
+				definitionsFound = false
+				modals[definition.modal].iterations[i].instructions.forEach((element3) => {
+					commonModal_actions(definition, element3, null, null)
+				})
+				
+				debug(5, 'type is undefined')
+			}			
+
 			if(definitionsFound == true){
 				await commonModal_getData(definition, modals[definition.modal].iterations[i], postData)
-			}			
+			}
+
+
 		}
 	
 		//Handle Events
@@ -67,19 +79,37 @@ async function commonModal(definition){
 			commonModal_event(definition, modals[definition.modal].events[i])
 		}
 
-		//Event: Changes to any fields (Transition View -> Edit mode)
+		//Event: Changes to any fields (transition from View -> Edit mode)
 		modals[definition.modal].monitorChanges.forEach((element4) => {
-			$('#' + element4.id).unbind().on(element4.on, () => {
-				//Prevent update
-				modals[definition.modal].lockOnChange.forEach((element5) => {$('#' + element5).prop('disabled', true)})
-				modals[definition.modal].unlockOnChange.forEach((element5) => {$('#' + element5).prop('disabled', false)})	
-			})
+			
+			if (element4.on === 'any'){
+				debug(5, 'in any')
+				//A handler needs to be added to multiple controls
+				$(`#${element4.id} select`).on('change', () => {
+					debug(5, 'change firing')
+					modals[definition.modal].lockOnChange.forEach((element5) => {$('#' + element5).prop('disabled', true)})
+					modals[definition.modal].unlockOnChange.forEach((element5) => {$('#' + element5).prop('disabled', false)})	
+				})
+
+				$(`#${element4.id} input`).on('input', () => {
+					debug(5, 'input firing')
+					modals[definition.modal].lockOnChange.forEach((element5) => {$('#' + element5).prop('disabled', true)})
+					modals[definition.modal].unlockOnChange.forEach((element5) => {$('#' + element5).prop('disabled', false)})	
+				})
+
+
+			} else {
+				//A handler needs to be added to a single control
+				$('#' + element4.id).on(element4.on, () => {
+					modals[definition.modal].lockOnChange.forEach((element5) => {$('#' + element5).prop('disabled', true)})
+					modals[definition.modal].unlockOnChange.forEach((element5) => {$('#' + element5).prop('disabled', false)})	
+				})
+			}
 		})
 	}
 }
 
 async function commonModal_getData(definition, formData, postData){
-	//debug(5,definition)
 	debug(5, `Getting '${postData.type}' from the server (select.json):`)
 	
 	await $.post('select.json', postData, (result) => {
@@ -94,15 +124,14 @@ async function commonModal_getData(definition, formData, postData){
 			//Populate the form's fields
 			formData.instructions.forEach((element3) => {
 
-				switch (element3.action){
+				//switch (element3.action){
 
-					default:
-						commonModal_actions(definition, element3, postData, result)
-				}
+					//default:
+				commonModal_actions(definition, element3, postData, result)
+				//}
 			})
 		}
 	})
-	//debug(5, definition)
 }
 
 function commonModal_event(definition, event){
@@ -199,7 +228,6 @@ function commonModal_event(definition, event){
 function commonModal_actions(definition, element, postData, result){
 	//debug(5, 'in commonModal_actions with element', element)
 	switch (element.action){
-		//Set controls
 		case 'setControl_MultipleValues':
 		case 'setControl_MultipleValues_EntireArray':
 		case 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes': //An array of objects is returned and needs to be iterated through. Generally for populating selects and droppable elements
@@ -217,8 +245,6 @@ function commonModal_actions(definition, element, postData, result){
 		case 'setControl_SingleValue_fromParamNoArray':
 		case 'setControl_SingleValue_AtSpecificArrayIndex':
 			if(element.arrayIndex >= 0){
-				//debug(5,'res', result[element.arrayIndex])
-				
 				setFormElement('#' + element.id, element, result[element.arrayIndex][element.columnName]) 
 			} else {
 				setFormElement('#' + element.id, element, result[element.columnName]) }
@@ -235,11 +261,21 @@ function commonModal_actions(definition, element, postData, result){
 			break;
 		case 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition': //Matches a definition parameter with a row parameter and sets a control to another parameter on that row, if found.
 			if (definition[element.definition]){
-				result.forEach((element4) => {
-					if (element4[element.definition] == definition[element.definition]){
-						setFormElement('#' + element.id, element, element4[element.columnName])
-					}
-				})
+				if(element.arrayIndex >= 0){
+					result[element.arrayIndex].forEach((element4) => {
+						if (element4[element.definition] == definition[element.definition]){
+							setFormElement('#' + element.id, element, element4[element.columnName])
+						}
+					})
+				} else {
+					result.forEach((element4) => {
+						if (element4[element.definition] == definition[element.definition]){
+							setFormElement('#' + element.id, element, element4[element.columnName])
+						}
+					})
+				}
+
+
 			}
 			break;
 		case 'setControl_Focus':
@@ -261,11 +297,22 @@ function commonModal_actions(definition, element, postData, result){
 
 
 			break;
+		case 'setControl_Colours':
+			setFormElement('#' + element.id, element, CSS_COLOUR_NAMES)
+			break;
+		case 'setControl_FromList':
+			debug(5, 'In setControl_FromList', element)
+			//for (var i = 0; i < element.list; i++){
+				setFormElement('#' + element.id, element, element.list)
+			
+			break;
+	
 
 		//Set definition
 		case 'setDefinition_SingleValue_ifDefintionNotAlreadySet':
 			if (!definition[element.definition]){
 				definition[element.definition] = getFormElement('#' + element.id, element)
+				debug(5, 'setDefinition_SingleValue_ifDefintionNotAlreadySet is ' + getFormElement('#' + element.id, element))
 			}
 			break;
 		case 'setDefinition_SingleValue':
@@ -277,9 +324,13 @@ function commonModal_actions(definition, element, postData, result){
 		case 'setDefinition_SingleValue_AtSpecificArrayIndexFirstIndex':
 		case 'setDefinition_SingleValue_fromParamNoArray': //Populate key ID's if they were not supplied
 		case 'setDefinition_SingleValue':
-			if(element.arrayIndex){
-				if(result[element.arrayIndex][0]) { definition[element.id] = result[element.arrayIndex][0][element.columnName] }
+			debug(2, 'In setDefinition_SingleValue, check the following works', element)
+			if(element.arrayIndex !== undefined){
+				
+				//if(result[element.arrayIndex][0]) { definition[element.id] = result[element.arrayIndex][0][element.columnName] }
+				if(result[element.arrayIndex]) { definition[element.id] = result[element.arrayIndex][element.columnName] }
 			} else {
+				
 				definition[element.definitionName] = result[element.columnName]
 			}
 			
@@ -330,7 +381,6 @@ function commonModal_actions(definition, element, postData, result){
 			modals[definition.modal].unlockOnChange.forEach((element2) => {$('#' + element2).prop('disabled', false)})	
 			break;
 		case 'hideControls':
-			element.controls.forEach((element2) => {$('#' + element2).hide();})
 			break;
 		case 'addControls':
 			addFormElement('#' + element.id, element)
@@ -341,6 +391,7 @@ function commonModal_actions(definition, element, postData, result){
 
 		//From update cleanup
 		case 'returnToLastModal':
+			debug(5, 'Breadcrumb:', breadcrumbTracker)
 			if (breadcrumbTracker.length == 0){
 				//Close the modal
 				$('#mainModal').modal('hide');
@@ -388,6 +439,23 @@ function commonModal_actions(definition, element, postData, result){
 		case 'removeElement':
 			$(`#${element.id}[data-${element.dataAttr}="${definition[element.definitionName]}"`).remove();
 			break;
+		case 'showHideControls_ifValueEquals':
+			
+			var setValue = getFormElement('#' + element.id, element)
+
+			element.dataAttrValues.forEach((dataAttrValue) => {
+				if (setValue == dataAttrValue){
+					element.controlsToHide.forEach((control) => {
+						$(`#${control}`).addClass('d-none')
+						$(`label[for=${control}]`).addClass('d-none')
+					})
+					element.controlsToShow.forEach((control) => {
+						$(`#${control}`).removeClass('d-none')
+						$(`label[for=${control}]`).removeClass('d-none')
+					})
+				}
+			})
+		break;
 		case 'debug':
 			debug(5, 'In switch debug with definition: ', definition)
 			break;
@@ -428,7 +496,6 @@ function settingsModal(message){
 	//Add the form element
 	document.querySelector('#mainModal .modal-body').innerHTML = `<form></form>`
 
-	//Add the form controls
 	settings.forEach((element) => {
 		addFormElement('#mainModal form', element);
 		setFormElement('#' + element.id, element, localStorage.getItem(element.id))

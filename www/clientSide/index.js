@@ -519,7 +519,7 @@ async function charts(){
 			if (result.msg){
 				//An error was passed
 				debug(5, 'error', result.msg)
-				//updateSystemLinksModal(id_system,{info: 'failure', msg: `There was an error. Check the console.`}, id_SIMap);
+				//updateSystemLinksModal(id_system,{info: 'failure', msg: `There was an error. Check the console.`}, id_ISMap);
 			} else {
 				//Interface data
 				data.interfaces.push({x: i})

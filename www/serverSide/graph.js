@@ -81,24 +81,26 @@ exports.switch = (req,res) => {
 		case 'Interfaces': //Gets all system interfaces associated with the the systems provided in id_system_arr
 			queryString += sql.format(`
 				SELECT * 
-				FROM SIMap 
+				FROM InterfaceToSystemMap 
 				LEFT JOIN interfaces 
-				ON SIMap.id_interface = interfaces.id_interface 
-				WHERE SIMap.id_system IN (?) 
+				ON InterfaceToSystemMap.id_interface = interfaces.id_interface 
+				WHERE InterfaceToSystemMap.id_system IN (?) 
 				ORDER BY interfaces.id_interface;`,[req.body.id_system_arr])
 
 			break;
-		case 'Links': //Gets all links associated with the system interfaces provided in id_SIMap_arr
+		case 'Links': //Gets all links associated with the system interfaces provided in id_ISMap_arr
 			queryString += sql.format(`
-				SELECT networks.*, SINMap.id_SINMap, SINMap.id_SIMap, SINMap.category AS linkCategory, technologies.category as technologyCategory, SIMap.id_system
-				FROM SINMap
-				LEFT JOIN SIMap 
-				ON SIMap.id_SIMap = SINMap.id_SIMap 
-				LEFT JOIN networks 
-				ON networks.id_network = SINMap.id_network
+				SELECT links.*, SystemInterfaceToLinkMap.id_SILMap, SystemInterfaceToLinkMap.id_ISMap, SystemInterfaceToLinkMap.isPrimary, technologyCategories.name as technologyCategoryName, technologyCategories.colour as technologyCategoryColour, InterfaceToSystemMap.id_system
+				FROM SystemInterfaceToLinkMap
+				LEFT JOIN InterfaceToSystemMap 
+				ON InterfaceToSystemMap.id_ISMap = SystemInterfaceToLinkMap.id_ISMap 
+				LEFT JOIN links 
+				ON links.id_link = SystemInterfaceToLinkMap.id_link
 				LEFT JOIN technologies
-				ON technologies.id_technology = networks.id_technology
-				WHERE SIMap.id_SIMap IN (?)`,[req.body.id_SIMap_arr])
+				ON technologies.id_technology = links.id_technology
+				LEFT JOIN technologyCategories
+				ON technologies.id_techCategory = technologyCategories.id_techCategory
+				WHERE InterfaceToSystemMap.id_ISMap IN (?)`,[req.body.id_ISMap_arr])
 			break;
 		case 'Subsystems': // Returns the system provided at id_system_arr and their children, by depth
 			
@@ -198,11 +200,11 @@ exports.switch = (req,res) => {
 			queryString += sql.format(`
 				SELECT systemsResult.quantity, interfaces.name, interfaces.id_interface, SUM(systemsResult.quantity) AS interfaceQty
 				FROM systemsResult
-				LEFT JOIN SIMap
-				ON systemsResult.id_system = SIMap.id_system
+				LEFT JOIN InterfaceToSystemMap
+				ON systemsResult.id_system = InterfaceToSystemMap.id_system
 				LEFT JOIN interfaces
-				ON SIMap.id_interface = interfaces.id_interface
-				WHERE SIMap.id_SIMap IS NOT NULL
+				ON InterfaceToSystemMap.id_interface = interfaces.id_interface
+				WHERE InterfaceToSystemMap.id_ISMap IS NOT NULL
 				GROUP BY id_interface
 				ORDER BY interfaces.id_interface;`)
 			break;
@@ -263,10 +265,10 @@ exports.switch = (req,res) => {
 
 			#Get the interfaces which are represented in the systems available in this particular year
 			CREATE TEMPORARY TABLE t3 AS
-				(SELECT DISTINCT SIMap.id_interface
+				(SELECT DISTINCT InterfaceToSystemMap.id_interface
 				FROM systemsResult
-				LEFT JOIN SIMap
-				ON systemsResult.id_system = SIMap.id_system);
+				LEFT JOIN InterfaceToSystemMap
+				ON systemsResult.id_system = InterfaceToSystemMap.id_system);
 
 			SELECT DISTINCT t2.id_interface, t2.interfaceName, t2.id_interfaceIssue, t2.issueName, t2.issue, t2.resolution, t2.severity, systemsResult.id_system, systemsResult.name as systemName, systemsResult.version as systemVersion, systemsResult.quantity
 			FROM t3
@@ -282,16 +284,16 @@ exports.switch = (req,res) => {
 			queryString += sql.format(`
 				SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 				SET @inputYear = ?;
-				SELECT interfaces.id_interface, a.id_system, systems.name AS systemName, systems.image AS systemImage, version AS systemVersion,  a.quantity AS qtySystems,  interfaces.name AS interfaceName, COUNT(SIMap.id_SIMap) AS qtyEachSystem
+				SELECT interfaces.id_interface, a.id_system, systems.name AS systemName, systems.image AS systemImage, version AS systemVersion,  a.quantity AS qtySystems,  interfaces.name AS interfaceName, COUNT(InterfaceToSystemMap.id_ISMap) AS qtyEachSystem
 				FROM (SELECT * FROM quantities WHERE year <= @inputYear) AS a
 				LEFT JOIN (SELECT * FROM quantities WHERE year <= @inputYear) AS b
 				ON a.id_system = b.id_system AND a.year < b.year
 				LEFT JOIN systems
 				ON a.id_system = systems.id_system
-				LEFT JOIN SIMap
-				ON systems.id_system = SIMap.id_system
+				LEFT JOIN InterfaceToSystemMap
+				ON systems.id_system = InterfaceToSystemMap.id_system
 				LEFT JOIN interfaces
-				ON interfaces.id_interface = SIMap.id_interface
+				ON interfaces.id_interface = InterfaceToSystemMap.id_interface
 				WHERE b.id_system IS NULL AND a.quantity != 0 AND systems.id_system IN (${req.body.id_system_arr}) AND interfaces.id_interface IS NOT NULL
 				GROUP BY interfaces.id_interface, systems.id_system
 				ORDER BY interfaces.id_interface, systemName;`, req.body.year)
@@ -329,15 +331,33 @@ exports.switch = (req,res) => {
 
 			break;
 		case 'LinksForAssociatedSystems': //Draw links between systems which do not have a distributed subsystem attached
+
+		queryString += sql.format(`
+			SELECT systems_a.id_system AS source, systems_a.name, systems_b.id_system AS destination, systems_b.name, links.id_link, links.name, technologies.category AS technologyCategory, SystemInterfaceToLinkMap_a.category AS linkCategory
+			FROM systems AS systems_a
+			LEFT JOIN InterfaceToSystemMap AS InterfaceToSystemMap_a ON systems_a.id_system = InterfaceToSystemMap_a.id_system
+			LEFT JOIN SystemInterfaceToLinkMap AS SystemInterfaceToLinkMap_a ON SystemInterfaceToLinkMap_a.id_ISMap = InterfaceToSystemMap_a.id_ISMap
+			LEFT JOIN SystemInterfaceToLinkMap AS SystemInterfaceToLinkMap_b ON SystemInterfaceToLinkMap_b.id_link = SystemInterfaceToLinkMap_a.id_link
+			LEFT JOIN links ON SystemInterfaceToLinkMap_a.id_link = links.id_link
+			LEFT JOIN technologies ON links.id_technology = technologies.id_technology
+			LEFT JOIN InterfaceToSystemMap AS InterfaceToSystemMap_b ON SystemInterfaceToLinkMap_b.id_ISMap = InterfaceToSystemMap_b.id_ISMap
+			LEFT JOIN systems AS systems_b ON systems_b.id_system = InterfaceToSystemMap_b.id_system
+			WHERE systems_a.id_system IN (?) AND systems_a.id_system != systems_b.id_system;`,[req.body['id_system_arr!']])
+
+
+
+
+		//The following works, but AMap wasn't well implemented
+		/*
 			queryString += sql.format(`
-				SELECT AMap.id_AMap, AMap.source, c.name , AMap.destination, d.name, networks.id_network, networks.name, technologies.category AS technologyCategory, SINMap.category AS linkCategory
+				SELECT AMap.id_AMap, AMap.source, c.name , AMap.destination, d.name, links.id_link, links.name, technologies.category AS technologyCategory, SystemInterfaceToLinkMap.category AS linkCategory
 				FROM AMap
-				LEFT JOIN SIMap ON SIMap.id_system = AMap.source
-				LEFT JOIN SINMap ON SINMap.id_SIMap = SIMap.id_SIMap
-				LEFT JOIN networks ON networks.id_network = SINMap.id_network
-				LEFT JOIN technologies ON technologies.id_technology = networks.id_technology
-				LEFT JOIN SINMap AS a ON a.id_network = networks.id_network
-				LEFT JOIN SIMap AS b ON b.id_SIMap = a.id_SIMap
+				LEFT JOIN InterfaceToSystemMap ON InterfaceToSystemMap.id_system = AMap.source
+				LEFT JOIN SystemInterfaceToLinkMap ON SystemInterfaceToLinkMap.id_ISMap = InterfaceToSystemMap.id_ISMap
+				LEFT JOIN links ON links.id_link = SystemInterfaceToLinkMap.id_link
+				LEFT JOIN technologies ON technologies.id_technology = links.id_technology
+				LEFT JOIN SystemInterfaceToLinkMap AS a ON a.id_link = links.id_link
+				LEFT JOIN InterfaceToSystemMap AS b ON b.id_ISMap = a.id_ISMap
 				LEFT JOIN systems AS c ON c.id_system = AMap.source
 				LEFT JOIN systems AS d ON d.id_system = AMap.destination
 				WHERE
@@ -346,25 +366,8 @@ exports.switch = (req,res) => {
 				;
 				`,[req.body['id_system_arr!']])
 
-			// queryString += sql.format(`
-			// 	SELECT a.id_SINMap, systems.id_system, systems.name, c.id_system AS destinationId, c.name AS destinationName, technologies.category AS technologyCategory
-			// 	FROM systems
-			// 	LEFT JOIN SIMap ON SIMap.id_system = systems.id_system
-			// 	LEFT JOIN SINMap ON SINMap.id_SIMap = SIMap.id_SIMap
-			// 	LEFT JOIN networks ON networks.id_network = SINMap.id_network
-			// 	LEFT JOIN technologies ON technologies.id_technology = networks.id_technology
-			// 	LEFT JOIN SINMap AS a ON a.id_network = networks.id_network
-			// 	LEFT JOIN SIMap AS b ON b.id_SIMap = a.id_SIMap
-			// 	LEFT JOIN systems AS c ON c.id_system = b.id_system
-			// 	WHERE 
-			// 		#technologies.category IN ('terresterialNB','terresterialWB', 'satelliteWB')
-			// 		systems.id_system IN (${arrStringOut})
-			// 		AND c.id_system IN (${arrStringIn})
-			// 		AND a.category = 'primary'
-			// 		AND SINMap.category = 'primary'
-			// 		AND SINMap.id_SINMap != a.id_SINMap
-			// 		;`)
-					
+
+					*/
 			break;
 		case 'AllSystems': //Regardless of years
 			queryString += sql.format(`
@@ -374,55 +377,48 @@ exports.switch = (req,res) => {
 			break;
 	}
 
-	executeQuery(queryString).then((result) => { 
-		//res.json(result);
-		switch (req.body.type){
-			case 'Compound':
-			case 'Systems':	
-				res.json(result[1]);
-			break;
-			case 'QuantityOfInterfacesPerSystem':
-				res.json(result[2])
-				break;
-			case 'InterfaceQuantitiesInYear':
-				res.json(result[4]);
-				break;	
-			case 'Issues':
-				res.json(result[6]);
-			case 'Normal':
-				res.json([result[4], result[6], result[8], result[9], result[10]]) 
-			break;
-			
+	// sql.execute('SELECT * FROM systems;')
+	// 	.then((result) => {
+	// 		debug(1,'** Promise resolved', result)
+	// 	})
 
-			default:
-				res.json(result)
 
-		}
-		
-	}).catch((err) => {
-		debug(3,err);
-		if (debugLevel == 7){
-			res.json({msg: 'There was an error executing the query (select.json)', err: err})
-		} else {
-			res.json({msg: 'There was an error executing the query (select.json)'})
-		}
-	});
-}
-
-var executeQuery = (queryString) => new Promise((resolve,reject) => {
-	//Submit the query to the database
-	queryString = queryString.trim();
-	let re = /\n\s\s+/gi;
-	queryString = queryString.replace(re,'\n\t')
+	//executeQuery(queryString).then((result) => { 
 	debug(7, 'Query:  ' + queryString);
-	sql.query(queryString, (err,res) => {
-		if (err) { 
-			reject(err);
-		}
-		resolve(res);
-	})    
-}) 
+	sql.execute(queryString)
+		.then((result) => {
+			//res.json(result);
+			switch (req.body.type){
+				case 'Compound':
+				case 'Systems':	
+					res.json(result[1]);
+				break;
+				case 'QuantityOfInterfacesPerSystem':
+					res.json(result[2])
+					break;
+				case 'InterfaceQuantitiesInYear':
+					res.json(result[4]);
+					break;	
+				case 'Issues':
+					res.json(result[6]);
+				case 'Normal':
+					res.json([result[4], result[6], result[8], result[9], result[10]]) 
+				break;
+				
 
+				default:
+					res.json(result)
+
+			}	
+		}).catch((err) => {
+			debug(3,err);
+			if (debugLevel == 7){
+				res.json({msg: 'There was an error executing the query (select.json)', err: err})
+			} else {
+				res.json({msg: 'There was an error executing the query (select.json)'})
+			}
+		});
+}
 
 /*
 Backup before organisation integration

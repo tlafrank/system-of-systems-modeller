@@ -64,7 +64,7 @@ function update_technologies(){
 }
 
 /**
- * @description Update the networks by choosing the network from a list
+ * @description Update the links by choosing the link from a list
  * 
  */
 function update_network(){
@@ -293,13 +293,13 @@ function hideNode(id, idNo, type){
 				//An error was passed																			//Add error handling
 			} else {
 				result.forEach((element) => {
-					cy.remove(`[id = 'node_si_${element.id_SIMap}']`)
+					cy.remove(`[id = 'node_si_${element.id_ISMap}']`)
 				})	
 			}
 		})
 	}
 	
-	//Remove all orphaned nodes (i.e. networks)
+	//Remove all orphaned nodes (i.e. links)
 
 }
 
@@ -328,10 +328,10 @@ function hideNode(id, idNo, type){
 				postData.noTags = true;
 				break;
 			case 'SystemInterface':
-				postData.id_SIMap = eventTarget.data('id_SIMap');
+				postData.id_ISMap = eventTarget.data('id_ISMap');
 				break;
 			case 'Link':
-				postData.id_network = eventTarget.data('id_network');			
+				postData.id_link = eventTarget.data('id_link');			
 				break;
 			default:
 				debug(1,'Error in nodeSelected with unexpected nodeType: ' + eventTarget.data('nodeType'), eventTarget._private.data)
@@ -368,7 +368,7 @@ function edgeSelected(eventTarget){
 //************************************************************ Page Buttons ******************************************************/
 
 /**
- * @description Opens the modal to allow a user to add/edit the systems, interfaces, features or networks
+ * @description Opens the modal to allow a user to add/edit the systems, interfaces, features or links
  * 
  */
 function editNodeButton(){
@@ -382,10 +382,10 @@ function editNodeButton(){
 			commonModal({modal: 'systems', continue: true, id_system: selectedNode.id_system})
 			break;
 		case 'SystemInterface':
-			commonModal({modal: 'interfacesToSystems', continue: true, id_system: selectedNode.id_system, id_SIMap: selectedNode.id_SIMap})
+			commonModal({modal: 'interfacesToSystems', continue: true, id_system: selectedNode.id_system, id_ISMap: selectedNode.id_ISMap})
 			break;
 		case 'Link':
-			commonModal({modal: 'links', continue: true, id_network: selectedNode.id_network})
+			commonModal({modal: 'links', continue: true, id_link: selectedNode.id_link})
 			break;
 	}
 }
@@ -444,8 +444,8 @@ function mappingModal_addButton(){
 
 		if (selectedNode.type == 'SystemInterface') {
 			postData.type = 'NetworkToSystemInterface';
-			postData.id_network = $("#mappingModalSelect option:selected").data("id");
-			postData.id_SIMap = selectedNode.id_SIMap;
+			postData.id_link = $("#mappingModalSelect option:selected").data("id");
+			postData.id_ISMap = selectedNode.id_ISMap;
 		}
 
 
@@ -474,12 +474,12 @@ function mappingModal_deleteButton(idToDelete){
 
 	if (selectedNode.type == 'System') { 
 		postData.type = 'DeleteInterfaceFromSystem';
-		postData.id_SIMap = idToDelete;
+		postData.id_ISMap = idToDelete;
 	}
 
 	if (selectedNode.type == 'SystemInterface') { 
 		postData.type = 'DeleteNetworkFromInterface';
-		postData.id_SINMap = idToDelete;
+		postData.id_SILMap = idToDelete;
 	}
 
 

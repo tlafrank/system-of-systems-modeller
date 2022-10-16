@@ -9,8 +9,6 @@ const chart = require('./serverSide/chart');
 const update = require('./serverSide/update');
 const backup = require('./serverSide/backup');
 
-
-
 const images = require('./serverSide/images');
 const fs = require('fs');
 

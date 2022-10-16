@@ -117,13 +117,13 @@ async function commonGraph(definition){
 							element.fields.forEach((field) => {
 								var str = '';
 								switch (field.action){
-									case 'fromResult':
+									case 'fromResult': //Inserts the contents of the columns referenced in columnNames[] into format at the appropriate place, as identified in format by <x>
 										str = field.format
 										for (var i = 0; i < field.columnNames.length; i++){
 											str = str.replace(`<${i}>`, row[field.columnNames[i]])
 										}
 										break;
-									case 'fromResult_Name':
+									case 'fromResult_Name': //Formats the display for a system name [system version], if a version is supplied
 										if (row[field.columnNames[1]] === null || row[field.columnNames[1]] === ''){
 											str = row[field.columnNames[0]]
 										} else {
@@ -132,7 +132,6 @@ async function commonGraph(definition){
 										for (var i = 0; i < field.columnNames.length; i++){
 											str = str.replace(`<${i}>`, )
 										}
-										
 										break;
 									case 'fromConstant':
 										str = field.default
@@ -272,13 +271,12 @@ async function commonGraph(definition){
 				case 'buildGraphObject_links':
 
 //Handle link category
-switch (element2.linkCategory){
-	case 'primary':
-		break;
-	case 'alternate':
-	case 'incapable':			//Shouldnt be returned, precautionary
-	default:
-		tempNode.classes += ' dashed';					
+if (element2.isPrimary){
+	//Link is a primary
+
+} else {
+	//Link is an alternate, should be dashed
+	tempNode.classes += ' dashed';	
 }
 
 //Handle classes
@@ -396,7 +394,6 @@ if(element.designation){
 
 					break;
 
-					
 				case 'buildIssuesObject':
 					sosm.issues = []
 					var interfaceId = 0;
@@ -404,8 +401,6 @@ if(element.designation){
 					var issuesTracker = 0;
 					var issueId = 0;
 					var j = -1;
-
-					
 
 					//Reorganise the data to make table loading easier
 					for (var i = 0; i < result.length; i++){
@@ -616,7 +611,7 @@ function newCyX(){
 			if (element.qtyConnections == 1){
 				for (var i = 0; i<sosmNetworkData.length; i++){
 					
-					if (sosmNetworkData[i].id_network == element.id_network){
+					if (sosmNetworkData[i].id_link == element.id_link){
 						
 						//Remove the element from the array
 						debug(5, 'removing', element)
