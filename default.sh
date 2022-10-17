@@ -5,7 +5,7 @@ cd $(dirname $(readlink -f $0))
 
 : ${SOSM_USER:=sosmUser}
 : ${SOSM_DB:=db_sosm}
-: ${SOSM_PASS:=dnRk384!djrLdo}836w:}
+: ${SOSM_PASS:="dnRk384!djrLdo}836w:"}
 
 while getopts "p:d" options; do
   case ${options} in
