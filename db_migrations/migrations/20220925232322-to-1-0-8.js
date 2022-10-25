@@ -3,7 +3,8 @@
 var dbm;
 var type;
 var seed;
-var aysnc = require('async');
+var async = require('async');
+var mc = require('../migrate-common.js');
 
 /**
   * We receive the dbmigrate dependency from dbmigrate initially.
@@ -20,7 +21,8 @@ exports.setup = function(options, seedLink) {
   consistency.
 */
 exports.up = function(db, callback) {
-  aysnc.series([
+  mc.log("migrating to 1.0.8");
+  async.series([
 		db.createTable.bind(db, 'cimMap', {
       id_cimMap : { type : 'int', notNull : true, autoIncrement : true, primaryKey : true },
       id_system : { type : 'int', notNull : true, foreignKey : {
