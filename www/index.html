@@ -23,6 +23,7 @@
 		<script src="https://unpkg.com/layout-base/layout-base.js"></script>
 		<script src="https://unpkg.com/cose-base/cose-base.js"></script>
 		<script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
+		<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.19.0/package/dist/xlsx.full.min.js"></script>
 		-->
 
 		<!-- Locally Sourced -->
@@ -35,6 +36,7 @@
 		<script src="./src/layout-base.js"></script>
 		<script src="./src/cose-base.js"></script>
 		<script src="./src/cytoscape-fcose.js"></script>
+		<script src="./src/xlsx.full.min.js"></script>
 
 
 		<!-- Local stylesheet -->
@@ -42,7 +44,6 @@
 
 		<!-- Page scripts -->
 		<script src="./clientSide/Node.js" type="text/javascript" defer></script>
-		
 		<script src="./clientSide/constants.js" type="text/javascript" defer></script>
 		<script src="./clientSide/privateConstants.js" type="text/javascript" defer></script>
 		<script src="./clientSide/helpers.js" type="text/javascript" defer></script>
@@ -50,6 +51,7 @@
 		<script src="./clientSide/index.js" type="text/javascript" defer></script>
 		<script src="./clientSide/events.js" type="text/javascript" defer></script>
 		<script src="./clientSide/graph.js" type="text/javascript" defer></script>
+		<script src="./clientSide/exports.js" type="text/javascript" defer></script>
 
 		<title>System of Systems Modeller</title>
 
@@ -69,9 +71,6 @@
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 						<!---->
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('families')">System Families</a></li>
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('parties')">Parties</a></li>
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('poc')">Points of Contact</a></li>
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('cimMap')">CIM Mapping</a></li>
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('techCategories')">Technology Categories</a></li>
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('paramDefinition')">Define Parameters</a></li>
 						
@@ -92,7 +91,7 @@
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('interfaceIssues')">Issues</a></li>
 					</ul>
 				</li>
-
+<!--
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Organisation</a>
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -100,7 +99,7 @@
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('orgSystemMap')">Attach Systems to Organisational Nodes</a></li>
 					</ul>
 				</li>				
-
+			-->
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">View</a>
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -112,7 +111,6 @@
 						<li><a class="dropdown-item" href="#" onclick="view_charts()">Charts</a></li>
 						<li><hr class="dropdown-divider"></li>
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('specificSystem')">Specific System</a></li>
-						<li><a class="dropdown-item" href="#" onclick="pageSwitch('pocs')">System Points of Contact</a></li>
 
 					</ul>
 				</li>
@@ -128,12 +126,17 @@
 				
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Maintenance</a>
-					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-						<a class="dropdown-item" href="/backup.txt" target="_blank">Backup</a>
-					</div>
+
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<li><a class="dropdown-item" href="/backup.txt" target="_blank">Backup</a></li>
+						<!--<li><a class="dropdown-item" href="#" onclick="exportSosmData()">Export Data (Direct)</a></li>-->
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('exports')">Export Data</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('configureExports')">Configure Data Export</a></li>
+					</ul>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link" href="#" onclick="settingsModal()">Settings</a>
+
 				</li>
 			</div>
 		</nav>

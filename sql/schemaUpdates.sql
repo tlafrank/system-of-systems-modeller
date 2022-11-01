@@ -253,7 +253,7 @@
 		CREATE TABLE IF NOT EXISTS `db_sosm`.`technologyCategories` (
 			`id_techCategory` INT NOT NULL AUTO_INCREMENT,
 			`name` VARCHAR(45) NULL DEFAULT NULL,
-			`colour` VARCHAR(45) NULL DEFAULT NULL,
+			`color` VARCHAR(45) NULL DEFAULT NULL,
 			PRIMARY KEY (`id_techCategory`))
 		ENGINE = InnoDB;
 

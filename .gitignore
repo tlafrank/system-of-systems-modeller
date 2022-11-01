@@ -10,3 +10,5 @@ www/assets/*.css
 www/assets/*.js
 www/clientSide/privateConstants.js
 package_export/
+.vscode/
+*.pem

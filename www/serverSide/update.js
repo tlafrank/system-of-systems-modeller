@@ -23,13 +23,39 @@ exports.switch = (req,res) => {
 	switch (req.body.type){
 		//Update parameters (for systems initially)
 		case 'UpdateParams':
-			//Delete all existing values
-			queryString += sql.format(`DELETE FROM params WHERE id_system = ?;`, [req.body.id_system])
+			switch (req.body.paramType){
+				case 'system':
+				case 'subsystem':
+					//Delete all existing values
+					queryString += sql.format(`DELETE FROM params WHERE id_system = ?;`, [req.body.id_system])
 
-			//Create all the insert statements
-			req.body.params.forEach((param) => {
-				queryString += sql.format(`INSERT INTO params (id_paramDefinition, value, id_system) VALUES (?,?,?);`, [param.id_paramDefinition, param.value, req.body.id_system])
-			})
+					//Create all the insert statements
+					req.body.params.forEach((param) => { queryString += sql.format(`INSERT INTO params (id_paramDefinition, value, id_system) VALUES (?,?,?);`, [param.id_paramDefinition, param.value, req.body.id_system]) })
+					break;
+				case 'interface':
+					//Delete all existing values
+					queryString += sql.format(`DELETE FROM params WHERE id_interface = ?;`, [req.body.id_interface])
+				
+					//Create all the insert statements
+					req.body.params.forEach((param) => { queryString += sql.format(`INSERT INTO params (id_paramDefinition, value, id_interface) VALUES (?,?,?);`, [param.id_paramDefinition, param.value, req.body.id_interface]) })
+					break;
+				case 'link':
+					//Delete all existing values
+					queryString += sql.format(`DELETE FROM params WHERE id_link = ?;`, [req.body.id_link])
+
+					//Create all the insert statements
+					req.body.params.forEach((param) => { queryString += sql.format(`INSERT INTO params (id_paramDefinition, value, id_link) VALUES (?,?,?);`, [param.id_paramDefinition, param.value, req.body.id_link]) })
+					break;
+				case 'technology':
+					//Delete all existing values
+					queryString += sql.format(`DELETE FROM params WHERE id_technology = ?;`, [req.body.id_technology])
+
+					//Create all the insert statements
+					req.body.params.forEach((param) => { queryString += sql.format(`INSERT INTO params (id_paramDefinition, value, id_technology) VALUES (?,?,?);`, [param.id_paramDefinition, param.value, req.body.id_technology]) })
+					break;
+			}
+
+
 			
 
 
@@ -164,8 +190,6 @@ exports.switch = (req,res) => {
 		case 'DeleteNetworkFromInterface': queryString += sql.format(`DELETE FROM SystemInterfaceToLinkMap WHERE id_SILMap = ?`,[req.body.id_SILMap]); break;
 		case 'DeleteInterfaceIssue': queryString += sql.format(`DELETE FROM interfaceIssues WHERE id_interfaceIssue = ?`,[req.body.id_interfaceIssue]); break;
 		case 'DeleteFamily': queryString += sql.format(`DELETE FROM families WHERE id_family = ?`,[req.body.id_family]); break;
-		case 'DeleteParty': queryString += sql.format(`DELETE FROM parties WHERE id_party = ?`,[req.body.id_party]); break;
-		case 'DeletePoc': queryString += sql.format(`DELETE FROM poc WHERE id_poc = ?`,[req.body.id_poc]); break;
 		case 'DeleteTechCategory': queryString += sql.format(`DELETE FROM technologyCategories WHERE id_techCategory = ?`,[req.body.id_techCategory]); break;
 		case 'DeleteParamGroup': queryString += sql.format(`DELETE FROM paramGroups WHERE id_paramGroup = ?`,[req.body.id_paramGroup]); break;
 		case 'DeleteParamDefinition': queryString += sql.format(`DELETE FROM paramDefinitions WHERE id_paramDefinition = ?`,[req.body.id_paramDefinition]); break;
@@ -217,6 +241,14 @@ exports.switch = (req,res) => {
 			break;
 
 		//Simple Updates / Insertions
+		case 'UpdateExport':
+			var exportObject = JSON.stringify(req.body.exportObject)
+			if (req.body.id_export){
+				queryString += sql.format(`UPDATE exports SET name = ?, exportFormat = ?, exportObject = ? WHERE exports.id_export = ?;`,[req.body.name, req.body.exportFormat, exportObject, req.body.id_export]);
+			} else {
+				queryString += sql.format(`INSERT INTO exports (name,exportFormat,exportObject) VALUES (?,?,?);`,[req.body.name, req.body.exportFormat, exportObject]);
+			}
+			break;
 		case 'UpdateParamGroup':
 			if (req.body.id_paramGroup){
 				queryString += sql.format(`UPDATE paramGroups SET name = ? WHERE paramGroups.id_paramGroup = ?;`,[req.body.name, req.body.id_paramGroup]);
@@ -231,41 +263,28 @@ exports.switch = (req,res) => {
 					paramType = ?,
 					options = ?,
 					applicableToSystem = ?, 
+					applicableToSubsystem = ?, 
 					applicableToInterface = ?,
 					applicableToLink = ?, 
 					applicableToTechnology = ? 
-					WHERE paramDefinitions.id_paramDefinition = ?;`,[req.body.name, req.body.paramType, req.body.options, req.body.applicableToSystem, req.body.applicableToInterface, req.body.applicableToLink, req.body.applicableToTechnology, req.body.id_paramDefinition]);
+					WHERE paramDefinitions.id_paramDefinition = ?;`,[req.body.name, req.body.paramType, req.body.options, req.body.applicableToSystem, req.body.applicableToSubsystem, req.body.applicableToInterface, req.body.applicableToLink, req.body.applicableToTechnology, req.body.id_paramDefinition]);
 			} else {
-				queryString += sql.format(`INSERT INTO paramDefinitions (name, paramType, options, id_paramGroup, applicableToSystem, applicableToInterface, applicableToLink, applicableToTechnology) VALUES (?,?,?,?,?,?,?,?);`,
-					[req.body.name, req.body.paramType, req.body.options, req.body.id_paramGroup, req.body.applicableToSystem, req.body.applicableToInterface, req.body.applicableToLink, req.body.applicableToTechnology]);
+				queryString += sql.format(`INSERT INTO paramDefinitions (name, paramType, options, id_paramGroup, applicableToSystem, applicableToSubsystem, applicableToInterface, applicableToLink, applicableToTechnology) VALUES (?,?,?,?,?,?,?,?,?);`,
+					[req.body.name, req.body.paramType, req.body.options, req.body.id_paramGroup, req.body.applicableToSystem, req.body.applicableToSubsystem, req.body.applicableToInterface, req.body.applicableToLink, req.body.applicableToTechnology]);
 			}
 			break;
 
 
 		case 'UpdateTechCategory':
 			if (req.body.id_techCategory){
-				queryString += sql.format(`UPDATE technologyCategories SET name = ?, colour = ? WHERE technologyCategories.id_techCategory = ?;`,[req.body.name, req.body.colour, req.body.id_techCategory]);
+				queryString += sql.format(`UPDATE technologyCategories SET name = ?, color = ? WHERE technologyCategories.id_techCategory = ?;`,[req.body.name, req.body.color, req.body.id_techCategory]);
 			} else {
-				queryString += sql.format(`INSERT INTO technologyCategories (name, colour) VALUES (?,?);`,[req.body.name, req.body.colour]);
+				queryString += sql.format(`INSERT INTO technologyCategories (name, color) VALUES (?,?);`,[req.body.name, req.body.color]);
 			}
 			break;
 		case 'UpdateCimMap':
 			queryString += sql.format(`DELETE FROM cimMap WHERE id_system = ?;`,[req.body.id_system]);
 			queryString += sql.format(`INSERT INTO cimMap (id_system, cimName, updateTime) VALUES (?,?,?);`,[req.body.id_system, req.body.cimName, Date.now()]);
-			break;
-		case 'UpdatePoc':
-			if (req.body.id_poc){
-				queryString += sql.format(`UPDATE poc SET name = ?, email = ?, updateTime = ? WHERE poc.id_poc = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_poc]);
-			} else {
-				queryString += sql.format(`INSERT INTO poc (name, email, updateTime) VALUES (?,?,?);`,[req.body.name, req.body.email, Date.now()]);
-			}
-			break;
-		case 'UpdateParty':
-			if (req.body.id_party){
-				queryString += sql.format(`UPDATE parties SET name = ?, description = ?, updateTime = ? WHERE parties.id_party = ?;`,[req.body.name, req.body.description, Date.now(), req.body.id_party]);
-			} else {
-				queryString += sql.format(`INSERT INTO parties (name, description, updateTime) VALUES (?,?,?);`,[req.body.name, req.body.description, Date.now()]);
-			}
 			break;
 		case 'UpdateInterfaceToSystemMap':
 			//queryString += sql.format(`UPDATE InterfaceToSystemMap SET isProposed = ?, name = ?, description = ? WHERE InterfaceToSystemMap.id_ISMap = ?;`,[req.body.isProposed, req.body.name, req.body.description, req.body.id_ISMap]);
@@ -303,8 +322,8 @@ exports.switch = (req,res) => {
 				
 			if (req.body.id_system) { //Update existing system
 				//Update system details
-				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, category = ?, updateTime = ?, version = ?, id_family = ?, id_poc = ? WHERE id_system = ?;`, 
-					[req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family, req.body.id_poc, req.body.id_system]);
+				queryString += sql.format(`UPDATE systems SET name = ?, image = ?, description = ?, reference = ?, category = ?, updateTime = ?, version = ?, id_family = ? WHERE id_system = ?;`, 
+					[req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family, req.body.id_system]);
 	
 				//Delete existing tags
 				queryString += sql.format(`DELETE FROM tags WHERE id_system = ?;`, req.body.id_system)
@@ -317,8 +336,8 @@ exports.switch = (req,res) => {
 	
 			} else { //Add new system
 				
-				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem, version, id_family, id_poc) VALUES (?,?,?,?,?,?,0,?,?,?);`, 
-					[req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family, req.body.id_poc]);
+				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem, version, id_family) VALUES (?,?,?,?,?,?,0,?,?,?);`, 
+					[req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family]);
 				queryString += sql.format(`SET @insertID = LAST_INSERT_ID();`)
 	
 				//Add new tags
@@ -331,9 +350,9 @@ exports.switch = (req,res) => {
 			break;
 		case 'UpdateLink':
 			if (req.body.id_link){
-				queryString += queryString = sql.format(`UPDATE links SET name = ?, designation = ?, description = ?, id_technology = ?, category = ? WHERE id_link = ?;`, [req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.category, req.body.id_link])
+				queryString += queryString = sql.format(`UPDATE links SET updateTime = ?, name = ?, designation = ?, description = ?, id_technology = ?, category = ? WHERE id_link = ?;`, [Date.now(), req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.category, req.body.id_link])
 			} else {
-				queryString += sql.format(`INSERT INTO links (name, designation, description, id_technology, category, image) VALUES (?,?,?,?,?,'tba.svg')`, [req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.category])
+				queryString += sql.format(`INSERT INTO links (updateTime, name, designation, description, id_technology, category, image) VALUES (?,?,?,?,?,?,'tba.svg')`, [Date.now(), req.body.name, req.body.designation, req.body.description, req.body.id_technology, req.body.category])
 			}
 			break;
 		case 'UpdateTechnology':

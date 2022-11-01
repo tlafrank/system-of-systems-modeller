@@ -78,10 +78,11 @@ const graph = {
 							{action: 'fromResult', nodeName: 'id', format: 'g1_node_system_<0>_<1>', columnNames: ['topSystem', 'id_system']},
 							{action: 'fromResult', nodeName: 'parent', format: 'g1_node_system_<0>_<1>', columnNames: ['topSystem', 'immediateParent']},
 							{action: 'fromResult', nodeName: 'id_system', format: '<0>', columnNames: ['id_system']},
-							{action: 'fromResult', nodeName: 'nodeType', format: 'System', columnNames: []},
+							{action: 'fromResult', nodeName: 'nodeType', format: 'Subsystem', columnNames: []},
 							{action: 'fromResult', nodeName: 'name', format: '<0>', columnNames: ['name']},
+							{action: 'fromDefault', nodeName: 'lineColor', default: 'black'},
 						],
-						classes: ['square', 'centerLabel'],
+						classes: ['subsystem', 'centerLabel'],
 						position: true,
 					},
 				]		
@@ -154,7 +155,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'source', format: 'g1_node_systemInterface_<0>', columnNames: ['id_ISMap']}, //SystemInterface
 							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_link']}, //Link
 							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
-							{action: 'fromResult', nodeName: 'lineColor', format: '<0>', columnNames: ['technologyCategoryColour']},
+							{action: 'fromResult', nodeName: 'lineColor', format: '<0>', columnNames: ['technologyCategoryColor']},
 							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
 						classes: []
@@ -168,7 +169,7 @@ const graph = {
 							{action: 'fromResult', nodeName: 'target', format: 'g1_node_link_<0>', columnNames: ['id_link']}, //Link
 							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_link']},
 							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
-							{action: 'fromResult', nodeName: 'lineColor', format: '<0>', columnNames: ['technologyCategoryColour']},
+							{action: 'fromResult', nodeName: 'lineColor', format: '<0>', columnNames: ['technologyCategoryColor']},
 							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
 						],
 						classes: []
@@ -645,7 +646,12 @@ const graphTable = {
 		{ label: 'Quantities', type: 'text', columnName: '' },
 		{ label: 'Block Diagram', type: 'link', columnName: 'reference'},
 		{ label: 'Description', type: 'text', columnName: 'description' },
-		
+	],
+	Subsystem: [
+		{ label: 'Subsystem Name', type: 'text', columnName: 'name' },
+		//{ label: 'Quantities', type: 'text', columnName: '' },
+		//{ label: 'Block Diagram', type: 'link', columnName: 'reference'},
+		{ label: 'Description', type: 'text', columnName: 'description' },
 	],
 	SystemInterface: [
 		{ label: 'Interface Name', type: 'text', columnName: 'interfaceName' },
@@ -773,10 +779,11 @@ const cyStyle = [ // the stylesheet for the graph
 	},
 
 	{
-		selector: '.square',
+		selector: '.subsystem',
 		style: {
 			'shape': 'round-rectangle',
-			'height': '200px',
+			'background-color': '#D0D0D0',
+			'height': '120px',
 		}
 	},
 	{
@@ -1047,7 +1054,7 @@ const modals = {
 				definitionFields: [],
 				continueOnUndefined: true,
 				instructions: [
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'parentSystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions_MultipleFields', id: 'parentSystem', columnName: ['name','version'], attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'parentSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'parentSystem', definition: 'id_system', dataAttr: 'id_system'},
 
@@ -1289,12 +1296,11 @@ const modals = {
 				id: 'systemReferenceDropZone', label: '&#8595'
 			} },
 			{ type: 'text', id: 'textSystemTags', label: 'Tag List (Comma separated)'},
-			{ type: 'select', id: 'selectPocs', label: 'Point of Contact'},
 			{ type: 'buttons', buttons: [
 				{ id: 'buttonIcons', label: 'Choose Icon'},
 				{ id: 'buttonSystemQuantities', label: 'Map Systems to Years'},
 				{ id: 'buttonUpdateSystemInterfaces', label: 'Attach Interfaces & Connect Links'},
-				{ id: 'buttonSystemRelationships', label: 'System Relationships'},
+				{ id: 'buttonSystemRelationships', label: 'Attach Subsystems'},
 				{ id: 'buttonParameters', label: 'System Parameters'},
 			]}
 
@@ -1307,7 +1313,6 @@ const modals = {
 			{id: 'textSystemReferences', on: 'input'},
 			{id: 'textSystemTags', on: 'input'},
 			{id: 'selectCategory', on: 'change'},
-			{id: 'selectPocs', on: 'change'},
 		],
 		lockOnChange: ['selectSystem','buttonNew','buttonClone','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces','buttonSystemRelationships'], //The ID of the controls to lock when editing an object
 		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
@@ -1331,15 +1336,6 @@ const modals = {
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectFamily', columnName: 'name', attr: {name: 'id_family', columnName: 'id_family'} },
 				],
 			},
-			{ //Get the all the pocs
-				type: 'AllPocs',
-				definitionFields: [],
-				continueOnUndefined: true,
-				instructions: [
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectPocs', columnName: 'name', attr: {name: 'id_poc', columnName: 'id_poc'} },
-					
-				],
-			},
 			{ //Get specific system details
 				type: 'SingleSystem_WithTags',
 				definitionFields: ['id_system'],
@@ -1356,7 +1352,6 @@ const modals = {
 					{action: 'setControl_SingleValue', arrayIndex: 0, id: 'textSystemReferences', type: 'text', columnName: 'reference'},
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_MultipleValues_AtSpecificArrayIndex', arrayIndex: 1, id: 'textSystemTags', type: 'textList', columnName: 'tag'},
-					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectPocs', dataAttr: 'id_poc', columnName: 'id_poc'},
 					{action: 'setControl_Focus', id: 'selectSystem'},
 					
 				]
@@ -1412,7 +1407,6 @@ const modals = {
 					{action: 'toServer_ControlValue', id: 'textSystemReferences',  type: 'text', columnName: 'reference'},
 					{action: 'toServer_ControlValue', id: 'textSystemTags',  type: 'text', columnName: 'tags'},
 					{action: 'toServer_ControlValue', type: 'select', id: 'selectCategory', columnName: 'category', dataAttr: 'category'},
-					{action: 'toServer_ControlValue', type: 'select', id: 'selectPocs', columnName: 'id_poc', dataAttr: 'id_poc'},
 
 				],
 				cleanup: [
@@ -1466,7 +1460,9 @@ const modals = {
 			},
 			{	//Parameters modal
 				handlers: [{controlId: 'buttonParameters', event: 'click'},],
-				instructions: [],
+				instructions: [
+					{action: 'setDefinition_SingleValue_FromConstant', definitionName: 'paramType', value: 'system'},
+				],
 				cleanup: [
 					{action: 'modalDefinitionToBreadcrumb'},
 					{action: 'newModal', modal: 'parameters'},
@@ -1492,6 +1488,7 @@ const modals = {
 			{ type: 'checkbox', id: 'chkDistributedSystem', label: 'Distributed Subsystem' },
 			{ type: 'buttons', buttons: [
 				{ id: 'buttonIcons', label: 'Choose Icon'},
+				{ id: 'buttonParameters', label: 'Subsystem Parameters'},
 			]}
 
 		],
@@ -1613,6 +1610,16 @@ const modals = {
 				cleanup: [
 					{action: 'modalDefinitionToBreadcrumb'},
 					{action: 'newModal', modal: 'interfacesToSystems'},
+				],
+			},
+			{	//Parameters modal
+				handlers: [{controlId: 'buttonParameters', event: 'click'},],
+				instructions: [
+					{action: 'setDefinition_SingleValue_FromConstant', definitionName: 'paramType', value: 'subsystem'},
+				],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'parameters'},
 				],
 			},
 		]
@@ -1861,6 +1868,7 @@ const modals = {
 			{ type: 'droppable2', id: 'assignedTechnologies', label: 'Interface Technologies'},
 			{ type: 'buttons', buttons: [
 				{ id: 'buttonIcons', label: 'Choose Icon'},
+				{ id: 'buttonParameters', label: 'Interface Parameters'},
 			]}
 		],
 		monitorChanges: [
@@ -1990,6 +1998,16 @@ const modals = {
 				instructions: [{action: 'preventDefault'},],
 				cleanup: [],
 			},
+			{	//Parameters modal
+				handlers: [{controlId: 'buttonParameters', event: 'click'},],
+				instructions: [
+					{action: 'setDefinition_SingleValue_FromConstant', definitionName: 'paramType', value: 'interface'},
+				],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'parameters'},
+				],
+			},
 		]
 	},
 
@@ -2089,6 +2107,7 @@ const modals = {
 			{ type: 'textarea', id: 'textLinkDescription', label: 'Description' },
 			{ type: 'buttons', buttons: [
 				{ id: 'buttonIcons', label: 'Choose Icon'},
+				{ id: 'buttonParameters', label: 'Link Parameters'},
 			]}
 
 		],
@@ -2202,6 +2221,16 @@ const modals = {
 				instructions: [],
 				cleanup: [{action: 'returnToLastModal'},],
 			},
+			{	//Parameters modal
+				handlers: [{controlId: 'buttonParameters', event: 'click'},],
+				instructions: [
+					{action: 'setDefinition_SingleValue_FromConstant', definitionName: 'paramType', value: 'link'},
+				],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'parameters'},
+				],
+			},
 		]
 	},
 
@@ -2218,6 +2247,9 @@ const modals = {
 			{ type: 'text', id: 'textTechnologyName', label: 'Name'},
 			{ type: 'select', id: 'selectCategory', label: 'Category'},
 			{ type: 'textarea', id: 'textTechnologyDescription', label: 'Description' },
+			{ type: 'buttons', buttons: [
+				{ id: 'buttonParameters', label: 'Technology Parameters'},
+			]}
 		],
 		monitorChanges: [
 			{id: 'textTechnologyName', on: 'input'},
@@ -2300,6 +2332,16 @@ const modals = {
 				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
 				instructions: [],
 				cleanup: [{action: 'returnToLastModal'},],
+			},
+			{	//Parameters modal
+				handlers: [{controlId: 'buttonParameters', event: 'click'},],
+				instructions: [
+					{action: 'setDefinition_SingleValue_FromConstant', definitionName: 'paramType', value: 'technology'},
+				],
+				cleanup: [
+					{action: 'modalDefinitionToBreadcrumb'},
+					{action: 'newModal', modal: 'parameters'},
+				],
 			},
 		]
 	},
@@ -2779,258 +2821,6 @@ const modals = {
 		]
 	},
 
-	parties: {
-		title: 'Parties', //The title of the modal to display at the top of the modal
-		formButtons: [ //The buttons to insert at the bottom of the modal
-			{type: 'info', id: 'buttonNew', label: 'New Party', initialState: 'unlock'},
-			{type: 'delete', id: 'buttonDelete', label: 'Delete Party', initialState: 'unlock'},
-			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
-			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
-		], 
-		formFields: [ //The empty controls to insert in the modal
-			{ type: 'select', id: 'selectParty', label: 'All Parties'},
-			{ type: 'text', id: 'textPartyName', label: 'Name'},
-			{ type: 'textarea', id: 'textPartyDescription', label: 'Description' },
-		],
-		monitorChanges: [ //The ID of the controls to monitor for changes
-			{id: 'textPartyName', on: 'input'},
-			{id: 'textPartyDescription', on: 'input'},
-		], 
-		lockOnChange: ['buttonDelete','buttonNew','selectParty'],
-		unlockOnChange: ['buttonUpdate'],
-		iterations: [
-			{ 
-				type: 'AllParties',
-				definitionFields: [],
-				continueOnUndefined: true,
-				instructions: [ 
-					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectParty', columnName: 'name', attr: {name: 'id_party', columnName: 'id_party'} },
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectParty', definition: 'id_party', dataAttr: 'id_party', columnName: 'id_party'},
-					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectParty', definition: 'id_party', dataAttr: 'id_party'},
-				],
-			},
-			{
-				type: 'SingleParty', 
-				definitionFields: ['id_party'],
-				continueOnUndefined: true,
-				instructions: [ 
-					{action: 'setControl_SingleValue', type: 'text', id: 'textPartyName', columnName: 'name'},
-					{action: 'setControl_SingleValue', type: 'text', id: 'textPartyDescription', columnName: 'description'},
-				],
-			},
-		],
-		events: [
-			{	//Change to all parties select
-				handlers: [{controlId: 'selectParty', event: 'change'},], 
-				instructions: [
-					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectParty', definitionName: 'id_party', dataAttr: 'id_party'}
-				],
-				cleanup: [
-					{action: 'reload'},
-				],
-			},
-			{	//Add New party button
-				handlers: [{controlId: 'buttonNew', event: 'click'},], 
-				instructions: [
-					{action: 'deleteDefinitionValue', definitionName: 'id_party'},
-					{action: 'emptyControl', type: 'select', id: 'selectParty'},
-					{action: 'emptyControl', type: 'text', id: 'textPartyName'},
-					{action: 'emptyControl', type: 'text', id: 'textPartyDescription'},
-					{action: 'lockControls'}					
-				],
-				cleanup: [],
-			},
-			{	//Delete button
-				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
-				postType: 'DeleteParty', 
-				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_party', columnName: 'id_party'},
-				],
-				cleanup: [
-					{action: 'deleteDefinition', definitionName: 'id_party'},
-					{action: 'reload'},
-				],
-			},
-			{	//Update button
-				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
-				postType: 'UpdateParty',
-				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_party', columnName: 'id_party'},
-					{action: 'toServer_ControlValue', type: 'text', id: 'textPartyName', columnName: 'name'},
-					{action: 'toServer_ControlValue', type: 'text', id: 'textPartyDescription', columnName: 'description'},
-				],
-				cleanup: [
-					{action: 'setDefinition_FromResultInsert', definitionName: 'id_party'},
-					{action: 'reload'},
-				],
-			},
-			{	//Close buttton
-				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
-				instructions: [],
-				cleanup: [{action: 'returnToLastModal'},],
-			},
-		]
-	},
-
-	poc: {
-		title: 'Points of contact', //The title of the modal to display at the top of the modal
-		formButtons: [ //The buttons to insert at the bottom of the modal
-			{type: 'info', id: 'buttonNew', label: 'New POC', initialState: 'unlock'},
-			{type: 'delete', id: 'buttonDelete', label: 'Delete POC', initialState: 'unlock'},
-			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
-			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
-		], 
-		formFields: [ //The empty controls to insert in the modal
-			{ type: 'select', id: 'selectPoc', label: 'All Parties'},
-			{ type: 'text', id: 'textPocName', label: 'Name'},
-			{ type: 'text', id: 'textPocEmail', label: 'Email' },
-		],
-		monitorChanges: [ //The ID of the controls to monitor for changes
-			{id: 'textPocName', on: 'input'},
-			{id: 'textPocEmail', on: 'input'},
-		], 
-		lockOnChange: ['buttonDelete','buttonNew','selectPoc'],
-		unlockOnChange: ['buttonUpdate'],
-		iterations: [
-			{ 
-				type: 'AllPocs',
-				definitionFields: [],
-				continueOnUndefined: true,
-				instructions: [ 
-					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectPoc', columnName: 'name', attr: {name: 'id_poc', columnName: 'id_poc'} },
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectPoc', definition: 'id_poc', dataAttr: 'id_poc', columnName: 'id_poc'},
-					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectPoc', definition: 'id_poc', dataAttr: 'id_poc'},
-				],
-			},
-			{
-				type: 'SinglePoc', 
-				definitionFields: ['id_poc'],
-				continueOnUndefined: false,
-				instructions: [ 
-					{action: 'setControl_SingleValue', type: 'text', id: 'textPocName', columnName: 'name'},
-					{action: 'setControl_SingleValue', type: 'text', id: 'textPocEmail', columnName: 'email'},
-				],
-			},
-		],
-		events: [
-			{	//Change to all parties select
-				handlers: [{controlId: 'selectPoc', event: 'change'},], 
-				instructions: [
-					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectPoc', definitionName: 'id_poc', dataAttr: 'id_poc'}
-				],
-				cleanup: [
-					{action: 'reload'},
-				],
-			},
-			{	//Add New party button
-				handlers: [{controlId: 'buttonNew', event: 'click'},], 
-				instructions: [
-					{action: 'deleteDefinitionValue', definitionName: 'id_poc'},
-					{action: 'emptyControl', type: 'select', id: 'selectPoc'},
-					{action: 'emptyControl', type: 'text', id: 'textPocName'},
-					{action: 'emptyControl', type: 'text', id: 'textPocEmail'},
-					{action: 'lockControls'}					
-				],
-				cleanup: [],
-			},
-			{	//Delete button
-				handlers: [{controlId: 'buttonDelete', event: 'click'},], 
-				postType: 'DeletePoc', 
-				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_poc', columnName: 'id_poc'},
-				],
-				cleanup: [
-					{action: 'deleteDefinition', definitionName: 'id_poc'},
-					{action: 'reload'},
-				],
-			},
-			{	//Update button
-				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
-				postType: 'UpdatePoc',
-				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_poc', columnName: 'id_poc'},
-					{action: 'toServer_ControlValue', type: 'text', id: 'textPocName', columnName: 'name'},
-					{action: 'toServer_ControlValue', type: 'text', id: 'textPocEmail', columnName: 'email'},
-				],
-				cleanup: [
-					{action: 'setDefinition_FromResultInsert', definitionName: 'id_poc'},
-					{action: 'reload'},
-				],
-			},
-			{	//Close buttton
-				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
-				instructions: [],
-				cleanup: [{action: 'returnToLastModal'},],
-			},
-		]
-	},
-
-	cimMap: {
-		title: 'Map systems to CIM', //The title of the modal to display at the top of the modal
-		formButtons: [ //The buttons to insert at the bottom of the modal
-			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
-			{type: 'close', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
-		], 
-		formFields: [ //The empty controls to insert in the modal
-			{ type: 'select', id: 'selectSystem', label: 'All Systems'},
-			{ type: 'text', id: 'textCimName', label: 'Name'},
-		],
-		monitorChanges: [ //The ID of the controls to monitor for changes
-		{id: 'textCimName', on: 'input'},
-
-		], 
-		lockOnChange: ['selectSystem'],
-		unlockOnChange: ['buttonUpdate'],
-		iterations: [
-			{ 
-				type: 'AllSystems',
-				definitionFields: [],
-				continueOnUndefined: true,
-				instructions: [ 
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions_MultipleFields', id: 'selectSystem', columnName: ['name','version'], attr: {name: 'id_system', columnName: 'id_system'} },
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
-					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system'},
-				],
-			},
-			{
-				type: 'SingleCim',
-				definitionFields: ['id_system'],
-				continueOnUndefined: true,
-				instructions: [ 
-					{action: 'setControl_SingleValue', type: 'text', id: 'textCimName', columnName: 'cimName'},
-				],
-			},
-		],
-		events: [
-			{	//Change to all systems select
-				handlers: [{controlId: 'selectSystem', event: 'change'},], 
-				instructions: [
-					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectSystem', definitionName: 'id_system', dataAttr: 'id_system'}
-				],
-				cleanup: [
-					{action: 'reload'},
-				],
-			},
-			{	//Update button
-				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
-				postType: 'UpdateCimMap',
-				instructions: [
-					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
-					{action: 'toServer_ControlValue', type: 'text', id: 'textCimName', columnName: 'cimName'},
-				],
-				cleanup: [
-					{action: 'setDefinition_FromResultInsert', definitionName: 'id_system'},
-					{action: 'reload'},
-				],
-			},
-			{	//Close buttton
-				handlers: [{controlId: 'buttonCancel', event: 'click'},], 
-				instructions: [],
-				cleanup: [{action: 'returnToLastModal'},],
-			},
-		]
-	},
-
 	techCategories: {
 		title: 'Technology Categories',
 		formButtons: [ 
@@ -3042,11 +2832,11 @@ const modals = {
 		formFields: [ 
 			{ type: 'select', id: 'selectTechCategory', label: 'All Technology Categories'},
 			{ type: 'text', id: 'textTechCategoryName', label: 'Name'},
-			{ type: 'select', id: 'selectTechCategoryColour', label: 'Assigned Colour' },
+			{ type: 'select', id: 'selectTechCategoryColor', label: 'Assigned Colour' },
 		],
 		monitorChanges: [
 			{id: 'textTechCategoryName', on: 'input'},
-			{id: 'selectTechCategoryColour', on: 'change'},
+			{id: 'selectTechCategoryColor', on: 'change'},
 		],
 		lockOnChange: ['buttonDelete','buttonNew','selectTechCategory'],
 		unlockOnChange: ['buttonUpdate'],
@@ -3059,7 +2849,7 @@ const modals = {
 					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectTechCategory', columnName: 'name', attr: {name: 'id_techCategory', columnName: 'id_techCategory'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectTechCategory', definition: 'id_techCategory', dataAttr: 'id_techCategory', columnName: 'id_techCategory'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectTechCategory', definition: 'id_techCategory', dataAttr: 'id_techCategory'},
-					{action: 'setControl_Colours', type: 'selectOptions', id: 'selectTechCategoryColour'},
+					{action: 'setControl_Colors', type: 'selectOptions', id: 'selectTechCategoryColor'},
 				],
 			},
 			{
@@ -3068,7 +2858,7 @@ const modals = {
 				continueOnUndefined: false,
 				instructions: [ 
 					{action: 'setControl_SingleValue', type: 'text', id: 'textTechCategoryName', columnName: 'name'},
-					{action: 'setControl_SingleValue', type: 'select', id: 'selectTechCategoryColour', columnName: 'colour'},
+					{action: 'setControl_SingleValue', type: 'select', id: 'selectTechCategoryColor', columnName: 'color'},
 				],
 			},
 		],
@@ -3109,7 +2899,7 @@ const modals = {
 				instructions: [
 					{action: 'toServer_DefinitionValue', definitionName: 'id_techCategory', columnName: 'id_techCategory'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textTechCategoryName', columnName: 'name'},
-					{action: 'toServer_ControlValue', type: 'select', id: 'selectTechCategoryColour', columnName: 'colour'},
+					{action: 'toServer_ControlValue', type: 'select', id: 'selectTechCategoryColor', columnName: 'color'},
 				],
 				cleanup: [
 					{action: 'setDefinition_FromResultInsert', definitionName: 'id_techCategory'},
@@ -3139,6 +2929,7 @@ const modals = {
 			{ type: 'select', id: 'selectParamType', label: 'Parameter Type'},
 			{ type: 'textarea', id: 'textParamOptions', label: 'Parameter Options'},
 			{ type: 'checkbox', id: 'chkApplicableToSystem', label: 'Applicable to System'},
+			{ type: 'checkbox', id: 'chkApplicableToSubsystem', label: 'Applicable to Subsystem'},
 			{ type: 'checkbox', id: 'chkApplicableToInterface', label: 'Applicable to Interface'},
 			{ type: 'checkbox', id: 'chkApplicableToLink', label: 'Applicable to Link'},
 			{ type: 'checkbox', id: 'chkApplicableToTechnology', label: 'Applicable to Technology'},
@@ -3147,21 +2938,23 @@ const modals = {
 			{ type: 'buttons', buttons: [
 				{ id: 'buttonParamGroups', label: 'Parameter Groups'},
 			]}
-			//{ type: 'select', id: 'selectTechCategoryColour', label: 'Assigned Colour' },
+			//{ type: 'select', id: 'selectTechCategoryColor', label: 'Assigned Color' },
 		],
 		monitorChanges: [
 			{id: 'textParamName', on: 'input'},
 			{id: 'textParamOptions', on: 'input'},
 			{id: 'selectParamType', on: 'change'},
 			{id: 'chkApplicableToSystem', on: 'change'},
+			{id: 'chkApplicableToSubsystem', on: 'change'},
 			{id: 'chkApplicableToInterface', on: 'change'},
 			{id: 'chkApplicableToLink', on: 'change'},
 			{id: 'chkApplicableToTechnology', on: 'change'},
 		],
-		lockOnChange: ['buttonDelete','buttonNew','selectParamGroup','selectParamDefinition'],
+		lockOnChange: ['buttonDelete','buttonNew','selectParamGroup','selectParamDefinition','buttonParamGroups'],
 		unlockOnChange: ['buttonUpdate'],
 		iterations: [
-			{ //Populate fixed controls
+			{ 
+				//Populate fixed controls
 				definitionFields: [],
 				continueOnUndefined: false,
 				instructions: [
@@ -3174,7 +2967,6 @@ const modals = {
 						{title: 'Free Text', value: 'freeText'},
 						{title: 'Number', value: 'number'},
 					]},
-
 				]
 			},
 			{ 
@@ -3207,13 +2999,17 @@ const modals = {
 					{action: 'setControl_SingleValue', type: 'text', id: 'textParamName', columnName: 'name'},
 					{action: 'setControl_SingleValue', type: 'text', id: 'textParamOptions', columnName: 'options'},
 					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToSystem', columnName: 'applicableToSystem'},
+					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToSubsystem', columnName: 'applicableToSubsystem'},
 					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToInterface', columnName: 'applicableToInterface'},
 					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToLink', columnName: 'applicableToLink'},
 					{action: 'setControl_SingleValue', type: 'checkbox', id: 'chkApplicableToTechnology', columnName: 'applicableToTechnology'},
 					{action: 'setControl_SingleValue', type: 'select', id: 'selectParamType', dataAttr: 'paramType', columnName: 'paramType'},
 					{action: 'showHideControls_ifValueEquals', id: 'selectParamType', type: 'select', dataAttr: 'paramType', dataAttrValues: ['boolean','freeText','number'], controlsToHide: ['textParamOptions'], controlsToShow: []},
 					{action: 'showHideControls_ifValueEquals', id: 'selectParamType', type: 'select', dataAttr: 'paramType', dataAttrValues: ['singleOption','multiOption'], controlsToHide: [], controlsToShow: ['textParamOptions']},
-
+				],
+				ifUndefined: [
+					{action: 'emptyControl', type: 'select', id: 'selectParamType'},
+					{action: 'setControls_Disabled', controls: ['selectParamDefinition','textParamName','selectParamType','textParamOptions','chkApplicableToSystem','chkApplicableToSubsystem','chkApplicableToInterface','chkApplicableToLink','chkApplicableToTechnology']},
 				]
 			}
 		],
@@ -3261,7 +3057,23 @@ const modals = {
 					{action: 'deleteDefinitionValue', definitionName: 'id_paramDefinition'},
 					{action: 'emptyControl', type: 'select', id: 'selectParamDefinition'},
 					{action: 'emptyControl', type: 'text', id: 'textParamName'},
-					{action: 'lockControls'}
+					{action: 'emptyControl', type: 'textarea', id: 'textParamOptions'},
+					{action: 'emptyControl', type: 'checkbox', id: 'chkApplicableToSystem'},
+					{action: 'emptyControl', type: 'checkbox', id: 'chkApplicableToSubsystem'},
+					{action: 'emptyControl', type: 'checkbox', id: 'chkApplicableToInterface'},
+					{action: 'emptyControl', type: 'checkbox', id: 'chkApplicableToLink'},
+					{action: 'emptyControl', type: 'checkbox', id: 'chkApplicableToTechnology'},
+					{action: 'setControl_FromList', type: 'selectOptions', id: 'selectParamType', attr: {name: 'paramType', columnName: 'value'}, columnName: 'title',
+					list: [
+						{title: 'Single Option', value: 'singleOption'},
+						{title: 'Multiple Options', value: 'multiOption'},
+						{title: 'True/False', value: 'boolean'},
+						{title: 'Free Text', value: 'freeText'},
+						{title: 'Number', value: 'number'},
+					]},
+					{action: 'setControls_Enabled', controls: ['selectParamDefinition','textParamName','selectParamType','textParamOptions','chkApplicableToSystem','chkApplicableToSubsystem','chkApplicableToInterface','chkApplicableToLink','chkApplicableToTechnology']},
+					{action: 'lockControls'},
+					{action: 'setControl_Focus', id: 'textParamName'},
 				],
 				cleanup: [],
 			},
@@ -3287,6 +3099,7 @@ const modals = {
 					{action: 'toServer_ControlValue', type: 'select', id: 'selectParamType', dataAttr: 'paramType', columnName: 'paramType'},
 					{action: 'toServer_ControlValue', type: 'text', id: 'textParamOptions', columnName: 'options'},
 					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToSystem', columnName: 'applicableToSystem'},
+					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToSubsystem', columnName: 'applicableToSubsystem'},
 					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToInterface', columnName: 'applicableToInterface'},
 					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToLink', columnName: 'applicableToLink'},
 					{action: 'toServer_ControlValue', type: 'checkbox', id: 'chkApplicableToTechnology', columnName: 'applicableToTechnology'},
@@ -3343,7 +3156,8 @@ const modals = {
 					{action: 'deleteDefinitionValue', definitionName: 'id_paramGroup'},
 					{action: 'emptyControl', type: 'select', id: 'selectParamGroup'},
 					{action: 'emptyControl', type: 'text', id: 'textParamGroupName'},
-					{action: 'lockControls'}
+					{action: 'lockControls'},
+					{action: 'setControl_Focus', id: 'textParamGroupName'},
 				],
 				cleanup: [],
 			},
@@ -3405,11 +3219,10 @@ const modals = {
 		unlockOnChange: ['buttonUpdate'], 
 		iterations: [
 			{
-				type: 'ParamsForSystem', 
-				definitionFields: ['id_system'], 
-				continueOnUndefined: false,
+				type: 'Params', 
+				definitionFields: ['paramType','id_system', 'id_interface', 'id_link', 'id_technology'], 
+				continueOnUndefined: true,
 				instructions: [
-					//{action: ''},
 					{action: 'setControl_MultipleValues_AtSpecificArrayIndex', type: 'params', id: 'params'},
 				],
 			},
@@ -3426,7 +3239,12 @@ const modals = {
 				instructions: [
 
 					//Working here
+					{action: 'toServer_DefinitionValue', definitionName: 'paramType', columnName: 'paramType'},
 					{action: 'toServer_DefinitionValue', definitionName: 'id_system', columnName: 'id_system'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_interface', columnName: 'id_interface'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_link', columnName: 'id_link'},
+					{action: 'toServer_DefinitionValue', definitionName: 'id_technology', columnName: 'id_technology'},
+
 					//{action: 'toServer_DefinitionValue', definitionName: 'id_paramDefinition', columnName: 'id_paramDefinition'},
 					{action: 'toServer_ControlValue', type: 'params', id: 'params', columnName: 'params'},
 
@@ -3439,6 +3257,164 @@ const modals = {
 		]
 	},
 
+	exports: {
+		title: 'Export Data',
+		formButtons: [ 
+			
+			{type: 'submit', id: 'buttonUpdate', label: 'Export', initialState: 'unlock'},
+			{type: 'cancel', id: 'buttonCancel', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{ type: 'select', id: 'selectExport', label: 'Export Name'},
+		],
+		monitorChanges: [],
+		lockOnChange: [],
+		unlockOnChange: ['buttonUpdate'],
+		iterations: [
+			{
+				type: 'AllExports', 
+				definitionFields: [], 
+				continueOnUndefined: true,
+				instructions: [
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectExport', columnName: 'name', attr: {name: 'id_export', columnName: 'id_export'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectExport', definition: 'id_export', dataAttr: 'id_export', columnName: 'id_export'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectExport', definition: 'id_export', dataAttr: 'id_export'},
+				],
+			},
+		],
+		events: [
+			{	//Cancel button
+				handlers: [{controlId: 'buttonCancel', event: 'click'},],  
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				//postType: 'UpdateParams',
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectExport', definitionName: 'id_export', dataAttr: 'id_export'},
+					{action: 'launchFunctionWithDefinition', functionName: 'exportSosmData'}
+				],
+				cleanup: [
+					//{action: 'reload'},
+				],
+			},
+		]
+	},
+
+	configureExports: {
+		title: 'Configure Data Export Formats',
+		formButtons: [ 
+			{type: 'info', id: 'buttonNew', label: 'New Export', initialState: 'unlock'},
+			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
+			{type: 'cancel', id: 'buttonCancel', label: 'Close', initialState: 'unlock'},
+		], 
+		formFields: [ 
+			{ type: 'select', id: 'selectExport', label: 'Exports'},
+			{ type: 'text', id: 'textExportName', label: 'Name'},
+			{ type: 'radioGroup', id: 'radioGroupExportFormat', label: 'Export Format', options:[
+				{id: 'csv', label: 'CSV'},
+				{id: 'xls', label: 'XLS'},
+				{id: 'tsv', label: 'TSV'},
+			]},
+			{ type: 'textarea', id: 'textExportObject', label: 'Export Object', rows: 30},
+			{ type: 'buttons', buttons: [
+				{ id: 'buttonTestJson', label: 'Insert Test JSON'},
+			]}
+		],
+		monitorChanges: [
+			{id: 'textExportName', on: 'input'},
+			{id: 'textExportObject', on: 'input'},
+			{id: 'radioGroupExportFormat', on: 'change'},
+			{id: 'buttonTestJson', on: 'click'},
+		],
+		lockOnChange: ['selectExport','buttonNew'],
+		unlockOnChange: ['buttonUpdate'], 
+		iterations: [
+			{
+				type: 'AllExports', 
+				definitionFields: ['id_export'], 
+				continueOnUndefined: true,
+				instructions: [
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectExport', columnName: 'name', attr: {name: 'id_export', columnName: 'id_export'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectExport', definition: 'id_export', dataAttr: 'id_export', columnName: 'id_export'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectExport', definition: 'id_export', dataAttr: 'id_export'},
+					//{action: 'setControl_MultipleValues_fromConstant', type: 'selectOptions', id: 'selectCategory', constantName: 'systems', columnName: 'title', attr: {name: 'category', columnName: 'value'} },
+					//{action: 'setControl_MultipleValues_AtSpecificArrayIndex', type: 'select', id: 'selectExport'},
+				],
+				ifUndefined: [
+					//{action: 'emptyControl', type: 'select', id: 'selectParamType'},
+					{action: 'setControls_Disabled', controls: ['selectExport','textExportName','radioGroupExportFormat_csv','radioGroupExportFormat_xls','radioGroupExportFormat_tsv','textExportObject']},
+				]
+			},
+			{ //Get specific export details
+				type: 'SingleExport',
+				definitionFields: ['id_export'],
+				continueOnUndefined: true,
+				instructions: [
+					{action: 'setControl_SingleValue', type: 'text', id: 'textExportName', columnName: 'name'},
+					{action: 'setControl_SingleValue', type: 'radioGroup', id: 'radioGroupExportFormat', columnName: 'exportFormat'},
+					{action: 'setControl_SingleValue_JSON', type: 'textarea', id: 'textExportObject', columnName: 'exportObject'},
+					{action: 'setControl_Focus', id: 'selectExport'},
+					
+				]
+			}
+
+		],
+		events: [
+			{	//Param Group button
+				handlers: [{controlId: 'buttonTestJson', event: 'click'},], 
+				instructions: [],
+				cleanup: [
+					{action: 'emptyControl', type: 'textarea', id: 'textExportObject'},
+					{action: 'setControl_JSONFromObject', type: 'textarea', id: 'textExportObject', variableName: 'testExportObject'},
+				],
+			},
+			{	//Add New Export
+				handlers: [{controlId: 'buttonNew', event: 'click'},], 
+				instructions: [
+					{action: 'deleteDefinitionValue', definitionName: 'id_export'},
+					{action: 'emptyControl', type: 'select', id: 'selectExport'},
+					{action: 'emptyControl', type: 'text', id: 'textExportName'},
+					{action: 'emptyControl', type: 'text', id: 'textExportObject'},
+					{action: 'setControls_Enabled', controls: ['textExportName','radioGroupExportFormat_csv','radioGroupExportFormat_xls','radioGroupExportFormat_tsv','textExportObject']},
+					{action: 'lockControls'},
+					{action: 'setControl_Focus', id: 'textExportName'},
+				],
+				cleanup: [],
+			},
+			{	//Cancel button
+				handlers: [{controlId: 'buttonCancel', event: 'click'},],  
+				instructions: [],
+				cleanup: [{action: 'returnToLastModal'},],
+			},
+			{	//Update button
+				handlers: [{controlId: 'buttonUpdate', event: 'click'},], 
+				postType: 'UpdateExport',
+				instructions: [
+					{action: 'toServer_DefinitionValue', definitionName: 'id_export', columnName: 'id_export'},
+					{action: 'toServer_ControlValue', type: 'text', id: 'textExportName', columnName: 'name'},
+
+					{action: 'toServer_ControlValue', type: 'radioGroup', id: 'radioGroupExportFormat', columnName: 'exportFormat', default: 'csv'},
+					{action: 'toServer_ControlValue_JSON', type: 'textarea', id: 'textExportObject', columnName: 'exportObject'},
+
+				],
+				cleanup: [
+					{action: 'setDefinition_FromResultInsert', definitionName: 'id_export'},
+					{action: 'reload'},
+				],
+			},
+			{	//Change to export select
+				handlers: [{controlId: 'selectExport', event: 'change'},],
+				instructions: [
+					{action: 'setDefinitionValueFromControlWithDataAttribute', type: 'select', id: 'selectExport', definitionName: 'id_export', dataAttr: 'id_export'}
+				],
+				cleanup: [
+					{action: 'reload'},
+				],
+			},
+		]
+	},
 }
 
 /**
@@ -3450,9 +3426,9 @@ const snapToGridDistance = 80
 
 
 /**
- * @description The available CSS colour names. Commented out ones are not able to be processed by cytoscape.
+ * @description The available CSS color names. Commented out ones are not able to be processed by cytoscape.
  */
-const CSS_COLOUR_NAMES = [
+const CSS_COLOR_NAMES = [
 	"AliceBlue",
 	"AntiqueWhite",
 	"Aqua",
@@ -3620,3 +3596,5 @@ const severityLabels = [
 	{index: 6, label: 'Emergency', description: 'An issue that renders the overall system inoperable.'},
 ];
 */
+
+

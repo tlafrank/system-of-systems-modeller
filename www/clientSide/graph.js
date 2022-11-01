@@ -192,7 +192,7 @@ async function commonGraph(definition){
 				// 					})									
 				// 				} else {
 				// 					switch(field.nodeName){
-				// 						case 'lineColor': //Handle node border colours
+				// 						case 'lineColor': //Handle node border colors
 				// 							str = 'grey'
 				// 							if (typeof node[field.columnName] !== 'undefined' && node[field.columnName] != null ){
 				// 								str = categories[field.constantName].find(x => x.value == node[field.columnName]).color
@@ -246,7 +246,7 @@ async function commonGraph(definition){
 				// 				tempEdge.data[field.nodeName] = str;
 				// 			})
 							
-				// 			//Line colours
+				// 			//Line colors
 				// 			tempEdge.data.lineColor = 'black'
 				// 			if (typeof edge.technologyCategory !== 'undefined'){
 				// 				tempEdge.data.lineColor = categories.technology.find(x => x.value == edge.technologyCategory).color

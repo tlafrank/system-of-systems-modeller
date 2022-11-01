@@ -61,7 +61,7 @@ function nodeTable($selector, node){
 
 	var responseString = '<table id="nodeDetailsTable" class="table table-sm mx-1"><tbody>';
 
-	graphTable[node.type].forEach((element) => {
+	graphTable[node.nodeType].forEach((element) => {
 		if (element.columnName){
 			switch (element.type){
 				case 'link':
@@ -307,9 +307,17 @@ function getFormElement($selector, properties){
 			return path
 			break;
 		case 'radio':
-			//debug(`${$selector} [name=${properties.id}]:checked`);
-			return $(`${$selector} [name=${properties.id}]:checked`).attr(`data-${properties.columnName}`);
-		
+		case 'radioGroup':
+			var value = $($selector + ` [name=${properties.id}]:checked`).val()
+
+			debug(5, `radioGroup is ` + value)
+			
+			if (value == undefined){
+				return properties.default
+			} else {
+				return value
+			}
+			break;
 		case 'trafficLightRadio':
 			//Set focus to the current severity level
 			return $($selector + ' button.btn-primary').attr('data-severity')
@@ -460,10 +468,7 @@ function setFormElement($selector, properties, value){
 						debug(5, 'in default with', value[i])
 						break;
 				}
-				
-				
 			}
-
 			break;
 		case 'qtyYears':
 			if (value.length > 0){ //Entries exist
@@ -487,7 +492,7 @@ function setFormElement($selector, properties, value){
 		case 'moveDroppableElements':
 			var sourceElements = document.querySelectorAll('#' + properties.sourceId + ' span');
 			//debug(5, 'moveDroppableElements', properties, 'val: ', value)
-			if (value) {
+			if (Array.isArray(value)) {
 				value.forEach((element) => {
 					//debug(5, 'element', element)
 					//Iterate through each source element and move to the target selector's .card-body
@@ -555,29 +560,28 @@ function setFormElement($selector, properties, value){
 			if(properties.dataAttr){
 				$($selector + ` option[data-${properties.dataAttr}="${value}"]`).prop('selected', true);
 			} else {
-				debug(5, 'in select correctly')
 				$($selector).val(value);
 			}
 			
 			if (value == ''){
-				debug(2,`Something is trying to empty the select ${properties.id}`)
-				//$($selector).empty();
+				//debug(2,`Something is trying to empty the select ${properties.id}`)
+				$($selector).empty();
 			}
 			break;
 		case 'selectOptions': //Fills a select
 			//debug(5, value)
-			if(properties.attr){
-				value.forEach((element) => {
-					$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName]}</option>`)
-				})
+			if(value.length > 0){
+				if(properties.attr){
+					value.forEach((element) => {
+						$($selector).append(`<option data-${properties.attr.name}="${element[properties.attr.columnName]}">${element[properties.columnName]}</option>`)
+					})
+				} else {
+					value.forEach((element) => {
+						$($selector).append(`<option>${element}</option>`)
+					})
+				}				
 			} else {
-				value.forEach((element) => {
-					$($selector).append(`<option>${element}</option>`)
-				})
-			}
-			
-			//Disable the select if there were no values passed
-			if (value.length == 0){
+				//Disable the select if there were no values passed
 				$($selector).prop('disabled', true)
 			}
 			break;
@@ -635,10 +639,18 @@ function setFormElement($selector, properties, value){
 		case 'year':
 			break;
 		case 'checkbox':
-			if (value == 1){
-				$($selector).prop("checked", true);
-			} else {
-				$($selector).prop("checked", false);
+			switch (value){
+				case 1:
+				case '1':
+					$($selector).prop("checked", true);
+					break;
+				case 0:
+				case '0':
+				case '':
+					$($selector).prop("checked", false);
+					break;
+				default:
+					debug(1, `Value ${value} received in setFormElement for checkbox was unexpected`)
 			}
 			break;
 		case 'img':
@@ -671,6 +683,11 @@ function setFormElement($selector, properties, value){
 				default:
 					debug('setFormElement switch default trafficLightRadio should not make it here due to value of ' + value)
 			}
+			break;
+		case 'radioGroup':
+			debug(5, 'Setting radioGroup with value: ' + value)
+			$($selector + ` input[value="${value}"]`).prop('checked', true)
+
 			break;
 		case 'orgPath':
 			var html = '';
@@ -820,6 +837,20 @@ function addFormElement($selector, properties){
 			addQuantityFormControl($selector, nextIndex, {year: year, quantity: 0}, false)
 			break;
 		case 'radio':
+			debug(2, 'radio called in helpers.addFormElement()')
+		case 'radioGroup':
+			formElement += `<div id="${properties.id}" class="form-group">`;
+
+			properties.options.forEach((element) => {
+				formElement += `<div class="form-check">`;
+				formElement += `<input class="form-check-input" type="radio" name="${properties.id}" id="${properties.id}_${element.id}" value="${element.id}">`;
+				formElement += `<label class="form-check-label" for="${properties.id}_${element.id}">${element.label}</label>`;
+				formElement += `</div>`;
+			})
+			formElement += `</div>`;
+
+
+		/*
 			formElement += `<div id="${properties.id}" class="btn-group">`;
 
 			formElement += `<button class="btn btn-light mx-2" data-severity="critical"><img src="./assets/critical.png" width="30px"><br>Critical</button>`
@@ -827,8 +858,10 @@ function addFormElement($selector, properties){
 			formElement += `<button class="btn btn-light mx-2" data-severity="notice"><img src="./assets/notice.png" width="30px"><br>Notice</button>`
 
 			formElement += `</div>`;
+			*/
 			break;
 		case 'radioOld':
+			debug(2, 'radioOld called in helpers.addFormElement()')
 			formElement += `<div id="${properties.id}" class="form-group">`;
 
 			properties.options.forEach((element) => {
@@ -886,9 +919,13 @@ function addFormElement($selector, properties){
 			formElement += `</div>`;
 			break;
 		case 'textarea':
+			var rows = 4
+			if (properties.rows){
+				rows = properties.rows
+			}
 			formElement += `<div class="form-group">`;
 			formElement += `<label for="${properties.id}">${properties.label}</label>`;
-			formElement += `<textarea id="${properties.id}" class="form-control" rows="4"></textarea>`;
+			formElement += `<textarea id="${properties.id}" class="form-control" rows="${rows}"></textarea>`;
 			formElement += `</div>`
 			break;
 		case 'year':
@@ -1591,4 +1628,13 @@ function generateSystemName(name, version){
 	} else {
 		return `${name} [${version}]`
 	}
+}
+
+
+function buildFormattedString(format, data){
+	var str = format
+	for (var i = 0; i < data.length; i++){
+		str = str.replace(`<${i}>`, data[i])
+	}
+	return str
 }

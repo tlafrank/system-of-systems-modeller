@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.SOSM_PORT;
+const https = require('https')
 
 const select = require('./serverSide/select');
 const graph = require('./serverSide/graph');
@@ -11,7 +12,12 @@ const backup = require('./serverSide/backup');
 
 const images = require('./serverSide/images');
 const fs = require('fs');
+const { servicesVersion } = require('typescript');
 
+const credentials = {
+	key: fs.readFileSync('./key.pem', 'utf8'),
+	cert: fs.readFileSync('./cert.pem', 'utf8')
+}
 
 app.get('/', (req, res) => {
     res.statusCode = 200;
@@ -47,9 +53,16 @@ app.get('/backup.txt', backup.run)
 
 app.get('/images.json', images.getImages);
 
+
+const httpsServer = https.createServer(credentials, app)
+httpsServer.listen(port, ()=> {
+	console.log(`Https server started on port ${port}`);
+})
+
+/*
 app.listen(port, ()=> {
     console.log(`Server started on port ${port}`);
 })
 
-
+*/
 

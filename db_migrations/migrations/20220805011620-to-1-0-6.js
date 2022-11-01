@@ -37,8 +37,10 @@ exports.up = function (db, callback) {
 	], callback);
 };
 
-exports.down = function (db) {
-	return null;
+exports.down = function(db, callback) {
+	async.series([
+			
+	], callback);
 };
 
 exports._meta = {

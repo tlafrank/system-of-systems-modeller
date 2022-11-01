@@ -24,7 +24,7 @@ connection.query('select * from systems', function(error,results,fields){
 
 
 connection.execute = (queryString) => new Promise((resolve,reject) => {
-	console.log('In db.js with querystring: ' + queryString)
+	//console.log('In db.js with querystring: ' + queryString)
 	queryString = queryString.trim();
 	let re = /\n\s\s+/gi;
 	queryString = queryString.replace(re,'\n\t')

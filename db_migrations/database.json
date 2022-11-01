@@ -7,9 +7,10 @@
   },
   "prod": {
     "driver": "mysql",
-    "user" : "root",
+    "user" : "rwUser",
     "password" :  {"ENV": "SOSM_ROOT_PASS"},
-    "database" : "db_sosm"
+    "database" : "db_sosm",
+    "multipleStatements": true
   }
 
 }

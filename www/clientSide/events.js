@@ -179,7 +179,7 @@ function savePNG(){
 }
 
 /**
- * @description 
+ * @description depricated, moved to exports.js
  * 
  */
  function saveCSV(){
@@ -205,7 +205,6 @@ function savePNG(){
 
 	}
 	
-	
 	var hiddenElement = document.createElement('a');
 	hiddenElement.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(csv);
 	hiddenElement.target = '_blank';
@@ -214,7 +213,7 @@ function savePNG(){
 }
 
 /**
- * @description 
+ * @description To be replaced by exports.js
  * 
  */
  async function saveCimCsv(){
@@ -317,20 +316,23 @@ function hideNode(id, idNo, type){
 		hideNode(eventTarget.data('id'), eventTarget.data('idNo'), eventTarget.data('nodeType'));
 	} else {
 		
-
 		const postData = {};
-		//debug(3,'NodeType: ' + eventTarget.data('nodeType'))
-		postData.type = eventTarget.data('nodeType');
+		debug(5,'NodeType: ' + eventTarget.data('nodeType'))
 
-		switch (postData.type){
+		switch (eventTarget.data('nodeType')){
 			case 'System':
+				postData.type = 'SingleSystem'
 				postData.id_system = eventTarget.data('id_system');
-				postData.noTags = true;
+			case 'Subsystem':
+				postData.type = 'SingleSystem'
+				postData.id_system = eventTarget.data('id_system');
 				break;
 			case 'SystemInterface':
+				postData.type = 'SystemInterface';
 				postData.id_ISMap = eventTarget.data('id_ISMap');
 				break;
 			case 'Link':
+				postData.type = 'Link';
 				postData.id_link = eventTarget.data('id_link');			
 				break;
 			default:
@@ -338,7 +340,7 @@ function hideNode(id, idNo, type){
 		}
 		
 		//Get node details from the server
-		//debug(1, `Sending '${postData.type}' to the server (select.json):`)
+		debug(5, `Sending '${postData.type}' to the server (select.json):`)
 		$.post('./select.json', postData, (result) => {
 			//debug(3, postData, result)
 
@@ -348,7 +350,7 @@ function hideNode(id, idNo, type){
 
 			} else {
 				//Set the selected node object
-				result.type = postData.type;
+				result.nodeType = eventTarget.data('nodeType')
 				selectedNode.update(result, eventTarget.data('id'));				
 
 				//debug(3,'selectedNode:', selectedNode)
@@ -356,12 +358,13 @@ function hideNode(id, idNo, type){
 			//Populate the table
 			//$('#nodeDetailsTable').replaceWith(nodeDetailsTable());
 			nodeTable('#nodeDetailsTable', result)
+			debug(5, 'selectedNode:', selectedNode)
 		})
 	}
 }
 
 function edgeSelected(eventTarget){
-	debug(1,'Edge clicked');
+	debug(5,'Edge clicked');
 }
 
 
@@ -372,14 +375,17 @@ function edgeSelected(eventTarget){
  * 
  */
 function editNodeButton(){
-	debug(1,'In editNodeButton()');
-	debug(3, 'selectedNode is',selectedNode)
+	debug(5,'In editNodeButton()');
+	debug(5, 'selectedNode is',selectedNode)
 
 
 
 	switch (selectedNode.type){
 		case 'System':
 			commonModal({modal: 'systems', continue: true, id_system: selectedNode.id_system})
+			break;	
+		case 'Subsystem':
+			commonModal({modal: 'subsystems', continue: true, id_system: selectedNode.id_system})
 			break;
 		case 'SystemInterface':
 			commonModal({modal: 'interfacesToSystems', continue: true, id_system: selectedNode.id_system, id_ISMap: selectedNode.id_ISMap})

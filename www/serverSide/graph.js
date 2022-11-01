@@ -90,7 +90,7 @@ exports.switch = (req,res) => {
 			break;
 		case 'Links': //Gets all links associated with the system interfaces provided in id_ISMap_arr
 			queryString += sql.format(`
-				SELECT links.*, SystemInterfaceToLinkMap.id_SILMap, SystemInterfaceToLinkMap.id_ISMap, SystemInterfaceToLinkMap.isPrimary, technologyCategories.name as technologyCategoryName, technologyCategories.colour as technologyCategoryColour, InterfaceToSystemMap.id_system
+				SELECT links.*, SystemInterfaceToLinkMap.id_SILMap, SystemInterfaceToLinkMap.id_ISMap, SystemInterfaceToLinkMap.isPrimary, technologyCategories.name as technologyCategoryName, technologyCategories.color as technologyCategoryColor, InterfaceToSystemMap.id_system
 				FROM SystemInterfaceToLinkMap
 				LEFT JOIN InterfaceToSystemMap 
 				ON InterfaceToSystemMap.id_ISMap = SystemInterfaceToLinkMap.id_ISMap 

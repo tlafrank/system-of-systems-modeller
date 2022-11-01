@@ -56,7 +56,7 @@ class Node {
 	 * @param  {} node
 	 */
 	update(node,graphNodeId){
-		this.type = node.type;
+		this.type = node.nodeType;
 
 		this.id = graphNodeId;
 
@@ -66,60 +66,59 @@ class Node {
 			this.description = node.description;
 		}
 
-		if (node.type == 'System'){
-			standardSet();
-			
-			this.id_system = node.id_system;
-			this.idNo = node.id_system;
-		}
+		switch (node.nodeType){
+			case 'System':
+			case 'Subsystem':
+				standardSet();
+				this.id_system = node.id_system;
+				this.idNo = node.id_system;				
+				break;
+			case 'Interface':
+				standardSet();
 
-		if (node.type == 'Interface'){
-			standardSet();
+				this.id_interface = node.id_interface;
+				this.idNo = node.id_interface;
 
-			this.id_interface = node.id_interface;
-			this.idNo = node.id_interface;
+				if (node.features) {
+					this.features = node.features.split(',');
 
-			if (node.features) {
-				this.features = node.features.split(',');
+					//Convert array of strings to numbers
+					for (var i = 0; i < this.features.length; i++){ this.features[i] = parseInt(this.features[i]) }
+					//console.log('Created features array:', this.features)
+				} else {
+					this.features = [];
+				}				
+				break;
+			case 'SystemInterface':
+				this.name = node.interfaceName;
+				this.image = node.interfaceImage;
+				this.description = node.description;
+				this.id_ISMap = node.id_ISMap;
+				this.idNo = node.id_ISMap;
+				this.systemName = node.systemName;
+				this.systemImage = node.systemImage;
+				this.id_interface = node.id_interface;
+				this.id_system = node.id_system;
+				
+				
+				if (node.features) {
+					this.features = node.features.split(',');
 
-				//Convert array of strings to numbers
-				for (var i = 0; i < this.features.length; i++){ this.features[i] = parseInt(this.features[i]) }
-				//console.log('Created features array:', this.features)
-			} else {
-				this.features = [];
-			}
-		}
+					//Convert array of strings to numbers
+					for (var i = 0; i < this.features.length; i++){ this.features[i] = parseInt(this.features[i]) }
+					//console.log('Created features array:', this.features)
+				} else {
+					this.features = [];
+				}				
+				break;
 
-		if (node.type == 'SystemInterface'){
-			this.name = node.interfaceName;
-			this.image = node.interfaceImage;
-			this.description = node.description;
-			this.id_ISMap = node.id_ISMap;
-			this.idNo = node.id_ISMap;
-			this.systemName = node.systemName;
-			this.systemImage = node.systemImage;
-			this.id_interface = node.id_interface;
-			this.id_system = node.id_system;
-			
-			
-			if (node.features) {
-				this.features = node.features.split(',');
-
-				//Convert array of strings to numbers
-				for (var i = 0; i < this.features.length; i++){ this.features[i] = parseInt(this.features[i]) }
-				//console.log('Created features array:', this.features)
-			} else {
-				this.features = [];
-			}
-			
-		}
-
-		if (node.type == 'Link'){
-			standardSet();
-			this.id_link = node.id_link;
-			this.idNo = node.id_link;
-			this.id_feature = node.id_feature;
-			this.featureName = node.featureName;
+			case 'Link':
+				standardSet();
+				this.id_link = node.id_link;
+				this.idNo = node.id_link;
+				this.id_feature = node.id_feature;
+				this.featureName = node.featureName;
+				break;
 		}
 	}
 

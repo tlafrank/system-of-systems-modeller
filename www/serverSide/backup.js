@@ -30,10 +30,12 @@ const tableList = [
 	'OSMap',
 	'SMap',
 	'AMap',
-	'cimMap',
-	'parties',
 	'families',
-	'technologyCategories'
+	'technologyCategories',
+	'migrations',
+	'params',
+	'paramGroups',
+	'paramDefinitions',
 ];
 
 exports.run = (req,res) => {
