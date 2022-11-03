@@ -43,6 +43,8 @@ https://unpkg.com/layout-base/layout-base.js
 https://unpkg.com/cose-base/cose-base.js
 
 https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js
+
+https://cdn.sheetjs.com/xlsx-0.19.0/package/dist/xlsx.full.min.js
 )
 
 # Move to the www folder
