@@ -5,9 +5,6 @@ private/
 www/src/*.map
 www/src/*.css
 www/src/*.js
-www/assets/*.map
-www/assets/*.css
-www/assets/*.js
 www/clientSide/privateConstants.js
 package_export/
 .vscode/

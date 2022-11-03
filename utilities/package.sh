@@ -27,8 +27,8 @@ function prepare_export_dir(){
 }
 prepare_export_dir
 
-# Zip the two resources now
-zip -r ${rzip} ../www/node_modules ../www/src
+# Zip the resources now
+zip -r ${rzip} ../www/node_modules ../www/src ../www/images ../www/clientSide/privateConstants.js
 
 git_mirror_dir=${pex_dir}/git_mirror
 function make_mirror()
