@@ -3,7 +3,8 @@
     "driver": "mysql",
     "user" : { "ENV" : "USER"},
     "password" : { "ENV" : "USER"},
-    "database" : "db_mig_test"
+    "database" : "db_mig_test",
+	"multipleStatements": true
   },
   "prod": {
     "driver": "mysql",

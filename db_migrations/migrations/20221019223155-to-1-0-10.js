@@ -4,6 +4,7 @@ var dbm;
 var type;
 var seed;
 var async = require('async');
+var mc = require('../migrate-common.js');
 
 /**
 	* We receive the dbmigrate dependency from dbmigrate initially.
@@ -16,10 +17,8 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
+	mc.log("migrating to 1.0.10");
 	async.series([
-		//From 1.0.9
-		db.removeColumn.bind(db, 'SystemInterfaceToLinkMap', 'category'),
-		db.removeColumn.bind(db, 'technologies', 'category'),
 
 		db.dropTable.bind(db, 'cimMap', { ifExists: true } ),
 		db.removeForeignKey.bind(db, 'systems', 'fk_systems_parties'),

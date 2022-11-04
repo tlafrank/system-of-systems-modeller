@@ -59,17 +59,18 @@ exports.up = function (db, callback) {
 				rules: { onDelete : 'CASCADE', onUpdate: 'No action' }
 			}}
 		}),
+
 		db.createTable.bind(db, 'OSMap', {
 			id_OSMap : { type: 'int', notNull: true, autoIncrement: true, primaryKey: true },
-			id_organisation: { type: 'int', notNull: true, 
-			foreignKey: { name: 'fk_OSMap_organisation', table: 'organisation', mapping: 'id_organisation', 
+			id_organisation: { type: 'int', notNull: true, foreignKey: { 
+				name: 'fk_OSMap_organisation', table: 'organisation', mapping: 'id_organisation', 
 				rules: { onDelete: 'No Action', onUpdate: 'No Action'}
 				}
 			},
-			child: {
+			id_system: {
 				type: 'int', notNull: true, foreignKey: {
-					name: 'fk_OMap_organisation_child', table: 'organisation', mapping: 'id_organisation',
-					rules: { onDelete: 'CASCADE', onUpdate: 'No action' }
+					name: 'fk_OSMap_systems', table: 'systems', mapping: 'id_system',
+					rules: { onDelete: 'NO ACTION', onUpdate: 'NO ACTION' }
 				}
 			},
 			quantity: { type: 'int', default: 0 },

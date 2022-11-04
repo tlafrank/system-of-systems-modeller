@@ -5,10 +5,7 @@ cd $(dirname $(readlink -f $0))
 
 NODEX=nothing
 
-if `which nodemon > /dev/null 2>&1`; then
-  echo using nodemon exe
-  NODEX="nodemon"
-elif `which nodejs > /dev/null 2>&1`; then
+if `which nodejs > /dev/null 2>&1`; then
   echo using nodejs exe
   NODEX="nodejs"
 elif `which node > /dev/null 2>&1`; then

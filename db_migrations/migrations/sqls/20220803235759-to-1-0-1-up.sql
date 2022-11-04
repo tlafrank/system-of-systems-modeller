@@ -7,15 +7,9 @@ SET autocommit = 0;
 -- SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 
 -- -----------------------------------------------------
--- Schema db_sosm
+-- Table `systems`
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `db_sosm` DEFAULT CHARACTER SET utf8 ;
--- USE `db_sosm` ;
-
--- -----------------------------------------------------
--- Table `db_sosm`.`systems`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`systems` (
+CREATE TABLE IF NOT EXISTS `systems` (
   `id_system` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NULL,
   `image` VARCHAR(45) NULL,
@@ -26,9 +20,9 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`systems` (
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`subsystems`
+-- Table `subsystems`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`subsystems` (
+CREATE TABLE IF NOT EXISTS `subsystems` (
   `id_subsystem` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NULL,
   `description` LONGTEXT NULL COMMENT 'A brief description of the subsystem',
@@ -36,9 +30,9 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`subsystems` (
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`technologies`
+-- Table `technologies`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`technologies` (
+CREATE TABLE IF NOT EXISTS `technologies` (
   `id_technology` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NULL,
   `description` LONGTEXT NULL,
@@ -46,9 +40,9 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`technologies` (
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`interfaces`
+-- Table `interfaces`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`interfaces` (
+CREATE TABLE IF NOT EXISTS `interfaces` (
   `id_interface` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NULL,
   `image` VARCHAR(45) NULL,
@@ -60,9 +54,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`networks`
+-- Table `networks`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`networks` (
+CREATE TABLE IF NOT EXISTS `networks` (
   `id_network` INT NOT NULL AUTO_INCREMENT,
   `id_technology` INT NOT NULL,
   `name` VARCHAR(45) NULL,
@@ -74,15 +68,15 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`networks` (
   INDEX `fk_id_technology_idx` (`id_technology` ASC) VISIBLE,
   CONSTRAINT `fk_id_technology`
     FOREIGN KEY (`id_technology`)
-    REFERENCES `db_sosm`.`technologies` (`id_technology`)
+    REFERENCES `technologies` (`id_technology`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`SSMap`
+-- Table `SSMap`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`SSMap` (
+CREATE TABLE IF NOT EXISTS `SSMap` (
   `id_SSMap` INT NOT NULL AUTO_INCREMENT,
   `id_system` INT NULL,
   `id_subsystem` INT NULL,
@@ -91,20 +85,20 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`SSMap` (
   INDEX `id_subsystem_idx` (`id_subsystem` ASC) VISIBLE,
   CONSTRAINT `fk_SSMap_system`
     FOREIGN KEY (`id_system`)
-    REFERENCES `db_sosm`.`systems` (`id_system`)
+    REFERENCES `systems` (`id_system`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_SSMap_subsystem`
     FOREIGN KEY (`id_subsystem`)
-    REFERENCES `db_sosm`.`subsystems` (`id_subsystem`)
+    REFERENCES `subsystems` (`id_subsystem`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`SIMap`
+-- Table `SIMap`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`SIMap` (
+CREATE TABLE IF NOT EXISTS `SIMap` (
   `id_SIMap` INT NOT NULL AUTO_INCREMENT,
   `id_system` INT NULL,
   `id_interface` INT NULL,
@@ -115,21 +109,21 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`SIMap` (
   INDEX `id_interface_idx` (`id_interface` ASC) VISIBLE,
   CONSTRAINT `fk_SIMap_system`
     FOREIGN KEY (`id_system`)
-    REFERENCES `db_sosm`.`systems` (`id_system`)
+    REFERENCES `systems` (`id_system`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_SIMap_interface`
     FOREIGN KEY (`id_interface`)
-    REFERENCES `db_sosm`.`interfaces` (`id_interface`)
+    REFERENCES `interfaces` (`id_interface`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`SINMap`
+-- Table `SINMap`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`SINMap` (
+CREATE TABLE IF NOT EXISTS `SINMap` (
   `id_SINMap` INT NOT NULL AUTO_INCREMENT,
   `id_SIMap` INT NULL,
   `id_network` INT NULL,
@@ -139,20 +133,20 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`SINMap` (
   INDEX `fk_id_network_idx` (`id_network` ASC) VISIBLE,
   CONSTRAINT `fk_SINMap_SIMap`
     FOREIGN KEY (`id_SIMap`)
-    REFERENCES `db_sosm`.`SIMap` (`id_SIMap`)
+    REFERENCES `SIMap` (`id_SIMap`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_SINMap_network`
     FOREIGN KEY (`id_network`)
-    REFERENCES `db_sosm`.`networks` (`id_network`)
+    REFERENCES `networks` (`id_network`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`TIMap`
+-- Table `TIMap`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`TIMap` (
+CREATE TABLE IF NOT EXISTS `TIMap` (
   `id_TIMap` INT NOT NULL AUTO_INCREMENT,
   `id_interface` INT NULL,
   `id_technology` INT NULL,
@@ -161,20 +155,20 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`TIMap` (
   INDEX `id_technologies_idx` (`id_technology` ASC) VISIBLE,
   CONSTRAINT `fk_TIMap_interface`
     FOREIGN KEY (`id_interface`)
-    REFERENCES `db_sosm`.`interfaces` (`id_interface`)
+    REFERENCES `interfaces` (`id_interface`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_TIMap_technology`
     FOREIGN KEY (`id_technology`)
-    REFERENCES `db_sosm`.`technologies` (`id_technology`)
+    REFERENCES `technologies` (`id_technology`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`quantities`
+-- Table `quantities`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`quantities` (
+CREATE TABLE IF NOT EXISTS `quantities` (
   `id_quantities` INT NOT NULL AUTO_INCREMENT,
   `id_system` INT NULL,
   `year` INT NULL,
@@ -183,15 +177,15 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`quantities` (
   INDEX `fk_quantities_system_idx` (`id_system` ASC) VISIBLE,
   CONSTRAINT `fk_quantities_system`
     FOREIGN KEY (`id_system`)
-    REFERENCES `db_sosm`.`systems` (`id_system`)
+    REFERENCES `systems` (`id_system`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`interfaceIssues`
+-- Table `interfaceIssues`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`interfaceIssues` (
+CREATE TABLE IF NOT EXISTS `interfaceIssues` (
   `id_interfaceIssue` INT NOT NULL AUTO_INCREMENT,
   `id_interface` INT NULL,
   `name` VARCHAR(256) NULL COMMENT 'A summary title of the issue',
@@ -202,9 +196,9 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`interfaceIssues` (
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`issuesToSystemsMap`
+-- Table `issuesToSystemsMap`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`issuesToSystemsMap` (
+CREATE TABLE IF NOT EXISTS `issuesToSystemsMap` (
   `id_issuesToSystemsMap` INT NOT NULL AUTO_INCREMENT,
   `id_interfaceIssue` INT NULL,
   `id_system` INT NULL,
@@ -213,29 +207,29 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`issuesToSystemsMap` (
   INDEX `id_system_idx` (`id_system` ASC) VISIBLE,
   CONSTRAINT `fk_issuesToSystemsMap_interfaceIssue`
     FOREIGN KEY (`id_interfaceIssue`)
-    REFERENCES `db_sosm`.`interfaceIssues` (`id_interfaceIssue`)
+    REFERENCES `interfaceIssues` (`id_interfaceIssue`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_issuesToSystemsMap_system`
     FOREIGN KEY (`id_system`)
-    REFERENCES `db_sosm`.`systems` (`id_system`)
+    REFERENCES `systems` (`id_system`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`classes`
+-- Table `classes`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`classes` (
+CREATE TABLE IF NOT EXISTS `classes` (
   `id_class` INT NOT NULL AUTO_INCREMENT,
   `class` VARCHAR(45) NULL,
   PRIMARY KEY (`id_class`))
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`systemClassMap`
+-- Table `systemClassMap`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`systemClassMap` (
+CREATE TABLE IF NOT EXISTS `systemClassMap` (
   `id_systemClassMap` INT NOT NULL AUTO_INCREMENT,
   `id_system` INT NULL,
   `id_class` INT NULL,
@@ -244,20 +238,20 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`systemClassMap` (
   INDEX `id_class_idx` (`id_class` ASC) VISIBLE,
   CONSTRAINT `fk_systemClassMap_system`
     FOREIGN KEY (`id_system`)
-    REFERENCES `db_sosm`.`systems` (`id_system`)
+    REFERENCES `systems` (`id_system`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_systemClassMap_classes`
     FOREIGN KEY (`id_class`)
-    REFERENCES `db_sosm`.`classes` (`id_class`)
+    REFERENCES `classes` (`id_class`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`tags`
+-- Table `tags`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`tags` (
+CREATE TABLE IF NOT EXISTS `tags` (
   `id_tag` INT NOT NULL AUTO_INCREMENT,
   `id_system` INT NOT NULL,
   `tag` VARCHAR(45) NOT NULL,
@@ -265,15 +259,15 @@ CREATE TABLE IF NOT EXISTS `db_sosm`.`tags` (
   INDEX `id_system_idx` (`id_system` ASC) VISIBLE,
   CONSTRAINT `fk_tags_systems`
     FOREIGN KEY (`id_system`)
-    REFERENCES `db_sosm`.`systems` (`id_system`)
+    REFERENCES `systems` (`id_system`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 -- -----------------------------------------------------
--- Table `db_sosm`.`dataExchanges`
+-- Table `dataExchanges`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_sosm`.`dataExchanges` (
+CREATE TABLE IF NOT EXISTS `dataExchanges` (
   `id_dataExchange` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(256) NULL,
   `description` LONGTEXT NULL COMMENT 'A brief description of the data exchange',
