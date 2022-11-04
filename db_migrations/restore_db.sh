@@ -7,8 +7,8 @@ ADMINUSER=${USER}
 ADMINPASS=${USER}
 
 
-if [ -z ${1} ]; then
-    echo You must provide the name of the destination copy, e.g. db_Fred
+if [ -z ${1} ] || [ -z ${2} ]; then
+    echo "usage: $0 <dst_db> <db_dump_file>"
     exit 1
 fi
 
