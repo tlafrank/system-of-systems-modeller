@@ -202,7 +202,7 @@ exports.switch = (req,res) => {
 			break;		
 
 		//Simple Mappings
-		case 'AssignInterfaceToSystem':	queryString += sql.format(`INSERT INTO InterfaceToSystemMap (id_interface, id_system) VALUES (?,?);`,[req.body.id_interface, req.body.id_system]); break;		
+		case 'AssignInterfaceToSystem':	queryString += sql.format(`INSERT INTO InterfaceToSystemMap (id_interface, id_system, isProposed) VALUES (?,?,1);`,[req.body.id_interface, req.body.id_system]); break;		
 		case 'AssignSystemToOrg': queryString += sql.format(`INSERT INTO OSMap (id_organisation, id_system) VALUES (?,?);`, [req.body.id_organisation, req.body.id_system]);	break;
 
 		//Delete & Re-add Mappings (Should be a better way to do this)
@@ -216,9 +216,12 @@ exports.switch = (req,res) => {
 			break;
 		case 'UpdateInterfaceTechnologyAssignments':
 			queryString += sql.format('DELETE FROM TIMap WHERE id_interface = ?;', req.body.id_interface);
-			req.body.id_technology_arr.forEach((element) => {
-				queryString += sql.format('INSERT INTO TIMap (id_interface, id_technology) VALUES (?,?);', [req.body.id_interface, element]);
-			})
+			if(req.body.id_technology_arr !== undefined){
+				req.body.id_technology_arr.forEach((element) => {
+					queryString += sql.format('INSERT INTO TIMap (id_interface, id_technology) VALUES (?,?);', [req.body.id_interface, element]);
+				})
+			}
+			
 			break;
 		case 'QtyYears':
 			queryString += sql.format('DELETE FROM quantities WHERE id_system = ?;', [req.body.id_system]);
@@ -317,7 +320,11 @@ exports.switch = (req,res) => {
 			break;
 		case 'UpdateSystem':
 			//Manage tag list
-			var tagArr = req.body.tags.split(',');
+			var tagArr = []
+			if (req.body.tags !== ''){
+				tagArr = req.body.tags.split(',');
+			}
+			
 			debug(1, tagArr)
 				
 			if (req.body.id_system) { //Update existing system
@@ -336,7 +343,7 @@ exports.switch = (req,res) => {
 	
 			} else { //Add new system
 				
-				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem, version, id_family) VALUES (?,?,?,?,?,?,0,?,?,?);`, 
+				queryString += sql.format(`INSERT INTO systems (name, image, description, reference, category, updateTime, isSubsystem, version, id_family) VALUES (?,?,?,?,?,?,0,?,?);`, 
 					[req.body.name, req.body.image, req.body.description, req.body.reference, req.body.category, Date.now(), req.body.version, req.body.id_family]);
 				queryString += sql.format(`SET @insertID = LAST_INSERT_ID();`)
 	

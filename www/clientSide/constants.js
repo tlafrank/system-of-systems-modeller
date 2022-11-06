@@ -1314,13 +1314,12 @@ const modals = {
 			{id: 'textSystemTags', on: 'input'},
 			{id: 'selectCategory', on: 'change'},
 		],
-		lockOnChange: ['selectSystem','buttonNew','buttonClone','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces','buttonSystemRelationships'], //The ID of the controls to lock when editing an object
+		lockOnChange: ['selectSystem','buttonNew','buttonClone','buttonDelete','buttonIcons','buttonSystemQuantities', 'buttonUpdateSystemInterfaces','buttonSystemRelationships','buttonParameters'], //The ID of the controls to lock when editing an object
 		unlockOnChange: ['buttonUpdate'], //The ID of the controls to lock when editing an object
 		iterations: [ //The objects to process in order to fetch information from the server and insert into the form controls
 			{ //Get the all the systems
 				type: 'AllSystems',
 				definitionFields: [],
-				continueOnUndefined: true,
 				instructions: [
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions_MultipleFields', id: 'selectSystem', columnName: ['name','version'], attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
@@ -1331,15 +1330,26 @@ const modals = {
 			{ //Get the all the families
 				type: 'AllFamilies',
 				definitionFields: [],
-				continueOnUndefined: true,
 				instructions: [
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectFamily', columnName: 'name', attr: {name: 'id_family', columnName: 'id_family'} },
+					//Simple test to make suure at least one family has been defined
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectFamily', definition: 'id_family', dataAttr: 'id_family'},
 				],
+			},
+			{ //Get specific system details
+				type: 'SingleFamily',
+				definitionFields: ['id_family'],
+				continueOnUndefined: false,
+				instructions: [],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonNew','buttonDelete','buttonClone','selectSystem','textSystemName','selectFamily','textVersion','textSystemDescription','selectCategory','textSystemReferences','textSystemTags','buttonIcons',
+						'buttonSystemQuantities','buttonUpdateSystemInterfaces','buttonSystemRelationships','buttonParameters']},
+				]
 			},
 			{ //Get specific system details
 				type: 'SingleSystem_WithTags',
 				definitionFields: ['id_system'],
-				continueOnUndefined: true,
+				continueOnUndefined: false,
 				instructions: [
 					
 					{action: 'setControl_MultipleValues', arrayIndex: 0, id: 'headingSystemName', type: 'headingMultiple', columnName: ['name','version']},
@@ -1353,7 +1363,10 @@ const modals = {
 					{action: 'setControl_SingleValue', arrayIndex: 0, type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_MultipleValues_AtSpecificArrayIndex', arrayIndex: 1, id: 'textSystemTags', type: 'textList', columnName: 'tag'},
 					{action: 'setControl_Focus', id: 'selectSystem'},
-					
+				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonDelete','buttonClone','selectSystem','textSystemName','selectFamily','textVersion','textSystemDescription','selectCategory','textSystemReferences','textSystemTags','buttonIcons',
+						'buttonSystemQuantities','buttonUpdateSystemInterfaces','buttonSystemRelationships','buttonParameters']},
 				]
 			}
 
@@ -1381,6 +1394,8 @@ const modals = {
 			{ 	//New system button clicked
 				handlers: [{controlId: 'buttonNew', event: 'click'},],
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['selectSystem','textSystemName','selectFamily','textVersion','textSystemDescription','selectCategory','textSystemReferences','textSystemTags','buttonIcons',
+						'buttonSystemQuantities','buttonUpdateSystemInterfaces','buttonSystemRelationships','buttonParameters']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_system'},
 					{action: 'emptyControl', type: 'select', id: 'selectSystem'},
 					{action: 'emptyControl', type: 'heading', id: 'headingSystemName'},
@@ -1504,7 +1519,6 @@ const modals = {
 			{ //Get the all the subsystems
 				type: 'AllSubsystems',
 				definitionFields: [], 
-				continueOnUndefined: true,
 				instructions: [
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectSubsystem', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectSubsystem', definition: 'id_system', dataAttr: 'id_system', columnName: 'id_system'},
@@ -1514,7 +1528,7 @@ const modals = {
 			{ //Get specific system details
 				type: 'SingleSystem',
 				definitionFields: ['id_system'],
-				continueOnUndefined: true,
+				continueOnUndefined: false,
 				instructions: [
 					{action: 'setControl_SingleValue', id: 'headingSubsystemName', type: 'heading', columnName: 'name'},
 					{action: 'setControl_SingleValue', id: 'imageSubsystem', type: 'image', columnName: 'image'},
@@ -1525,6 +1539,9 @@ const modals = {
 					//{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_SingleValue', id: 'chkDistributedSystem', type: 'checkbox', columnName: 'distributedSubsystem'},
 					{action: 'setControl_Focus', id: 'selectSubsystem'}
+				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonDelete','textSubsystemName','textSubsystemDescription','chkDistributedSystem','buttonIcons','buttonParameters']},
 				]
 			}
 		],
@@ -1551,6 +1568,7 @@ const modals = {
 			{ 	//New system button clicked
 				handlers: [{controlId: 'buttonNew', event: 'click'},],
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['textSubsystemName','textSubsystemDescription','chkDistributedSystem']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_system'},
 					{action: 'emptyControl', type: 'heading', id: 'headingSubsystemName'},
 					{action: 'emptyControl', type: 'text', id: 'textSubsystemName'},
@@ -1881,7 +1899,6 @@ const modals = {
 			{ 	//Populate interface select
 				type: 'AllInterfaces',
 				definitionFields: [],
-				continueOnUndefined: true,
 				instructions: [
 					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectInterfaces', columnName: 'name', attr: {name: 'id_interface', columnName: 'id_interface'}},
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectInterfaces', definition: 'id_interface', dataAttr: 'id_interface', columnName: 'id_interface'},
@@ -1890,7 +1907,8 @@ const modals = {
 			},
 			{ 	//Display interface details for the currently selected interface
 				type: 'SingleInterface', 
-				definitionFields: ['id_interface'], 
+				definitionFields: ['id_interface'],
+				continueOnUndefined: false,
 				instructions: [ 
 					{action: 'setControl_SingleValue', type: 'image', id: 'imageInterface', columnName: 'image'},
 					{action: 'setControl_SingleValue', type: 'heading', id: 'headingInterfaceName', columnName: 'name'},
@@ -1898,12 +1916,15 @@ const modals = {
 					{action: 'setControl_SingleValue', type: 'text', id: 'textInterfaceDescription', columnName: 'description'},
 					{action: 'setDefinition_SingleValue_fromParamNoArray', definitionName: 'image', columnName: 'image'},
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonDelete','selectInterfaces','textInterfaceName','textInterfaceDescription','availableTechnologies','assignedTechnologies','buttonIcons','buttonParameters','availableTechnologies','assignedTechnologies']},
+				]
 			},
 			{ 	//Get all technologies
 				type: 'AllTechnologies', 
 				definitionFields: [], 
 				instructions: [ 
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'droppableElements', id: 'availableTechnologies', arrayIndex: 0, columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'droppableElements', id: 'availableTechnologies', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
 				],
 			},
 			{	//Get technologies associated with the selected interface and move to the appropriate container
@@ -1939,6 +1960,7 @@ const modals = {
 			{ //New interface button clicked
 				handlers: [{controlId: 'buttonNew', event: 'click'},],
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['textInterfaceName','textInterfaceDescription','availableTechnologies','assignedTechnologies']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_interface'},
 					{action: 'emptyControl', type: 'select', id: 'selectInterfaces'},
 					{action: 'emptyControl', type: 'heading', id: 'headingInterfaceName'},
@@ -2125,12 +2147,22 @@ const modals = {
 			{
 				type: 'AllTechnologies', 
 				definitionFields: [],
-				continueOnUndefined: true,
 				instructions: [ 
-					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', arrayIndex: 0, id: 'selectTechnology', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
+					{action: 'setControl_MultipleValues_fromParamsSingleArrayInclDataAttributes', type: 'selectOptions', id: 'selectTechnology', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectTechnology', definition: 'id_technology', dataAttr: 'id_technology'},
 				],
 			},
-			{ 
+			{
+				//Simple check to prevent the user going further if no technology has been defined
+				type: 'SingleTechnology',
+				definitionFields: ['id_technology'], 
+				continueOnUndefined: false,
+				instructions: [ ],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonNew','buttonDelete','textLinkName','selectCategory','textLinkDesignation','selectTechnology','textLinkDescription','buttonIcons','buttonParameters']},
+				]
+			},
+			{
 				type: 'AllLinks', 
 				definitionFields: [], 
 				instructions: [ 
@@ -2142,6 +2174,7 @@ const modals = {
 			{ 
 				type: 'Link',
 				definitionFields: ['id_link'], 
+				continueOnUndefined: false,
 				instructions: [ 
 					{action: 'setControl_SingleValue', type: 'image', id: 'imageLinks', columnName: 'image'},
 					{action: 'setDefinition_SingleValue_fromParamNoArray', definitionName: 'image', columnName: 'image'},
@@ -2154,6 +2187,9 @@ const modals = {
 					{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'category', columnName: 'category'},
 					{action: 'setControl_Focus', id: 'selectLinks'}
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonDelete','textLinkName','selectCategory','textLinkDesignation','selectTechnology','textLinkDescription','buttonIcons','buttonParameters']},
+				]
 			},
 		],
 		events: [
@@ -2177,6 +2213,7 @@ const modals = {
 			{	//Add New link button
 				handlers: [{controlId: 'buttonNew', event: 'click'},],
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['textLinkName','selectCategory','textLinkDesignation','selectTechnology','textLinkDescription']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_link'},
 					{action: 'emptyControl', type: 'select', id: 'selectLinks'},
 					{action: 'emptyControl', type: 'heading', id: 'headingLinks'},
@@ -2260,25 +2297,45 @@ const modals = {
 		unlockOnChange: ['buttonUpdate'], 
 		iterations: [
 			{ 
-				type: 'AllTechnologies',
+				type: 'AllTechCategories',
 				definitionFields: [],
-				continueOnUndefined: true,
 				instructions: [
-					{action: 'setControl_MultipleValues', type: 'selectOptions', arrayIndex: 0, id: 'selectTechnologies', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', arrayIndex: 0, id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology', columnName: 'id_technology'},
-					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology'},
-					{action: 'setControl_MultipleValues', type: 'selectOptions', arrayIndex: 1, id: 'selectCategory', columnName: 'name', attr: {name: 'id_techCategory', columnName: 'id_techCategory'} },
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectCategory', columnName: 'name', attr: {name: 'id_techCategory', columnName: 'id_techCategory'} },
+					//{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectCategory', definition: 'id_techCategory', dataAttr: 'id_techCategory', columnName: 'id_techCategory'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectCategory', definition: 'id_techCategory', dataAttr: 'id_techCategory'},
 				],
 			},
+			{ //Prevent being able to create a link if no technology categories exist
+				type: 'SingleTechCategory', 
+				definitionFields: ['id_techCategory'],
+				continueOnUndefined: false,
+				instructions: [],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonNew','buttonDelete','selectTechnologies','textTechnologyName','selectCategory','textTechnologyDescription','buttonParameters']},
+				]
+			},
+			{ 
+				type: 'AllTechnologies',
+				definitionFields: [],
+				instructions: [
+					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectTechnologies', columnName: 'name', attr: {name: 'id_technology', columnName: 'id_technology'} },
+					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology', columnName: 'id_technology'},
+					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectTechnologies', definition: 'id_technology', dataAttr: 'id_technology'},
+				],
+			},
+
 			{
 				type: 'SingleTechnology', 
 				definitionFields: ['id_technology'],
-				continueOnUndefined: true,
+				continueOnUndefined: false,
 				instructions: [ 
 					{action: 'setControl_SingleValue', type: 'text', id: 'textTechnologyName', columnName: 'name'},
 					{action: 'setControl_SingleValue', type: 'text', id: 'textTechnologyDescription', columnName: 'description'},
 					{action: 'setControl_SingleValue', type: 'select', id: 'selectCategory', dataAttr: 'id_techCategory', columnName: 'id_techCategory'},
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonDelete','selectTechnologies','textTechnologyName','selectCategory','textTechnologyDescription','buttonParameters']},
+				]
 			},
 		],
 		events: [
@@ -2295,6 +2352,7 @@ const modals = {
 			{	//Add New link button
 				handlers: [{controlId: 'buttonNew', event: 'click'},], 
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['selectTechnologies','textTechnologyName','selectCategory','textTechnologyDescription']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_technology'},
 					{action: 'emptyControl', type: 'select', id: 'selectTechnologies'},
 					{action: 'emptyControl', type: 'text', id: 'textTechnologyName'},
@@ -2433,7 +2491,7 @@ const modals = {
 		],
 		monitorChanges: [
 			{id: 'textTitle', on: 'input'},
-			//{id: 'sliderSeverity', on: 'input'},
+			{id: 'sliderSeverity', on: 'input'},
 			{id: 'textIssueDetails', on: 'input'},
 			{id: 'textIssueResolution', on: 'input'},
 		],
@@ -2443,7 +2501,6 @@ const modals = {
 			{ 	//Populate interface select
 				type: 'AllInterfaces',
 				definitionFields: [],
-				continueOnUndefined: true,
 				instructions: [
 					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectInterface', columnName: 'name', attr: {name: 'id_interface', columnName: 'id_interface'}},
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectInterface', definition: 'id_interface', dataAttr: 'id_interface', columnName: 'id_interface'},
@@ -2453,12 +2510,15 @@ const modals = {
 			{ 	//Populate issues select
 				type: 'AllInterfaceIssues',
 				definitionFields: ['id_interface'],
-				continueOnUndefined: true,
+				continueOnUndefined: false,
 				instructions: [
 					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectIssue', columnName: 'name', attr: {name: 'id_interfaceIssue', columnName: 'id_interfaceIssue'}},
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectIssue', definition: 'id_interfaceIssue', dataAttr: 'id_interfaceIssue', columnName: 'id_interfaceIssue'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectIssue', definition: 'id_interfaceIssue', dataAttr: 'id_interfaceIssue'},
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonNew','buttonDelete','selectInterface','selectIssue','textTitle','sliderSeverity','textIssueDetails','textIssueResolution']},
+				]
 			},
 			{ 	//Populate the droppable with all systems which implement this interface
 				type: 'SystemsWithSpecificInterface',
@@ -2467,6 +2527,9 @@ const modals = {
 				instructions: [
 					{action: 'setControl_MultipleValues', type: 'droppableElements', id: 'droppableSystemsUsingThisInterface', columnName: 'name', attr: {name: 'id_system', columnName: 'id_system'}},
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonNew','buttonDelete','selectInterface','selectIssue','textTitle','sliderSeverity','textIssueDetails','textIssueResolution']},
+				]
 			},
 			
 			{ 	//Get selected issue detail
@@ -2481,11 +2544,10 @@ const modals = {
 					
 					{action: 'setControl_MultipleValues', arrayIndex: 1, type: 'moveDroppableElements', id: 'droppableAffectedSystems', sourceId: 'droppableSystemsUsingThisInterface', dataAttr: 'id_system', attr: {name: 'id_system', columnName: 'id_system'}},
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonDelete','selectInterface','selectIssue','textTitle','sliderSeverity','textIssueDetails','textIssueResolution']},
+				]
 			},
-			
-
-
-			
 		],
 		events: [
 			{	//Update issue details
@@ -2530,6 +2592,7 @@ const modals = {
 			{ 	//New system button clicked
 				handlers: [{controlId: 'buttonNew', event: 'click'},],
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['textTitle','sliderSeverity','textIssueDetails','textIssueResolution']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_interfaceIssue'},
 					{action: 'emptyControl', type: 'select', id: 'selectIssue'},
 					{action: 'emptyControl', type: 'text', id: 'textTitle'},
@@ -2738,7 +2801,7 @@ const modals = {
 		formFields: [ 
 			{ type: 'select', id: 'selectFamily', label: 'System Families'},
 			{ type: 'text', id: 'textFamilyName', label: 'Name'},
-			{ type: 'textarea', id: 'textFamilyDescription', label: 'Description' },
+			{ type: 'textarea', id: 'textFamilyDescription', label: 'Description'},
 		],
 		monitorChanges: [
 			{id: 'textFamilyName', on: 'input'},
@@ -2761,10 +2824,14 @@ const modals = {
 				type: 'SingleFamily', 
 				definitionFields: ['id_family'],
 				continueOnUndefined: false,
-				instructions: [ 
+				instructions: [
 					{action: 'setControl_SingleValue', type: 'text', id: 'textFamilyName', columnName: 'name'},
 					{action: 'setControl_SingleValue', type: 'text', id: 'textFamilyDescription', columnName: 'description'},
+					{action: 'setControls_Enabled', controls: ['buttonDelete', 'textFamilyName', 'textFamilyDescription']}
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['textFamilyName','textFamilyDescription','buttonDelete']},
+				]
 			},
 		],
 		events: [
@@ -2781,6 +2848,7 @@ const modals = {
 			{	//Add New family button
 				handlers: [{controlId: 'buttonNew', event: 'click'},], 
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['textFamilyName', 'textFamilyDescription']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_family'},
 					{action: 'emptyControl', type: 'select', id: 'selectFamily'},
 					{action: 'emptyControl', type: 'text', id: 'textFamilyName'},
@@ -2860,6 +2928,9 @@ const modals = {
 					{action: 'setControl_SingleValue', type: 'text', id: 'textTechCategoryName', columnName: 'name'},
 					{action: 'setControl_SingleValue', type: 'select', id: 'selectTechCategoryColor', columnName: 'color'},
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonDelete','textTechCategoryName','selectTechCategoryColor']},
+				]
 			},
 		],
 		events: [
@@ -2875,6 +2946,7 @@ const modals = {
 			{	//Add New Tech Category button
 				handlers: [{controlId: 'buttonNew', event: 'click'},], 
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['textTechCategoryName','selectTechCategoryColor']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_techCategory'},
 					{action: 'emptyControl', type: 'select', id: 'selectTechCategory'},
 					{action: 'emptyControl', type: 'text', id: 'textTechCategoryName'},
@@ -2917,7 +2989,7 @@ const modals = {
 	paramDefinition: {
 		title: 'Define Parameters',
 		formButtons: [ 
-			{type: 'info', id: 'buttonNew', label: 'New Parameter', initialState: 'unlock'},
+			{type: 'info', id: 'buttonNew', label: 'New Parameter', initialState: 'lock'},
 			{type: 'delete', id: 'buttonDelete', label: 'Delete Parameter', initialState: 'unlock'},
 			{type: 'submit', id: 'buttonUpdate', label: 'Update', initialState: 'lock'},
 			{type: 'cancel', id: 'buttonClose', label: 'Close', initialState: 'unlock'},
@@ -2973,7 +3045,6 @@ const modals = {
 				//Load the parameter groups
 				type: 'AllParamGroups',
 				definitionFields: [],
-				continueOnUndefined: true,
 				instructions: [ 
 					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectParamGroup', columnName: 'name', attr: {name: 'id_paramGroup', columnName: 'id_paramGroup'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectParamGroup', definition: 'id_paramGroup', dataAttr: 'id_paramGroup', columnName: 'id_paramGroup'},
@@ -2984,12 +3055,17 @@ const modals = {
 				//Load the parameter definitions which exist within the parameter group
 				type: 'ParamDefinitionsWithinGroup', 
 				definitionFields: ['id_paramGroup'],
-				continueOnUndefined: true,
+				continueOnUndefined: false,
 				instructions: [ 
 					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectParamDefinition', columnName: 'name', attr: {name: 'id_paramDefinition', columnName: 'id_paramDefinition'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectParamDefinition', definition: 'id_paramDefinition', dataAttr: 'id_paramDefinition', columnName: 'id_paramDefinition'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectParamDefinition', definition: 'id_paramDefinition', dataAttr: 'id_paramDefinition'},
+					{action: 'setControls_Enabled', controls: ['buttonNew','buttonDelete']},
+
 				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['buttonNew','buttonDelete']},
+				]
 			},
 			{ //Get specific parameter definition details
 				type: 'SingleParamDefinition',
@@ -3009,7 +3085,7 @@ const modals = {
 				],
 				ifUndefined: [
 					{action: 'emptyControl', type: 'select', id: 'selectParamType'},
-					{action: 'setControls_Disabled', controls: ['selectParamDefinition','textParamName','selectParamType','textParamOptions','chkApplicableToSystem','chkApplicableToSubsystem','chkApplicableToInterface','chkApplicableToLink','chkApplicableToTechnology']},
+					{action: 'setControls_Disabled', controls: ['buttonDelete','selectParamDefinition','textParamName','selectParamType','textParamOptions','chkApplicableToSystem','chkApplicableToSubsystem','chkApplicableToInterface','chkApplicableToLink','chkApplicableToTechnology']},
 				]
 			}
 		],
@@ -3136,23 +3212,33 @@ const modals = {
 		lockOnChange: ['buttonDelete','buttonNew','selectParamGroup'],
 		unlockOnChange: ['buttonUpdate'],
 		iterations: [
-			{ 
+			{
 				type: 'AllParamGroups',
 				definitionFields: [],
-				continueOnUndefined: true,
-				instructions: [ 
+				instructions: [
 					{action: 'setControl_MultipleValues', type: 'selectOptions', id: 'selectParamGroup', columnName: 'name', attr: {name: 'id_paramGroup', columnName: 'id_paramGroup'} },
 					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'select', id: 'selectParamGroup', definition: 'id_paramGroup', dataAttr: 'id_paramGroup', columnName: 'id_paramGroup'},
 					{action: 'setDefinition_SingleValue_ifDefintionNotAlreadySet', type: 'select', id: 'selectParamGroup', definition: 'id_paramGroup', dataAttr: 'id_paramGroup'},
-					//Populate name
-					{action: 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition', type: 'text', id: 'textParamGroupName', definition: 'id_paramGroup', dataAttr: 'id_paramGroup', columnName: 'name'},
+					
 				],
+			},
+			{ 
+				type: 'SingleParamGroup',
+				definitionFields: ['id_paramGroup'],
+				continueOnUndefined: false,
+				instructions: [
+					{action: 'setControl_SingleValue', type: 'text', id: 'textParamGroupName', columnName: 'name'},
+				],
+				ifUndefined: [
+					{action: 'setControls_Disabled', controls: ['textParamGroupName','buttonDelete']},
+				]
 			},
 		],
 		events: [
 			{	//Add New Parameter Group
 				handlers: [{controlId: 'buttonNew', event: 'click'},], 
 				instructions: [
+					{action: 'setControls_Enabled', controls: ['textParamGroupName']},
 					{action: 'deleteDefinitionValue', definitionName: 'id_paramGroup'},
 					{action: 'emptyControl', type: 'select', id: 'selectParamGroup'},
 					{action: 'emptyControl', type: 'text', id: 'textParamGroupName'},

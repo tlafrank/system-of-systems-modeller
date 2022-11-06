@@ -33,6 +33,20 @@ exports.switch = async (req,res) => {
 
 
 	switch (req.body.type){
+		case 'paramsSortedForSystems':
+			stripArr = false
+			queryString += sql.format(`
+				SELECT paramGroups.id_paramGroup, paramGroups.name AS paramGroupName, paramDefinitions.id_paramDefinition, paramDefinitions.name AS paramDefinitionName, params.id_param, params.value, systems.id_system, systems.name AS systemName
+				FROM paramGroups
+				LEFT JOIN paramDefinitions
+				ON paramGroups.id_paramGroup = paramDefinitions.id_paramDefinition
+				LEFT JOIN params
+				ON params.id_paramDefinition = paramDefinitions.id_paramDefinition
+				LEFT JOIN systems
+				ON systems.id_system = params.id_system
+				WHERE params.id_system IS NOT NULL AND params.value IS NOT NULL AND params.value <> '' AND systems.isSubsystem = FALSE AND systems.id_system IN (?)
+				ORDER BY paramGroups.name, paramDefinitions.name, params.value, systems.name;`, [req.body.id_system_arr])
+			break;
 		case 'SmartSystemWideParamQuery':
 			executeQueryAtEnd = false
 
@@ -275,6 +289,9 @@ exports.switch = async (req,res) => {
 			queryString += sql.format('SELECT * FROM paramGroups;')
 			stripArr = false
 			break;
+		case 'SingleParamGroup':
+			queryString += sql.format('SELECT * FROM paramGroups WHERE id_paramGroup = ?;', [req.body.id_paramGroup])
+			break;
 		case 'ParamDefinitionsWithinGroup':
 			queryString += sql.format('SELECT * FROM paramDefinitions WHERE id_paramGroup = ?;', req.body.id_paramGroup)
 			stripArr = false
@@ -283,12 +300,11 @@ exports.switch = async (req,res) => {
 			queryString += sql.format('SELECT * FROM paramDefinitions WHERE id_paramDefinition = ?;', req.body.id_paramDefinition)
 			break;
 		case 'AllTechCategories':
-			queryString += sql.format('SELECT * FROM technologyCategories;')
+			queryString += sql.format('SELECT * FROM technologyCategories ORDER BY name;')
 			stripArr = false
 			break;
 		case 'SingleTechCategory':
 			queryString += sql.format('SELECT * FROM technologyCategories WHERE id_techCategory = ?;', req.body.id_techCategory)
-			stripArr = false
 			break;
 		case 'AllFamilies':
 			queryString += sql.format('SELECT * FROM families;')
@@ -357,6 +373,8 @@ exports.switch = async (req,res) => {
 			stripArr = false
 			break;
 		case 'images': //Get the list of images located in the image folder
+			executeQueryAtEnd = false
+
 			const directoryPath = path.join(__dirname, '../images/');
 			debug(1, 'Image folder path is: ' + directoryPath);
 		
@@ -369,7 +387,8 @@ exports.switch = async (req,res) => {
 		
 				//Respond to client
 				res.json(files);
-			});			
+			});
+
 			break;
 		case 'AllInterfaces': //Get all interfaces
 			queryString += sql.format(`SELECT * FROM interfaces ORDER BY name;`);
@@ -395,10 +414,11 @@ exports.switch = async (req,res) => {
 			break;
 		case 'AllTechnologies': //Get all technologies in alphabertical order
 			queryString += sql.format(`SELECT * FROM technologies ORDER BY name;`)
-			queryString += sql.format(`SELECT * FROM technologyCategories ORDER BY name;`)
+			stripArr = false
 			break;
 		case 'SingleTechnology': //Get all record details for a given technology
 			queryString += sql.format(`SELECT * FROM technologies WHERE id_technology = ?;`, req.body.id_technology)
+			stripArr = true
 			break;
 		case 'AssignedTechnologies'://Get all technologies implemented by a given interface
 			queryString += sql.format(`SELECT * 
@@ -472,6 +492,7 @@ exports.switch = async (req,res) => {
 				LEFT JOIN interfaces
 				ON interfaceIssues.id_interface = interfaces.id_interface
 				WHERE interfaces.id_interface = ?;`, req.body.id_interface);
+			stripArr = false
 			break;
 		case 'SpecificInterfaceIssue': //Get the details associated with a specific interface issue
 			queryString += sql.format(`SET @id_interfaceIssue = ?;`, req.body.id_interfaceIssue)
@@ -532,45 +553,38 @@ exports.switch = async (req,res) => {
 				SELECT b.id_OMap, b.parent, b.child, cte.depth + 1 FROM cte, OMap AS b WHERE b.parent = cte.child AND cte.depth < 1)
 			SELECT organisation.* FROM cte LEFT JOIN organisation ON cte.child = organisation.id_organisation ORDER BY organisation.name;`)
 		break;
+		case 'SystemsWithSpecificInterface':
+			//Used by interface issues
+			queryString += sql.format(`
+				SELECT systems.id_system, systems.name
+				FROM systems
+				LEFT JOIN InterfaceToSystemMap
+				ON systems.id_system = InterfaceToSystemMap.id_system
+				LEFT JOIN interfaces
+				ON InterfaceToSystemMap.id_interface = interfaces.id_interface
+				WHERE interfaces.id_interface = ?
+				GROUP BY id_system;`, req.body.id_interface)
+				stripArr=false
+		break;
+		case 'SystemInterface':
+			queryString = sql.format(`
+				SELECT systems.id_system, systems.name AS systemName, systems.image AS systemImage, InterfaceToSystemMap.id_ISMap, InterfaceToSystemMap.isProposed, InterfaceToSystemMap.description,
+					interfaces.id_interface, interfaces.name AS interfaceName, interfaces.image AS interfaceImage 
+				FROM systems
+				INNER JOIN InterfaceToSystemMap ON systems.id_system = InterfaceToSystemMap.id_system
+				INNER JOIN interfaces ON InterfaceToSystemMap.id_interface = interfaces.id_interface
+				WHERE InterfaceToSystemMap.id_ISMap = ?;`,[req.body.id_ISMap])
+		break;
 	}
 
+	
 
-	//Get a list of systems which implement a particular interface
-	//For: updateIssuesModal()
-	/*
-	if (req.body.type == 'SystemsWithSpecificInterface'){
-		debug(1, '************************************************* Select.json SystemsWithSpecificInterface was called. Value to be determined.')
-		queryString = sql.format(`
-		SELECT systems.id_system, systems.name
-		FROM systems
-		LEFT JOIN InterfaceToSystemMap
-		ON systems.id_system = InterfaceToSystemMap.id_system
-		LEFT JOIN interfaces
-		ON InterfaceToSystemMap.id_interface = interfaces.id_interface
-		WHERE interfaces.id_interface = ?
-		GROUP BY id_system;`, req.body.id_interface)
-	}
+	if (executeQueryAtEnd){
 
-	//
-	if (req.body.type == 'SystemInterface'){ 
-		//Build the query
-		debug(1, '************************************************* Select.json SystemInterface was called. Value to be determined.')
-		queryString = sql.format(`
-			SELECT systems.id_system, systems.name AS systemName, systems.image AS systemImage, InterfaceToSystemMap.id_ISMap, InterfaceToSystemMap.isProposed, InterfaceToSystemMap.description,
-				interfaces.id_interface, interfaces.name AS interfaceName, interfaces.image AS interfaceImage 
-			FROM systems
-			INNER JOIN InterfaceToSystemMap ON systems.id_system = InterfaceToSystemMap.id_system
-			INNER JOIN interfaces ON InterfaceToSystemMap.id_interface = interfaces.id_interface
-			WHERE InterfaceToSystemMap.id_ISMap = ?;`,[req.body.id_ISMap])
+		if (queryString == ''){ 
+			res.json({msg: 'There was an error executing the query (select.json)', err: 'No queryString was developed.'}) 
+		} else {
 
-	}
-
-*/
-	if (queryString == ''){ 
-		res.json({msg: 'There was an error executing the query (select.json)', err: 'No queryString was developed.'}) 
-	} else {
-
-		if (executeQueryAtEnd){
 			debug(5,'Query:  ' + queryString);
 
 			sql.execute(queryString).then((result) => {
@@ -621,7 +635,7 @@ exports.switch = async (req,res) => {
 				} else {
 					res.json({msg: 'There was an error executing the query (select.json)'})
 				}
-			});			
+			});
 		}
 	}
 }

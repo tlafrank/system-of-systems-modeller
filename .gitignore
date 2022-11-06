@@ -9,3 +9,6 @@ www/clientSide/privateConstants.js
 package_export/
 .vscode/
 *.pem
+www/*.csr
+www/*.p7b
+

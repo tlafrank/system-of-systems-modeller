@@ -30,7 +30,7 @@ exports.up = function (db, callback) {
 		db.dropTable.bind(db, 'OMap', { ifExists: true }), // Populated table and modifications not needed
 		db.dropTable.bind(db, 'organisation', { ifExists: true }), // populated table and modifications not needed
 		db.createTable.bind(db, 'SMap', {
-			id_SMap: { type: 'int', auto_increment: true, notNull: true, primaryKey: true },
+			id_SMap: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
 			parent: {
 				type: 'int', notNull: true, foreignKey: {
 					name: 'fk_SMap_system_parent', table: 'systems', mapping: 'id_system',

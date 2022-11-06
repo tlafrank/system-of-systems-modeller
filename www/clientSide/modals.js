@@ -19,7 +19,7 @@ async function commonModal(definition){
 	modals[definition.modal].formButtons.forEach((element) => {addButton('#mainModal .modal-footer', element)})
 
 	//Add the form fields to the modal
-	modals[definition.modal].formFields.forEach((element) => {addFormElement('#mainModal form', element)})	
+	modals[definition.modal].formFields.forEach((element) => {addFormElement('#mainModal form', element)})
 
 	//Notifications
 	$('#mainModal .warning-holder').empty()
@@ -38,9 +38,30 @@ async function commonModal(definition){
 	if (definition.continue){
 		for (var i = 0; i < modals[definition.modal].iterations.length; i++){
 
+			var definitionsFound = true;
+
 			//Determine if this iteration requires an approach to the server
 			if (modals[definition.modal].iterations[i].type === undefined){
 				//No approach to the server is required
+
+				//Check if the definitionFields are available
+				modals[definition.modal].iterations[i].definitionFields.forEach((element2) => { 
+					if (definition[element2] == undefined){
+						//An expected definition was not found
+						debug(5, `Expected definition '${element2}' was not found`)
+						definitionsFound = false
+						
+						//Carry out array ifUndefined, if it exists
+						if (definitionsFound == false && modals[definition.modal].iterations[i].ifUndefined !== undefined){
+							modals[definition.modal].iterations[i].ifUndefined.forEach((element3) => {
+								commonModal_actions(definition, element3, null, null)
+							})
+						}
+					}
+				})
+
+
+
 				//Carry out the array of instructions
 				modals[definition.modal].iterations[i].instructions.forEach((element3) => { commonModal_actions(definition, element3, null, null) })
 				
@@ -50,8 +71,6 @@ async function commonModal(definition){
 				var postData = { 
 					type: modals[definition.modal].iterations[i].type
 				}
-
-				var definitionsFound = true;
 
 				//Prepare the object being sent to the server with the values from the definition object that the user wants
 				modals[definition.modal].iterations[i].definitionFields.forEach((element2) => { 
@@ -270,6 +289,7 @@ function commonModal_actions(definition, element, postData, result){
 			if (definition[element.definitionName]){setFormElement('#' + element.id, element, definition[element.definitionName])}
 			break;
 		case 'setControl_SingleValue_fromResultArrayWhenMatchesDefinition': //Matches a definition parameter with a row parameter and sets a control to another parameter on that row, if found.
+			debug(5,element)
 			if (definition[element.definition]){
 				if(element.arrayIndex >= 0){
 					result[element.arrayIndex].forEach((element4) => {
@@ -378,7 +398,9 @@ function commonModal_actions(definition, element, postData, result){
 			postData[element.columnName] = JSON.parse(getFormElement('#' + element.id, element))
 			break;
 		case 'toServer_ControlValue': //Set postData[element.columnName] to the value of the control specified by element.id
+			  debug(5, 'setting ' + element.columnName)
 			postData[element.columnName] = getFormElement('#' + element.id, element)
+			debug(5, element.columnName + ' set:', postData[element.columnName] )
 			break;		
 		case 'resetButtonClasses': //Deselect all buttons container within the element specified at element.id
 			$('#' + element.id + ' button').addClass('btn-secondary').removeClass('btn-primary')
@@ -398,7 +420,12 @@ function commonModal_actions(definition, element, postData, result){
 			modals[definition.modal].lockOnChange.forEach((element2) => { $('#' + element2).prop('disabled', true) })
 			break;
 		case 'unlockControls':
-			modals[definition.modal].unlockOnChange.forEach((element2) => {$('#' + element2).prop('disabled', false)})	
+			if(element.controls){
+				element.controls.forEach((element2) => {$('#' + element2).prop('disabled', false)})	
+			} else {
+				modals[definition.modal].unlockOnChange.forEach((element2) => {$('#' + element2).prop('disabled', false)})	
+			}
+			
 			break;
 		case 'hideControls':
 			break;

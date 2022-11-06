@@ -67,30 +67,32 @@
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 			<ul class="navbar-nav mr-auto">
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Supporting Info</a>
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Model Dependencies</a>
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-						<!---->
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('families')">System Families</a></li>
+						<li><hr class="dropdown-divider"></li>
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('techCategories')">Technology Categories</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('technologies')">Link Technologies</a></li>
+						<li><hr class="dropdown-divider"></li>
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('paramDefinition')">Define Parameters</a></li>
-						
 					</ul>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">System</a>
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Graph Components</a>
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-						<!---->
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('systems')">Systems</a></li>
-						
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('subsystems')">Subsystems</a></li>
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('mapSystems')">System Relationships</a></li>
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('interfaces')">Interfaces</a></li>
 						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('links')">Links</a></li>
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('technologies')">Link Technologies</a></li>
-						<li><hr class="dropdown-divider"></li>
-						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('interfaceIssues')">Issues</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('interfaces')">Interfaces</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('subsystems')">Subsystems</a></li>
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('systems')">Systems</a></li>
 					</ul>
 				</li>
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Knowledge Management</a>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<li><a class="dropdown-item" href="#" onclick="viewCommonModal('interfaceIssues')">Interface Issues</a></li>
+					</ul>
+				</li>
+
 <!--
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Organisation</a>
@@ -100,11 +102,13 @@
 					</ul>
 				</li>				
 			-->
+
+
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">View</a>
 					<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 						<li><a class="dropdown-item" href="#" onclick="pageSwitch('standard')">System Graph</a></li>
-						<li><a class="dropdown-item" href="#" onclick="pageSwitch('standardOrganisation')">System Graph (Incl Organisation)</a></li>
+						<!--<li><a class="dropdown-item" href="#" onclick="pageSwitch('standardOrganisation')">System Graph (Incl Organisation)</a></li>-->
 						<li><a class="dropdown-item" href="#" onclick="pageSwitch('subsystems')">Subsystem Graph</a></li>
 						<li><a class="dropdown-item" href="#" onclick="view_summary()">System Summary</a></li>
 						<li><a class="dropdown-item" href="#" onclick="view_issues()">Issue Summary</a></li>

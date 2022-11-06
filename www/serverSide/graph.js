@@ -333,13 +333,14 @@ exports.switch = (req,res) => {
 		case 'LinksForAssociatedSystems': //Draw links between systems which do not have a distributed subsystem attached
 
 		queryString += sql.format(`
-			SELECT systems_a.id_system AS source, systems_a.name, systems_b.id_system AS destination, systems_b.name, links.id_link, links.name, technologies.category AS technologyCategory, SystemInterfaceToLinkMap_a.category AS linkCategory
+			SELECT systems_a.id_system AS source, systems_a.name, systems_b.id_system AS destination, systems_b.name, links.id_link, links.name, technologyCategories.name AS technologyCategory, links.category AS linkCategory
 			FROM systems AS systems_a
 			LEFT JOIN InterfaceToSystemMap AS InterfaceToSystemMap_a ON systems_a.id_system = InterfaceToSystemMap_a.id_system
 			LEFT JOIN SystemInterfaceToLinkMap AS SystemInterfaceToLinkMap_a ON SystemInterfaceToLinkMap_a.id_ISMap = InterfaceToSystemMap_a.id_ISMap
 			LEFT JOIN SystemInterfaceToLinkMap AS SystemInterfaceToLinkMap_b ON SystemInterfaceToLinkMap_b.id_link = SystemInterfaceToLinkMap_a.id_link
 			LEFT JOIN links ON SystemInterfaceToLinkMap_a.id_link = links.id_link
 			LEFT JOIN technologies ON links.id_technology = technologies.id_technology
+			LEFT JOIN technologyCategories ON technologies.id_techCategory = technologyCategories.id_techCategory
 			LEFT JOIN InterfaceToSystemMap AS InterfaceToSystemMap_b ON SystemInterfaceToLinkMap_b.id_ISMap = InterfaceToSystemMap_b.id_ISMap
 			LEFT JOIN systems AS systems_b ON systems_b.id_system = InterfaceToSystemMap_b.id_system
 			WHERE systems_a.id_system IN (?) AND systems_a.id_system != systems_b.id_system;`,[req.body['id_system_arr!']])

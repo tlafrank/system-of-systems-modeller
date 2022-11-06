@@ -269,9 +269,12 @@ function getFormElement($selector, properties){
 			var droppableElements = document.querySelectorAll($selector + ' span');
 			var data = []
 
-			droppableElements.forEach((element) => {
-				data.push($(element).data(properties.dataAttr));
-			})
+			if (droppableElements.length > 0){
+				droppableElements.forEach((element) => {
+					data.push($(element).data(properties.dataAttr));
+				})				
+			}
+
 			return data;
 			break;
 		case 'select':
@@ -352,6 +355,11 @@ function setFormElement($selector, properties, value){
 
 			$($selector).append('<form>')
 
+			if (value.length == 0) {
+				debug(5,properties)
+				$(`${$selector} form`).append(`<p>No parameters have been assigned to this type. Try defining parameters first.</p>`)
+			}
+
 			for(var i = 0; i < value.length; i++){
 
 				//Check if this row indicates a new parameter group
@@ -379,10 +387,7 @@ function setFormElement($selector, properties, value){
 						
 						//Set the controls
 						if (value[i].value !== null){
-							//Set the control
-							if (value[i].value === "true"){
-								$(`#boolean_${value[i].id_paramDefinition}`).prop('checked', 'true')
-							}
+							if (value[i].value === "true"){$(`#boolean_${value[i].id_paramDefinition}`).prop('checked', 'true')}
 						}
 
 						break;
@@ -397,10 +402,7 @@ function setFormElement($selector, properties, value){
 						</div>`)
 
 						//Set the control
-						if (value[i].value !== null){
-							//Set the control
-							$(`#freeText_${value[i].id_paramDefinition}`).val(value[i].value)
-						}
+						if (value[i].value !== null){ $(`#freeText_${value[i].id_paramDefinition}`).val(value[i].value)}
 						break;
 					
 					case 'singleOption':
@@ -455,7 +457,6 @@ function setFormElement($selector, properties, value){
 							controlValues.forEach((controlValue) => {
 								debug(5, 'trying to select ' + controlValue)
 								$(`#multiOption_${value[i].id_paramDefinition} option[value='${controlValue}']`).prop('selected', true)
-								//$("#strings option[value='" + e + "']").prop("selected", true);
 							})							
 						}
 
@@ -743,8 +744,11 @@ function addFormElement($selector, properties){
 		case 'buttons':
 			formElement += `<div class="row justify-content-left">`;
 			properties.buttons.forEach((element) => {
-
-				formElement += `<div class="col-6 my-2"><button id="${element.id}" class="btn btn-info btn-block">${element.label}</button></div>`
+				if (element.initialState == 'lock'){
+					formElement += `<div class="col-6 my-2"><button id="${element.id}" class="btn btn-info btn-block" disabled>${element.label}</button></div>`
+				} else {
+					formElement += `<div class="col-6 my-2"><button id="${element.id}" class="btn btn-info btn-block">${element.label}</button></div>`
+				}
 			})
 			formElement += `</div>`;
 			break;		
@@ -941,6 +945,9 @@ function addFormElement($selector, properties){
 
 	//Insert the element into the DOM
 	$($selector).append(formElement);
+
+	//Determine if the form should be locked
+	if (properties.initialState == 'lock'){ $('#' + properties.id).prop('disabled', true) }
 }
 
 

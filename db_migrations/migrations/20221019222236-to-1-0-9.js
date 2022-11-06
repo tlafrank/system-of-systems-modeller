@@ -40,72 +40,77 @@ exports.up = function (db, callback) {
 			});
 			cb(null);
 		},
-		db.renameTable.bind(db, "SINMap", "SystemInterfaceToLinkMap"),
-		db.renameColumn.bind(db, "SystemInterfaceToLinkMap", "id_SINMap", "id_SILMap"),
+	  	db.renameTable.bind(db, "SINMap", "SystemInterfaceToLinkMap"),
 
+
+		db.runSql.bind(db, "ALTER TABLE SystemInterfaceToLinkMap RENAME COLUMN id_SINMap TO id_SILMap;"),
+		//db.renameColumn does not preserve auto increment!?
+
+		db.renameColumn.bind(db, "SystemInterfaceToLinkMap", "id_SIMap", "id_ISMap"),
+	  
 		db.renameTable.bind(db, "SIMap", "InterfaceToSystemMap"),
 		db.runSql.bind(db,
 			"ALTER TABLE InterfaceToSystemMap RENAME COLUMN id_SIMap to id_ISMap"
 		),
-
+  
 		db.createTable.bind(db, "technologyCategories",
 			{
-				id_techCategory: {
-					type: "int",
-					autoIncrement: true,
-					primaryKey: true,
-					notNull: true
-				},
-				name: { type: "varchar", length: 45, notNull: true },
-				color: { type: "varchar", length: 45, notNull: true }
+			id_techCategory: {
+				type: "int",
+				autoIncrement: true,
+				primaryKey: true,
+				notNull: true
+			},
+			name: { type: "varchar", length: 45, notNull: true },
+			color: { type: "varchar", length: 45, notNull: true }
 			}
 		),
 		db.addColumn.bind(db, "technologies", "id_techCategory",
 			{
-				type: "int",
-				notNull: true, foreignKey: {
-					name: 'fk_technologies_techCategory_idx',
-					table: 'technologyCategories',
-					mapping: 'id_techCategory', rules: {
-						onDelete: 'No Action', onUpdate: 'No Action'
-					}
+			type: "int",
+			notNull: true, foreignKey: {
+				name: 'fk_technologies_techCategory_idx',
+				table: 'technologyCategories',
+				mapping: 'id_techCategory', rules: {
+				onDelete: 'No Action', onUpdate: 'No Action'
 				}
+			}
 			}
 		),
 		async () => {
 			var cb = arguments[arguments.len - 1];
-			mc.log("Calling foreach", mc.DEBUG);
+	//      mc.log("Calling foreach");
 			var fall = [];
 			["Red",
-				"Green",
-				"Blue"
+			"Green",
+			"Blue"
 			].forEach((val) => {
-				mc.log("Calling insert for " + val, mc.INFO);
-				db.insert(
-					"technologyCategories", ["name", "color"],
-					[val, val.toLowerCase()]
+			//log("Calling insert for " + val);
+			db.insert(
+				"technologyCategories", ["name", "color"],
+				[val, val.toLowerCase()]
+			);
+	//        log("Selecting for " + val);
+			function update_table(err, results) {
+				if (err) {
+				log("Error in select id tech category " + err);
+				return;
+				}
+	//          log(`select for ${val} got ${results[0]["id"]} updating`);
+				var p = db.runSql("UPDATE technologies SET id_techCategory = ? " +
+				" WHERE category = ?", [results[0]["id"], val.toLowerCase()]
 				);
-				mc.log("Selecting for " + val, mc.INFO);
-				function update_table(err, results) {
-					if (err) {
-						mc.log("Error in select id tech category " + err, mc.ERROR);
-						return;
-					}
-					mc.log(`select for ${val} got ${results[0]["id"]} updating`, mc.INFO);
-					var p = db.runSql("UPDATE technologies SET id_techCategory = ? " +
-						" WHERE category = ?", [results[0]["id"], val.toLowerCase()]
-					);
-					fall.push(p);
-				};
-				var p = db.runSql("SELECT id_techCategory as id FROM technologyCategories WHERE name = ?", val, update_table);
 				fall.push(p);
+			};
+			var p = db.runSql("SELECT id_techCategory as id FROM technologyCategories WHERE name = ?", val, update_table);
+			fall.push(p);
 			});
-			mc.log("For each call completed, removing column after wait", mc.DEBUG);
+	//      log("For each call completed, removing column after wait");
 			await Promise.all(fall);
 			db.removeColumn("technologies", "category");
-			mc.log("Column remove done", mc.INFO);
+	//      log("Column remove done");
 			if (typeof cb == "function") {
-				cb(null);
+			cb(null);
 			}
 		},
 		db.createTable.bind(db, 'paramGroups', {
@@ -116,12 +121,12 @@ exports.up = function (db, callback) {
 		db.createTable.bind(db, 'paramDefinitions', {
 			id_paramDefinition: { type: 'int', autoIncrement: true, primaryKey: true, notNull: true },
 			id_paramGroup: {
-				type: 'int', notNull: true, foreignKey: {
+				type: 'int', notNull: true, 
+				foreignKey: {
 					name: 'fk_paramDefinitions_paramGroup_idx',
 					table: 'paramGroups',
-					mapping: 'id_paramGroup', rules: {
-						onDelete: 'No Action', onUpdate: 'No Action'
-					}
+					mapping: 'id_paramGroup', 
+					rules: {onDelete: 'No Action', onUpdate: 'No Action'}
 				}
 			},
 			name: { type: 'varchar', length: 45 },
