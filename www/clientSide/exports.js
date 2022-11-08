@@ -71,28 +71,32 @@ async function prepareServerApproach(outputArr, instruction, supportingData){
 		//debug(5, 'there is a query for this instruction')
 		var postData = {type: instruction.type}
 
-		instruction.postData.forEach((element) => {
-			//debug(5, element)
-			switch (element.source){
-				case 'constant':
-					//debug(5, 'element.value is', element.value)
-					postData[element.name] = element.value
-					break;
-				case 'definition':
-					postData[element.name] = 10
-					break;
-				case 'selectedNode':
-				case 'currentFocus': //Gets the required value from the node which has focus
-					postData[element.name] = selectedNode[element.selectedNodeName]
-					break;
-				case 'sosmObject':
-					postData[element.name] = sosm[element.sosmObjectName]
-					break;
-				case 'previousResult':
-					postData[element.name] = supportingData[element.columnName]
-					break;
-			}
-		})
+		if(instruction.postData){
+			instruction.postData.forEach((element) => {
+				//debug(5, element)
+				switch (element.source){
+					case 'constant':
+						//debug(5, 'element.value is', element.value)
+						postData[element.name] = element.value
+						break;
+					case 'definition':
+						postData[element.name] = 10
+						break;
+					case 'selectedNode':
+					case 'currentFocus': //Gets the required value from the node which has focus
+						postData[element.name] = selectedNode[element.selectedNodeName]
+						break;
+					case 'sosmObject':
+						postData[element.name] = sosm[element.sosmObjectName]
+						break;
+					case 'previousResult':
+						postData[element.name] = supportingData[element.columnName]
+						break;
+				}
+			})
+		}
+
+
 
 		if (instruction.wrapResultInArray){
 			queryResult = [await executeQuery(postData)]
@@ -215,7 +219,10 @@ async function processRow(outputArr, queryResult, instruction, supportingData){
 					break;
 				case 'paramResult':
 					outputArr[outputArr.length - 1][instruction.row[j].index] = queryResult[i].paramsArr[instruction.row[j].paramIndex]
-					
+					break;
+				case 'columnResult':
+					//Working here
+					outputArr[outputArr.length - 1][instruction.row[j].index] = queryResult[i][instruction.row[j].columnName]
 					break;
 				case 'time':
 					var date

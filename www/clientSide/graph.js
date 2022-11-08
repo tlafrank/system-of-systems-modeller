@@ -142,8 +142,20 @@ async function commonGraph(definition){
 											catch(err){
 												debug(2,'There was a recoverable error in graph.js due to a result not matching an expected constant value')
 											}
-											
 										}	
+										break;
+									case 'addClassIfColumnIsTrue':
+										if (row[field.columnName] == 1){ tempElement.classes += field.classList + ' ' }
+										break;
+									case 'addClassIfColumnIsFalse':
+										if (row[field.columnName] == 0){ tempElement.classes += field.classList + ' ' }
+										break;
+									case 'booleanToString':
+										if(row[field.columnName] == 1){
+											str = field.ifTrue
+										} else {
+											str = field.ifFalse
+										}
 										break;
 									case 'fromDefault':
 										str = field.default
@@ -158,6 +170,7 @@ async function commonGraph(definition){
 									tempElement.classes += className + ' ';
 								})
 							}
+							debug(5, 'classes are ' + tempElement.classes)
 
 							//Handle existing position
 							if (element.position && sosm.positions){
@@ -269,24 +282,23 @@ async function commonGraph(definition){
 
 
 				case 'buildGraphObject_links':
+					debug(5, 'In buildGraphObject_links')
 
-//Handle link category
-if (element2.isPrimary){
-	//Link is a primary
+					//Handle link category
+					if (element2.isPrimary){
+						//Link is a primary
+					} else {
+						//Link is an alternate, should be dashed
+						tempNode.classes += ' dashed';	
+					}
 
-} else {
-	//Link is an alternate, should be dashed
-	tempNode.classes += ' dashed';	
-}
-
-//Handle classes
-if(element.designation){
-	tempNode.data.name = element.designation
-	if(element.designation.substring(1,2) == 'J'){
-		tempNode.classes += ' class3';
-	}
-}
-										
+					//Handle classes
+					if(element.designation){
+						tempNode.data.name = element.designation
+						if(element.designation.substring(1,2) == 'J'){
+							tempNode.classes += ' class3';
+						}
+					}
 					
 					break;
 				case 'buildGraphObject_parents':
@@ -303,8 +315,15 @@ if(element.designation){
 							id_SMap: element2.id_SMap,
 							nodeType: 'System',
 							name: element2.name,
-							filename: './images/' + element2.image,
 						}
+
+						if (element2.image != null){
+							tempNode.data.filename = imagePath + element2.image
+						} else {
+							debug(2, 'An unexpected null entry for image filename was found for object:', element2)
+						}
+
+
 						sosm.nodes.interfaces.push(tempNode)
 
 						//Edges

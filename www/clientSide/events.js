@@ -364,7 +364,7 @@ function hideNode(id, idNo, type){
 }
 
 function edgeSelected(eventTarget){
-	debug(5,'Edge clicked');
+	debug(5,'Edge clicked with ID: ' + eventTarget.data('id'));
 }
 
 

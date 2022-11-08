@@ -170,7 +170,9 @@ const graph = {
 							{action: 'fromResult', nodeName: 'idNo', format: '<0>', columnNames: ['id_link']},
 							{action: 'fromResult', nodeName: 'id_link', format: '<0>', columnNames: ['id_link']},
 							{action: 'fromResult', nodeName: 'lineColor', format: '<0>', columnNames: ['technologyCategoryColor']},
-							{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
+							//{action: 'fromResult', nodeName: 'linkCategory', format: '<0>', columnNames: ['linkCategory']},
+							//{action: 'addClassIfColumnIsFalse', columnName: 'isPrimary', classList: 'dashed'}
+							{action: 'booleanToString', nodeName: 'linkPriority', columnName: 'isPrimary', ifTrue: 'primary', ifFalse: 'alternate'}
 						],
 						classes: []
 					},
@@ -741,7 +743,7 @@ const cyStyle = [ // the stylesheet for the graph
 		}
 	},
 	{
-		selector: 'edge[linkCategory = "alternate"]',
+		selector: 'edge[linkPriority = "alternate"]',
 		style: {
 			'line-style': 'dashed',
 			'line-opacity': 0.7,

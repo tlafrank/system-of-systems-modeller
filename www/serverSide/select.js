@@ -13,6 +13,18 @@ function debug(level, msg){
 	}
 }
 
+//For queryStrings which are used in multile places
+const queryStrings = {
+	allInterfaces: `SELECT * FROM interfaces ORDER BY name;`,
+	technologiesAssignedToInterface: `
+		SELECT * 
+		FROM technologies
+		LEFT JOIN TIMap
+		ON TIMap.id_technology = technologies.id_technology
+		WHERE TIMap.id_interface = ?
+		ORDER BY name;`,
+}
+
 exports.switch = async (req,res) => {
 	debug(1, `select.js debug level: ${debugLevel} req.body.type: ${req.body.type}`);
 	debug(5, req.body)
@@ -33,6 +45,47 @@ exports.switch = async (req,res) => {
 
 
 	switch (req.body.type){
+		case 'SmartInterfacesInclTechnologiesQuery':
+			executeQueryAtEnd = false
+			var resultArr = []
+
+			//Get the interfaces for this result
+			queryString = sql.format(queryStrings.allInterfaces)
+
+			sql.execute(queryString).then(async (result) => {
+				//Iterate through each interface, get technologies implemented
+
+				var primaryInterfaceIndex = 0
+
+				for (var i = 0; i < result.length; i++){
+					//Process each interface row
+					result[i].type = 'interface'
+					resultArr.push(result[i])
+					primaryInterfaceIndex = resultArr.length - 1
+
+					//Get technologies assigned to the last system
+					await sql.execute(sql.format(queryStrings.technologiesAssignedToInterface, [resultArr[primaryInterfaceIndex].id_interface])).then(async (result2) => {
+						//debug(5,'Commencing technologies for loop for system ' + resultArr[primaryInterfaceIndex].name)
+
+						for (var j=0; j< result2.length; j++){
+							result2[j].type = 'technology'
+							resultArr.push(result2[j])
+						}
+					})
+				}
+				}).then(async (result) => {
+				//prepare the next query to get all the system interfaces assigned to the system
+					debug(1, 'returning result')
+					res.json(resultArr)
+				}).catch((err) => {
+					debug(3,err);
+					if (debugLevel == 7){
+						res.json({msg: 'There was an error executing the query (select.json)', err: err})
+					} else {
+						res.json({msg: 'There was an error executing the query (select.json)'})
+					}
+				});
+			break;
 		case 'paramsSortedForSystems':
 			stripArr = false
 			queryString += sql.format(`
@@ -51,16 +104,13 @@ exports.switch = async (req,res) => {
 			executeQueryAtEnd = false
 
 			//const paramNameArr = req.body.paramArr
-			var paramNameArr = ['CoDE ID']
+			var paramNameArr = []
 			if (req.body.paramNameArr){ paramNameArr = req.body.paramNameArr }
 
 			var defaultValue = 'TBC'
 			if (req.body.defaultValue){ defaultValue = req.body.defaultValue }
 
-			if (!req.body.id_system_arr){ req.body.id_system_arr = [18,19,20,21] }
-
 			var resultArr = []
-			var paramResultArr = []
 			var primaryInterfaceIndex = 0
 
 			//Define the various queryStrings required
@@ -391,7 +441,7 @@ exports.switch = async (req,res) => {
 
 			break;
 		case 'AllInterfaces': //Get all interfaces
-			queryString += sql.format(`SELECT * FROM interfaces ORDER BY name;`);
+			queryString += sql.format(queryStrings.allInterfaces);
 			stripArr = false
 			break;
 		case 'SingleInterface': //Get the details of a specific interface
@@ -413,7 +463,12 @@ exports.switch = async (req,res) => {
 			queryString += sql.format(`SELECT * FROM InterfaceToSystemMap WHERE InterfaceToSystemMap.id_ISMap = ?;`,[req.body.id_ISMap])
 			break;
 		case 'AllTechnologies': //Get all technologies in alphabertical order
-			queryString += sql.format(`SELECT * FROM technologies ORDER BY name;`)
+			queryString += sql.format(`
+				SELECT technologies.*, technologyCategories.name AS techCategoryName 
+				FROM technologies
+				LEFT JOIN technologyCategories
+				ON technologies.id_techCategory = technologyCategories.id_techCategory
+				ORDER BY name;`)
 			stripArr = false
 			break;
 		case 'SingleTechnology': //Get all record details for a given technology
@@ -421,12 +476,7 @@ exports.switch = async (req,res) => {
 			stripArr = true
 			break;
 		case 'AssignedTechnologies'://Get all technologies implemented by a given interface
-			queryString += sql.format(`SELECT * 
-				FROM technologies
-				LEFT JOIN TIMap
-				ON TIMap.id_technology = technologies.id_technology
-				WHERE TIMap.id_interface = ?
-				ORDER BY name;`, req.body.id_interface)
+			queryString += sql.format(queryStrings.technologiesAssignedToInterface, req.body.id_interface)
 			stripArr = false
 			break;
 		case 'QtyYears': //Return all qty per year mappings for a given system
