@@ -3,11 +3,12 @@ const mysql = require('mysql2');
 
 //Database connection details
 
-var connection = mysql.createConnection({
-	host: 'localhost',
-	user: 'sosmUser',
-	password: 'dnRk384!djrLdo}836w:',
-	database: 'db_sosm',
+const connection = mysql.createConnection({
+	host: process.env.DB_HOST || 'localhost',
+	port: Number(process.env.DB_PORT || 3306),
+	user: process.env.DB_USER || 'sosmUser',
+	password: process.env.DB_PASS || 'dnRk384!djrLdo}836w:',
+	database: process.env.DB_NAME || 'db_sosm',
 	multipleStatements: true
 })
 
