@@ -20,3 +20,6 @@ if [[ $continue =~ [yY] ]]; then
         echo "Creating mysql users may have failed. Check above."
     fi
 fi
+
+
+#Need to fix the inability to create a user as "mysql < ../sql/users.sql" fails as it is unable to drop a non-existent user.
