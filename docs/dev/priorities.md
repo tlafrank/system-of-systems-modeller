@@ -8,65 +8,65 @@ Work is ordered from **foundations** (must-haves) → **core features** (to enab
 ## 1. Foundations (Deployment & Stability)
 
 - [ ] **Containerisation**
-    [ ] Add Dockerfile for the app (`www/`).
-    [ ] Add `docker-compose.yml` with services: `app`, `db`, (optional) `adminer`.
-    [ ] Use `.env` for DB + app config (no hardcoded credentials).
-    [ ] Ensure MySQL persistence with named volume (`dbdata`).
-    [ ] Modify `helpers/db.js` to read from env vars.
+  - [ ] Add Dockerfile for the app (`www/`).
+  - [ ] Add `docker-compose.yml` with services: `app`, `db`, (optional) `adminer`.
+  - [ ] Use `.env` for DB + app config (no hardcoded credentials).
+  - [ ] Ensure MySQL persistence with named volume (`dbdata`).
+  - [ ] Modify `helpers/db.js` to read from env vars.
 
 - [x] **Dependencies & fixes**
-    [x] Add missing `body-parser` to `package.json`.
-    [x] Confirm all dependencies install cleanly with `npm ci`.
+  - [x] Add missing `body-parser` to `package.json`.
+  - [x] Confirm all dependencies install cleanly with `npm ci`.
 
 - [ ] **Single-command deploy**
-    [ ] `docker compose up -d` runs app + DB, seeds schema on first boot.
-    [ ] Makefile shortcuts: `make up`, `make down`, `make logs`, `make reset`.
+  - [ ] `docker compose up -d` runs app + DB, seeds schema on first boot.
+  - [ ] Makefile shortcuts: `make up`, `make down`, `make logs`, `make reset`.
 
 - [ ] **Development workflow**
-    [ ] Decide on preferred dev mode (hybrid vs containerised).
-    [ ] Add `docker-compose.override.yml` for dev (bind-mount + nodemon).
-    [ ] Document workflows in `/docs/user/workflows.md`.
+  - [ ] Decide on preferred dev mode (hybrid vs containerised).
+  - [ ] Add `docker-compose.override.yml` for dev (bind-mount + nodemon).
+  - [ ] Document workflows in `/docs/user/workflows.md`.
 
 ---
 
 ## 2. Core Features (Architecture Definition)
 
 - [ ] **Two-layer IERs**
-  -  [ ] High-level IER description (decision-maker view).
-  -  [ ] Realizations layer (protocols/messages/voice formats).
-  -  [ ] Table + UI for mapping IERs → realizations → edges.
+  - [ ] High-level IER description (decision-maker view).
+  - [ ] Realizations layer (protocols/messages/voice formats).
+  - [ ] Table + UI for mapping IERs → realizations → edges.
 
 - [ ] **Edge assignments**
-  -  [ ] Allow attaching IERs (or realizations) directly to edges.
+  - [ ] Allow attaching IERs (or realizations) directly to edges.
 
 - [ ] **Organisation view**
-  -  [ ] Nodes collapsible/expandable by org unit.
-  -  [ ] Views toggle between node-centric and org-centric.
+  - [ ] Nodes collapsible/expandable by org unit.
+  - [ ] Views toggle between node-centric and org-centric.
 
 - [ ] **Sandpits / Branching**
-  -  [ ] Per-user “sandbox views” of a model.
-  -  [ ] Merge/diff workflow to bring sandbox changes into main model.
+  - [ ] Per-user “sandbox views” of a model.
+  - [ ] Merge/diff workflow to bring sandbox changes into main model.
 
 - [ ] **Comms message versioning**
-  -  [ ] Table for `message_profile` + `message_profile_version`.
-  -  [ ] UI to link realizations to message profiles.
+  - [ ] Table for `message_profile` + `message_profile_version`.
+  - [ ] UI to link realizations to message profiles.
 
 - [ ] **RFI / Threads**
-  -  [ ] Add discussion threads scoped to node/edge/IER.
-  -  [ ] Support open/closed status.
+  - [ ] Add discussion threads scoped to node/edge/IER.
+  - [ ] Support open/closed status.
 
 - [ ] **Docs per node/system**
-  -  [ ] Attach links, PDFs, or references to nodes/edges/IERs.
-  -  [ ] Store in `docrefs` table.
+  - [ ] Attach links, PDFs, or references to nodes/edges/IERs.
+  - [ ] Store in `docrefs` table.
 
 - [ ] **Exports**
-  -  [ ] SVG/PNG/PDF for graphs (with large-graph support).
-  -  [ ] CSV/XLSX export for nodes/edges/IERs.
-  -  [ ] “Generate pack” option to export a bundle.
+  - [ ] SVG/PNG/PDF for graphs (with large-graph support).
+  - [ ] CSV/XLSX export for nodes/edges/IERs.
+  - [ ] “Generate pack” option to export a bundle.
 
 - [ ] **Graph persistence**
-   - [ ] Autosave graph layouts + filters (`views` table).
-   - [ ] Named Views for focus subsets, org view, overlays.
+  - [ ] Autosave graph layouts + filters (`views` table).
+  - [ ] Named Views for focus subsets, org view, overlays.
 
 - [ ] **Switch DB to PostgreSQL**
 ---
