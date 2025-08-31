@@ -4,7 +4,7 @@ This guide explains how to prepare a **development environment** for SOSM in two
 - **Hybrid** (recommended): Node.js runs on your host; MySQL runs in Docker. Best for easy resets and future PostgreSQL migration.
 - **Native**: Node.js **and** MySQL run on your host machine directly.
 
-Once complete, deploy the app following **`docs/dev/deploySOSM.md`** (or your `deployTestData.sh` helper scripts).
+Once complete, deploy the app following [**`docs/dev/deploySOSM.md`**](./deploySOSM.md) (or your `deployTestData.sh` helper scripts).
 
 ---
 
