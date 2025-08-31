@@ -2,8 +2,9 @@
 
 1. [Setup Environment](./dev/setupEnvironment.md)
 2. [Deploy SOSM](./dev/deploySOSM.md)
-3. (Optional) [Populate SOSM with test data](./dev/deployTestData.md)
-4. (Optional) [Backup SOSM data](./dev/backupTestData.md)
+3. (Optional) [Deploy test data](./dev/deployTestData.md)
+4. [Run SOSM](./dev/runSOSM.md)
+5. (Optional) [Backup test data](./dev/backupTestData.md)
 
 
 ## [Setup environment](./dev/setupEnvironment.md)
@@ -12,17 +13,11 @@ This workflow describes the activities and prerequisites necessary to setup the 
 ## [Deploy SOSM](./dev/deploySOSM.md)
 This workflow describes the steps necessary to deploy SOSM from github to the target environment.
 
-
-## [Populate SOSM with test data](./dev/deployTestData.md)
+## [Deploy test data (Optional)](./dev/deployTestData.md)
 This workflow describes the steps required to populate the deployed SOSM instance with the test data residing in /testData/. Workflow is captured in the script /scripts/deployTestData.md
 
-## [Running SOSM (Development)]()
-- App runs locally with `npm run dev` (nodemon).
-- DB runs via Docker: `docker compose up db`.
-- `.env.development` used; never production secrets.
-
-## [Running SOSM (Production)]()
-
+## [Run SOSM](./dev/runSOSM.md)
+This guide explains how to run SOSM.
 
 ## [Update running instance](./dev/)
 - Back up DB.
@@ -31,8 +26,10 @@ This workflow describes the steps required to populate the deployed SOSM instanc
   - `docker compose up -d`
 - Apply migrations: `docker compose exec app node tools/migrate.js` (or SQL)
 
-## [Backup SOSM data](./dev/backupTestData.md)
-This workflow describes how to 
+## [Backup test data](./dev/backupTestData.md)
+This guide explains how to backup the running config to either:
+1. /testData/
+2. Folder of the users choosing
 
 ## Database sanitisation (requirement TBC)
 - Dump prod: `mysqldump ... > prod.sql`

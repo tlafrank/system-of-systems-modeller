@@ -1,4 +1,4 @@
-##Backup Test Data
+# Backup Test Data
 /scripts/backupTestData.sh performs the following actions:
 - Checks for the presence of the grep command (required to run the script).
 - Loads the .env for the database name and credentials
