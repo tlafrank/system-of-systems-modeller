@@ -5,7 +5,7 @@ Work is ordered from **foundations** (must-haves) → **core features** (to enab
 
 ---
 
-## 1. Foundations (Deployment & Stability)
+## Foundations (Deployment & Stability)
 
 - [ ] **Containerisation**
   - [ ] Add Dockerfile for the app (`www/`).
@@ -27,9 +27,38 @@ Work is ordered from **foundations** (must-haves) → **core features** (to enab
   - [ ] Add `docker-compose.override.yml` for dev (bind-mount + nodemon).
   - [ ] Document workflows in `/docs/user/workflows.md`.
 
+## DB Portability (MySQL → PostgreSQL)
+
+- [x] **Env-driven dialect switch**
+  - Introduce `DB_DIALECT` (`mysql` | `postgres`) and read it in the DB helper.
+- [ ] **Single DB adapter**
+  - Create `www/helpers/db-adapter.js` exposing `query(sql, params)`, `tx(fn)`, `upsertUser(...)` (example), hiding driver specifics.
+- [ ] **Centralise SQL**
+  - Move raw queries out of routes into `www/repos/*` modules; only repos call the adapter.
+- [ ] **Portable SQL hygiene**
+  - Remove MySQL backticks; use `lower_snake_case` identifiers.
+  - Replace MySQL-specific types/isms (ENUM, TINYINT(1), zero-dates) with portable patterns.
+- [ ] **UPSERT abstraction**
+  - Add helper that does `ON CONFLICT` (PG) vs `ON DUPLICATE KEY UPDATE` (MySQL).
+- [ ] **UTC & timestamps**
+  - Ensure all timestamps are UTC; use `CURRENT_TIMESTAMP` defaults in DDL.
+- [ ] **Boolean handling**
+  - Store `BOOLEAN` (PG) / `TINYINT(1)` (MySQL) behind adapter mapping.
+- [ ] **Migrations scaffold**
+  - Add `sql/migrations/` and a `schema_migrations` table; add a tiny runner so files apply once.
+- [ ] **Parallel schemas**
+  - Create `sql/mysql/` and `sql/postgres/` folders; split current `deploySchema.sql` accordingly.
+- [ ] **Compose: dual DB services (dev)**
+  - Add `postgres` service (16.x) alongside `mysql`; seed each from its folder.
+- [ ] **Dialect smoke tests**
+  - Add `www/tests/db-smoke.test.js` that runs against both dialects (basic CRUD for key tables).
+- [ ] **Docs**
+  - Document how to switch dialects and run both DBs locally (`/docs/dev/database.md`).
+
+
 ---
 
-## 2. Core Features (Architecture Definition)
+## Core Features (Architecture Definition)
 
 - [ ] **Two-layer IERs**
   - [ ] High-level IER description (decision-maker view).
@@ -71,7 +100,7 @@ Work is ordered from **foundations** (must-haves) → **core features** (to enab
 - [ ] **Switch DB to PostgreSQL**
 ---
 
-## 3. Advanced Features (Analysis & Validation)
+## Advanced Features (Analysis & Validation)
 
 - [ ] **IER tracing**
   - Traverse graph for end-to-end realization paths.
@@ -102,7 +131,7 @@ Work is ordered from **foundations** (must-haves) → **core features** (to enab
 
 ---
 
-## 4. Ops & Documentation
+## Ops & Documentation
 
 - [ ] **Documentation system**
   - `/docs/` folder with Markdown: user workflows, ops runbooks, dev architecture.
@@ -138,7 +167,7 @@ Work is ordered from **foundations** (must-haves) → **core features** (to enab
 
 ---
 
-## 5. Stretch Goals (Future-proofing)
+## Stretch Goals (Future-proofing)
 
 - [ ] **Graph DB adapter** (optional if queries become too complex).
 - [ ] **Realtime CRDT collaboration** (Y.js + websocket server).

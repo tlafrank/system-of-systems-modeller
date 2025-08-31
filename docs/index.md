@@ -20,3 +20,17 @@
   - Build or load new image
   - `docker compose up -d`
 - Apply migrations: `docker compose exec app node tools/migrate.js` (or SQL)
+
+
+## [Setup environment](./dev/setupEnvironment.md)
+This workflow describes the activities and prerequisites necessary to setup the environment ready for the [deployment of SOSM.](./dev/deploySOSM.md)
+
+## [Deploy SOSM](./dev/deploySOSM.md)
+This workflow describes the steps necessary to deploy SOSM from github to the target environment.
+
+
+## [Populate SOSM with test data](./dev/deployTestData.md)
+This workflow describes the steps required to populate the deployed SOSM instance with the test data residing in /testData/. Workflow is captured in the script /scripts/deployTestData.md
+
+## [Backup SOSM data](./dev/backupTestData.md)
+This workflow describes how to 
