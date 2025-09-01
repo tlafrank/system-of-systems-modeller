@@ -21,11 +21,9 @@ const select = require('./helpers/select');
 const graph = require('./helpers/graph');
 const update = require('./helpers/update');
 const backup = require('./helpers/backup');
-
+const logger = require('./helpers/logger.js');
 const images = require('./helpers/images');
 const fs = require('fs');
-
-
 
 
 app.get('/', (req, res) => {
@@ -54,7 +52,8 @@ app.get('/backup.txt', backup.run)
 app.get('/images.json', images.getImages);
 
 app.listen(port, ()=> {
-    console.log(`Server started on port ${port}`);
+    logger.info( { port }, 'SOSM listening');
+    //console.log(`Server started on port ${port}`);
 })
 
 // configure multer storage

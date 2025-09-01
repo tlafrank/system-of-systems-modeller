@@ -10,8 +10,14 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^2.2.0",
+    "dotenv": "^17.2.1",
     "express": "^4.17.1",
+    "multer": "^2.0.2",
     "mysql2": "^3.14.3",
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.12",
+    "pino": "^9.9.0",
+    "pino-http": "^10.5.0",
+    "pino-pretty": "^13.1.1",
+    "sql-formatter": "^15.6.6"
   }
 }
