@@ -1,5 +1,5 @@
-const { format } = require('./db');
-const sql = require('./db');
+const db = require('./db-adapter');
+const { format } = db;
 
 let debugOn = false;
 debugOn = true;

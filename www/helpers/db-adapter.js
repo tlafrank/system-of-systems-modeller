@@ -72,6 +72,7 @@ if (dialect === 'postgres') {         //postgres isn't fitted with loggin yet.
       logger.debug({sql: presentSql(rendered) }, 'DB Query');
 
       const [rows] = await pool.query(sql, params);
+      logger.trace({ rows }, "SQL Response")
       return rows;
     },
     async tx(fn) {
@@ -85,6 +86,7 @@ if (dialect === 'postgres') {         //postgres isn't fitted with loggin yet.
         };
         const res = await fn(q);
         await conn.commit();
+        logger.trace({ res }, "SQL Response")
         return res;
       } catch (e) {
         try { await conn.rollback(); } catch {}
