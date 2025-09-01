@@ -127,20 +127,6 @@ docker compose exec db sh -c 'mysqldump -u${DB_USER:-sosmUser} -p${DB_PASS:-sosm
 
 ---
 
-## 4) Useful scripts in `/scripts`
-
-> Run from repo root: `bash scripts/<script>.sh`
-
-- `setupEnvironment.sh` – installs server prerequisites (Node, Docker, etc.) on a fresh dev machine.
-- `deploySOSM.sh` – prompts to install npm packages in `www/` and sets up a dev server workflow.
-- `deployTestData.sh` – loads example/test data into the database.
-- `backupTestData.sh` – backs up `/www/images` to `/testData/images` and DB to `/testData/testData.sql`.
-- `deployRawSchema.sh` – deploy schema only (no data).
-
-(See each script for prompts/assumptions; some actions are interactive.)
-
----
-
 ## 5) Images & backups via the app
 
 - `GET /backup.txt` – generates SQL insert statements to replicate current DB contents.
