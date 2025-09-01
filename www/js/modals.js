@@ -201,10 +201,8 @@
 				})
 
 				//For those features already attached, move to the correct select
-				const featuresArr  = result[0].features.split(',');
-
-				//debug('featuresArr');
-				//debug(featuresArr);
+				
+				const featuresArr = (result[0].features ?? '').split(',');
 
 				featuresArr.forEach((element) => {
 					debug(element)
@@ -214,8 +212,6 @@
 					$(`#mainModalFeaturesAttached`).append($(toMove).clone());
 					$(toMove).remove();
 				})
-
-
 			})
 		}
 	}
