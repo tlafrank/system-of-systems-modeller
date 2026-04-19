@@ -30,15 +30,6 @@ source "${COMMON_LIB}"
 
 # ---------- helpers ----------
 
-die(){ sosm_die "$*"; }
-info(){ sosm_info "$*"; }
-
-need_cmd() { sosm_need_cmd "$1"; }
-
-confirm() {
-  sosm_confirm "${YES}" "$1"
-}
-
 docker_db_running() {
   sosm_docker_service_running "${REPO_ROOT}" "${COMPOSE_FILE}" "db"
 }
@@ -86,16 +77,16 @@ choose_destination() {
   esac
 
   read -r -p "Enter the name of the folder to use inside ${base}: " folder_name
-  [[ -n "${folder_name}" ]] || die "Folder name cannot be empty."
+  [[ -n "${folder_name}" ]] || sosm_die "Folder name cannot be empty."
 
   DEST_DIR="${base}/${folder_name}"
 }
 
 ensure_destination() {
   if [[ -d "${DEST_DIR}" ]]; then
-    info "Destination '${DEST_DIR}' already exists."
-    if ! confirm "Do you want to overwrite its contents?"; then
-      die "Aborted by user."
+    sosm_info "Destination '${DEST_DIR}' already exists."
+    if ! sosm_confirm "${YES}" "Do you want to overwrite its contents?"; then
+      sosm_die "Aborted by user."
     fi
   fi
   mkdir -p "${DEST_DIR}"
@@ -103,9 +94,9 @@ ensure_destination() {
 
 sync_images() {
   local dst="${DEST_DIR}/images"
-  [[ -d "${IMG_SRC}" ]] || die "Image source not found: ${IMG_SRC}"
+  [[ -d "${IMG_SRC}" ]] || sosm_die "Image source not found: ${IMG_SRC}"
   mkdir -p "${dst}"
-  info "Syncing images: ${IMG_SRC}/ -> ${dst}/"
+  sosm_info "Syncing images: ${IMG_SRC}/ -> ${dst}/"
   if command -v rsync >/dev/null 2>&1; then
     rsync -a --delete "${IMG_SRC}/" "${dst}/"
   else
@@ -118,11 +109,11 @@ dump_db() {
   local out="${DEST_DIR}/schema.sql"
   mkdir -p "${DEST_DIR}"
   local tmp="${out}.tmp"
-  info "Dumping database '${DB_NAME}' to ${out}"
+  sosm_info "Dumping database '${DB_NAME}' to ${out}"
   if docker_db_running; then
     mysqldump_docker > "${tmp}"
   else
-    need_cmd mysqldump
+    sosm_need_cmd mysqldump
     mysqldump_host > "${tmp}"
   fi
   mv -f "${tmp}" "${out}"
@@ -159,14 +150,14 @@ parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --dest)
-        shift; [[ $# -gt 0 ]] || die "--dest requires a path"
+        shift; [[ $# -gt 0 ]] || sosm_die "--dest requires a path"
         DEST_DIR="$1"; shift;;
       --yes)
         YES=true; shift;;
       -h|--help)
         usage; exit 0;;
       *)
-        die "Unknown argument: $1 (use --help)";;
+        sosm_die "Unknown argument: $1 (use --help)";;
     esac
   done
 }
@@ -174,24 +165,22 @@ parse_args() {
 # ---------- main ----------
 
 main() {
-  need_cmd grep
+  sosm_need_cmd grep
   parse_args "$@"
   sosm_load_env "${ENV_FILE}"
   sosm_resolve_compose_file "${REPO_ROOT}"
 
-  info "Checking database connectivity…"
+  sosm_info "Checking database connectivity…"
   if docker_db_running; then
-    if ! docker info >/dev/null 2>&1; then
-      die "Docker is installed but not accessible by this user. Try running with sudo or add your user to the docker group."
-    fi
-    info "Docker DB detected (service: db)."
+    sosm_require_docker_access
+    sosm_info "Docker DB detected (service: db)."
     mysql_probe_docker
   else
-    info "Using host MySQL at ${DB_HOST}:${DB_PORT}."
-    need_cmd mysql
+    sosm_info "Using host MySQL at ${DB_HOST}:${DB_PORT}."
+    sosm_need_cmd mysql
     mysql_probe_host
   fi
-  info "Database connectivity OK."
+  sosm_info "Database connectivity OK."
 
   choose_destination
   ensure_destination

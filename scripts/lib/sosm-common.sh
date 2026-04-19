@@ -70,3 +70,10 @@ sosm_docker_service_running() {
   running="$(docker inspect -f '{{.State.Running}}' "${cid}" 2>/dev/null || echo false)"
   [[ "${running}" == "true" ]]
 }
+
+sosm_require_docker_access() {
+  docker compose version >/dev/null 2>&1 || return 1
+  if ! docker info >/dev/null 2>&1; then
+    sosm_die "Docker is installed but not accessible by this user. Try running with sudo or add your user to the docker group."
+  fi
+}

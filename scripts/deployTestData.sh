@@ -29,31 +29,17 @@ source "${COMMON_LIB}"
 
 # ---------------- helpers ----------------------
 
-die() { sosm_die "$*"; }
-info(){ sosm_info "$*"; }
-
-need_cmd() {
-  sosm_need_cmd "$1"
-}
-
-confirm() {
-  sosm_confirm "${YES}" "$1"
-}
-
 docker_db_running() {
   # Returns 0 if a Compose service named "db" is up
-  info "Running: docker compose -f ${COMPOSE_FILE} ps -q db"
+  sosm_info "Running: docker compose -f ${COMPOSE_FILE} ps -q db"
   sosm_docker_service_running "${REPO_ROOT}" "${COMPOSE_FILE}" "db"
 }
 
 ensure_docker_db() {
   command -v docker >/dev/null 2>&1 || return 1
-  docker compose version >/dev/null 2>&1 || return 1
-  if ! docker info >/dev/null 2>&1; then
-    die "Docker is installed but not accessible by this user. Try 'sudo ./scripts/deployTestData.sh' or add your user to the docker group."
-  fi
+  sosm_require_docker_access || return 1
   if docker_db_running; then return 0; fi
-  info "Docker Compose detected but 'db' is not running. Attempting to start it…"
+  sosm_info "Docker Compose detected but 'db' is not running. Attempting to start it…"
   (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" up -d db)
   docker_db_running
 }
@@ -75,21 +61,21 @@ mysql_exec_docker() {
 }
 
 check_connectivity() {
-  info "Checking DB connectivity as ${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+  sosm_info "Checking DB connectivity as ${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
   local probe="SELECT 1 as ok;"
   if docker_db_running; then
     echo "${probe}" | mysql_exec_docker "-"
   else
-    need_cmd mysql
+    sosm_need_cmd mysql
     echo "${probe}" | mysql_exec_host "-"
   fi
-  info "Database connectivity OK."
+  sosm_info "Database connectivity OK."
 }
 
 run_sql_file() {
   local file="${1}"
-  [[ -f "${file}" ]] || die "SQL file not found: ${file}"
-  info "Applying $(basename "${file}")"
+  [[ -f "${file}" ]] || sosm_die "SQL file not found: ${file}"
+  sosm_info "Applying $(basename "${file}")"
   if docker_db_running; then mysql_exec_docker "${file}"; else mysql_exec_host "${file}"; fi
 }
 
@@ -97,11 +83,11 @@ copy_images_from() {
   local src_images="${1}/images"
   local dest_images="${WWW_DIR}/images"
   if [[ -d "${src_images}" ]]; then
-    info "Copying images from ${src_images} -> ${dest_images}"
+    sosm_info "Copying images from ${src_images} -> ${dest_images}"
     mkdir -p "${dest_images}"
     cp -R "${src_images}/." "${dest_images}/"
   else
-    info "No images folder in ${1}; skipping image copy."
+    sosm_info "No images folder in ${1}; skipping image copy."
   fi
 }
 
@@ -163,26 +149,26 @@ run_all_sql_in_folder() {
   local case_dir="${1}"
   mapfile -t files < <(find "${case_dir}" -maxdepth 1 -type f -name "*.sql" | sort)
   if [[ ${#files[@]} -eq 0 ]]; then
-    info "No .sql files found in ${case_dir}"
+    sosm_info "No .sql files found in ${case_dir}"
     return 0
   fi
-  info "Executing ${#files[@]} SQL file(s) from $(basename "${case_dir}")"
+  sosm_info "Executing ${#files[@]} SQL file(s) from $(basename "${case_dir}")"
   for f in "${files[@]}"; do run_sql_file "${f}"; done
 }
 
 # ---------------- main -------------------------
 
 main() {
-  need_cmd grep
+  sosm_need_cmd grep
   sosm_load_env "${ENV_FILE}"
   sosm_resolve_compose_file "${REPO_ROOT}"
 
-  info "Hybrid check: detecting Docker 'db' service…"
+  sosm_info "Hybrid check: detecting Docker 'db' service…"
   if ensure_docker_db; then
-    info "MySQL is running in Docker (service: db)."
+    sosm_info "MySQL is running in Docker (service: db)."
   else
-    info "Docker DB not detected. Will use host MySQL at ${DB_HOST}:${DB_PORT}."
-    need_cmd mysql
+    sosm_info "Docker DB not detected. Will use host MySQL at ${DB_HOST}:${DB_PORT}."
+    sosm_need_cmd mysql
   fi
 
   check_connectivity
@@ -199,15 +185,15 @@ main() {
   echo "Target  : DB=${DB_NAME}  public/images/"
   echo "----------------------------------------"
 
-  if ! confirm "Proceed with loading '${case_name}' into '${DB_NAME}'?"; then
-    info "Aborted."
+  if ! sosm_confirm "${YES}" "Proceed with loading '${case_name}' into '${DB_NAME}'?"; then
+    sosm_info "Aborted."
     exit 0
   fi
 
   run_all_sql_in_folder "${case_dir}"
   copy_images_from "${case_dir}"
 
-  info "Done."
+  sosm_info "Done."
 }
 
 main "$@"
