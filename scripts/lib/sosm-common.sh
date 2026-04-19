@@ -23,8 +23,23 @@ sosm_confirm() {
 sosm_load_env() {
   local env_file="${1}"
   [[ -f "${env_file}" ]] || sosm_die "Missing .env at ${env_file}"
-  # shellcheck disable=SC2046
-  export $(grep -v '^[[:space:]]*#' "${env_file}" | grep -E '^[A-Za-z0-9_]+=' | xargs) || true
+
+  local line key value
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    [[ "${line}" =~ ^[[:space:]]*$ ]] && continue
+    [[ "${line}" =~ ^[[:space:]]*# ]] && continue
+    [[ "${line}" == *=* ]] || continue
+
+    key="${line%%=*}"
+    value="${line#*=}"
+
+    key="${key#"${key%%[![:space:]]*}"}"
+    key="${key%"${key##*[![:space:]]}"}"
+
+    [[ "${key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    export "${key}=${value}"
+  done < "${env_file}"
+
   : "${DB_NAME:?Missing DB_NAME in .env}"
   : "${DB_USER:?Missing DB_USER in .env}"
   : "${DB_PASS:?Missing DB_PASS in .env}"
