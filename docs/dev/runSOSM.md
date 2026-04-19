@@ -62,11 +62,10 @@ docker compose logs -f
 
 # service‑specific
 docker compose logs -f db
-docker compose logs -f adminer
 docker compose logs -f server
 ```
 
-> Adminer (optional DB UI) is at **http://localhost:8080** once up. The app is exposed on **http://localhost:${APP_PORT:-3001}** (default 3001) with Compose mapping host `${APP_PORT}` to container port `3000`.
+> The app is exposed on **http://localhost:${APP_PORT:-3001}** (default 3001) with Compose mapping host `${APP_PORT}` to container port `3000`.
 
 ---
 

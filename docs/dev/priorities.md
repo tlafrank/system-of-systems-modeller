@@ -9,7 +9,7 @@ Work is ordered from **foundations** (must-haves) → **core features** (to enab
 
 - [ ] **Containerisation**
   - [ ] Add Dockerfile for the app (`www/`).
-  - [ ] Add `docker-compose.yml` with services: `app`, `db`, (optional) `adminer`.
+  - [ ] Add `docker-compose.yml` with services: `app`, `db`.
   - [ ] Use `.env` for DB + app config (no hardcoded credentials).
   - [ ] Ensure MySQL persistence with named volume (`dbdata`).
   - [ ] Modify `helpers/db.js` to read from env vars.
