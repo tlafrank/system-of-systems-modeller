@@ -12,7 +12,6 @@ set -euo pipefail
 # Paths (resolve relative to this script)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SQL_DIR="${REPO_ROOT}/server/sql"
 TEST_DIR="${REPO_ROOT}/testData"
 WWW_DIR="${REPO_ROOT}/public"
 ENV_FILE="${REPO_ROOT}/.env"

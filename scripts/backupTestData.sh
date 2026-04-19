@@ -19,7 +19,6 @@ WWW_DIR="${REPO_ROOT}/public"
 IMG_SRC="${WWW_DIR}/images"
 
 # Defaults (can be overridden)
-DEFAULT_DEST="${REPO_ROOT}/testData"
 DEST_DIR="${DEST_DIR:-}"                       # env override
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
 YES="${YES:-false}"
