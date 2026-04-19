@@ -1,20 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-### Development environment deployment
-read -n 1 -p "Do you wish to deploy a development environment (y/Y): " continue
-echo ""
-if [[ $continue =~ [yY] ]]; then
+# Deprecated compatibility wrapper.
+# Use ./scripts/dev-up.sh for Docker-based local deployment.
 
-	read -n 1 -p "Install required npm packages (y/Y): " continue
-	echo ""
-	if [[ $continue =~ [yY] ]]; then
-		#Install required packages
-		npm --prefix $PWD/../www install
-  
-  		#Nodemon install?
-	fi
-else
-	#Deploy a production server (NGINX?)
-	echo "Deploying a production server has not been considered at this stage."
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+cat <<MSG
+[DEPRECATED] scripts/deploySOSM.sh is no longer required for Docker-based setup.
+Use: ./scripts/dev-up.sh
+This wrapper will now call dev-up.sh.
+MSG
+
+"${SCRIPT_DIR}/dev-up.sh"
