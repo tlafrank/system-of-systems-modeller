@@ -47,6 +47,26 @@ load_env() {
   export DB_PORT="${DB_PORT:-3306}"
 }
 
+resolve_compose_file() {
+  if [[ -f "${REPO_ROOT}/${COMPOSE_FILE}" ]]; then
+    return
+  fi
+
+  local alt
+  if [[ "${COMPOSE_FILE}" == *.yaml ]]; then
+    alt="${COMPOSE_FILE%.yaml}.yml"
+  elif [[ "${COMPOSE_FILE}" == *.yml ]]; then
+    alt="${COMPOSE_FILE%.yml}.yaml"
+  else
+    alt=""
+  fi
+
+  if [[ -n "${alt}" && -f "${REPO_ROOT}/${alt}" ]]; then
+    info "Compose file '${COMPOSE_FILE}' not found, using '${alt}'"
+    COMPOSE_FILE="${alt}"
+  fi
+}
+
 docker_db_running() {
   if ! command -v docker >/dev/null 2>&1; then return 1; fi
   docker compose version >/dev/null 2>&1 || return 1
@@ -192,6 +212,7 @@ main() {
   need_cmd grep
   parse_args "$@"
   load_env
+  resolve_compose_file
 
   info "Checking database connectivity…"
   if docker_db_running; then

@@ -19,7 +19,7 @@ ENV_FILE="${REPO_ROOT}/.env"
 
 # Options / env overrides
 YES="${YES:-false}"                               # non-interactive confirm: YES=true
-COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yaml}" # docker compose file name
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}" # docker compose file name
 TEST_NAME="${TEST_NAME:-}"                        # choose test folder non-interactively
 
 # ---------------- helpers ----------------------
@@ -46,6 +46,26 @@ load_env() {
   : "${DB_PASS:?Missing DB_PASS in .env}"
   export DB_HOST="${DB_HOST:-127.0.0.1}"
   export DB_PORT="${DB_PORT:-3306}"
+}
+
+resolve_compose_file() {
+  if [[ -f "${REPO_ROOT}/${COMPOSE_FILE}" ]]; then
+    return
+  fi
+
+  local alt
+  if [[ "${COMPOSE_FILE}" == *.yaml ]]; then
+    alt="${COMPOSE_FILE%.yaml}.yml"
+  elif [[ "${COMPOSE_FILE}" == *.yml ]]; then
+    alt="${COMPOSE_FILE%.yml}.yaml"
+  else
+    alt=""
+  fi
+
+  if [[ -n "${alt}" && -f "${REPO_ROOT}/${alt}" ]]; then
+    info "Compose file '${COMPOSE_FILE}' not found, using '${alt}'"
+    COMPOSE_FILE="${alt}"
+  fi
 }
 
 docker_db_running() {
@@ -193,6 +213,7 @@ run_all_sql_in_folder() {
 main() {
   need_cmd grep
   load_env
+  resolve_compose_file
 
   info "Hybrid check: detecting Docker 'db' service…"
   if ensure_docker_db; then
@@ -204,9 +225,10 @@ main() {
 
   check_connectivity
 
+  local case_dir
+  case_dir="$(select_test_case)"
   local case_name
-  case_name="$(select_test_case)"
-  local case_dir="${TEST_DIR}/${case_name}"
+  case_name="$(basename "${case_dir}")"
 
   echo "----------------------------------------"
   echo "Test case: ${case_name}"
@@ -220,8 +242,8 @@ main() {
     exit 0
   fi
 
-  run_all_sql_in_folder "${case_name}"
-  copy_images_from "${case_name}"
+  run_all_sql_in_folder "${case_dir}"
+  copy_images_from "${case_dir}"
 
   info "Done."
 }
