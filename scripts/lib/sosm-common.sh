@@ -53,3 +53,20 @@ sosm_resolve_compose_file() {
     COMPOSE_FILE="${alt}"
   fi
 }
+
+sosm_docker_service_running() {
+  local repo_root="${1}"
+  local compose_file="${2}"
+  local service="${3}"
+
+  if ! command -v docker >/dev/null 2>&1; then return 1; fi
+  docker compose version >/dev/null 2>&1 || return 1
+
+  local cid
+  cid="$(cd "${repo_root}" && docker compose -f "${compose_file}" ps -q "${service}" || true)"
+  [[ -n "${cid}" ]] || return 1
+
+  local running
+  running="$(docker inspect -f '{{.State.Running}}' "${cid}" 2>/dev/null || echo false)"
+  [[ "${running}" == "true" ]]
+}

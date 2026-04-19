@@ -40,14 +40,7 @@ confirm() {
 }
 
 docker_db_running() {
-  if ! command -v docker >/dev/null 2>&1; then return 1; fi
-  docker compose version >/dev/null 2>&1 || return 1
-  local cid
-  cid="$(cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" ps -q db || true)"
-  [[ -n "${cid}" ]] || return 1
-  local st
-  st="$(docker inspect -f '{{.State.Running}}' "${cid}" 2>/dev/null || echo false)"
-  [[ "${st}" == "true" ]]
+  sosm_docker_service_running "${REPO_ROOT}" "${COMPOSE_FILE}" "db"
 }
 
 mysql_probe_host() {
