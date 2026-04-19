@@ -35,7 +35,7 @@ services:
       DB_NAME: ${DB_NAME:-sosm}
       DB_USER: ${DB_USER:-sosmuser}
       DB_PASS: ${DB_PASS:-sosmpass}
-      PORT: ${APP_PORT:-3001}
+      PORT: 3000
       NODE_ENV: development
     volumes:
       - ./:/app

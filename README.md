@@ -19,8 +19,10 @@ cp .env.example .env
 ```
 
 Optional edits in `.env`:
-- `APP_PORT` (default 3001)
+- `APP_PORT` (default 3001, host port)
 - `DB_NAME`, `DB_USER`, `DB_PASS`, `DB_ROOT_PASS`
+
+The container listens on port `3000`; Compose maps `${APP_PORT}:3000`.
 
 ### 2) Start SOSM + database
 ```bash

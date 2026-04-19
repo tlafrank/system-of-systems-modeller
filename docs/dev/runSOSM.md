@@ -63,10 +63,10 @@ docker compose logs -f
 # service‑specific
 docker compose logs -f db
 docker compose logs -f adminer
-docker compose logs -f www   # if your app service is named "www" in compose
+docker compose logs -f server
 ```
 
-> Adminer (optional DB UI) is at **http://localhost:8080** once up. The app listens on **http://localhost:${APP_PORT:-3001}** (default 3001).
+> Adminer (optional DB UI) is at **http://localhost:8080** once up. The app is exposed on **http://localhost:${APP_PORT:-3001}** (default 3001) with Compose mapping host `${APP_PORT}` to container port `3000`.
 
 ---
 
@@ -171,12 +171,12 @@ docker stats
 ### Restart a single service
 ```bash
 docker compose restart db
-docker compose restart www
+docker compose restart server
 ```
 
 ### Exec into the app container
 ```bash
-docker compose exec www sh
+docker compose exec server sh
 ps aux
 node -v
 ```
@@ -196,6 +196,10 @@ node -v
 
 - **Port already in use**
   - Change `APP_PORT` in `.env` (e.g., 3001) and re‑`up`.
+
+- **Adminer works but app does not respond**
+  - Check Compose mapping is `"${APP_PORT:-3001}:3000"` and app `PORT` inside container is `3000`.
+  - Verify with `docker compose ps` and `docker compose logs -f server`.
 
 - **Need a clean slate**
   - `docker compose down -v` to remove containers and volumes, then `docker compose up -d`.
