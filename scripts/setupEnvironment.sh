@@ -22,15 +22,7 @@ COMMON_LIB="${SCRIPT_DIR}/lib/sosm-common.sh"
 # shellcheck source=lib/sosm-common.sh
 source "${COMMON_LIB}"
 
-info(){ sosm_info "$*"; }
 warn(){ echo "!! $*" >&2; }
-die(){ sosm_die "$*"; }
-
-need_cmd() { sosm_need_cmd "$1"; }
-
-confirm() {
-  sosm_confirm "${YES}" "$1"
-}
 
 ask_mode() {
   echo "Choose environment mode:"
@@ -43,7 +35,7 @@ ask_mode() {
     2) MODE="native" ;;
     *) MODE="hybrid" ;;
   esac
-  info "Selected mode: ${MODE}"
+  sosm_info "Selected mode: ${MODE}"
 }
 
 apt_update_once=false
@@ -58,11 +50,11 @@ apt_install() {
 
 ensure_docker() {
   if command -v docker >/dev/null 2>&1 && command -v docker compose >/dev/null 2>&1; then
-    info "Docker + compose already installed."
+    sosm_info "Docker + compose already installed."
     return
   fi
-  if ! confirm "Docker is not installed. Install Docker Engine + compose plugin now?"; then
-    die "Docker is required for Hybrid mode."
+  if ! sosm_confirm "${YES}" "Docker is not installed. Install Docker Engine + compose plugin now?"; then
+    sosm_die "Docker is required for Hybrid mode."
   fi
   # Minimal Docker install for Ubuntu
   sudo apt-get remove -y docker docker-engine docker.io containerd runc || true
@@ -75,28 +67,28 @@ ensure_docker() {
   sudo apt-get update -y
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   sudo usermod -aG docker "$USER" || true
-  info "Docker installed. You may need to log out/in for group changes to apply."
+  sosm_info "Docker installed. You may need to log out/in for group changes to apply."
 }
 
 ensure_node() {
   if command -v node >/dev/null 2>&1; then
-    info "Node.js present: $(node -v)"
+    sosm_info "Node.js present: $(node -v)"
   else
-    info "Installing Node.js LTS via apt (Ubuntu)..."
+    sosm_info "Installing Node.js LTS via apt (Ubuntu)..."
     apt_install nodejs npm
   fi
   if ! command -v npx >/dev/null 2>&1; then
-    info "Installing npm (for npx)..."
+    sosm_info "Installing npm (for npx)..."
     apt_install npm
   fi
 }
 
 ensure_mysql_native() {
   if command -v mysql >/dev/null 2>&1 && command -v mysqldump >/dev/null 2>&1; then
-    info "MySQL client/server appears installed."
+    sosm_info "MySQL client/server appears installed."
   else
-    if ! confirm "Install MySQL Server locally (native mode)?"; then
-      die "MySQL Server required for native mode."
+    if ! sosm_confirm "${YES}" "Install MySQL Server locally (native mode)?"; then
+      sosm_die "MySQL Server required for native mode."
     fi
     apt_install mysql-server
   fi
@@ -105,10 +97,10 @@ ensure_mysql_native() {
 
 create_env_if_missing() {
   if [[ -f "${ENV_FILE}" ]]; then
-    info ".env exists; will reuse. ($(basename "${ENV_FILE}"))"
+    sosm_info ".env exists; will reuse. ($(basename "${ENV_FILE}"))"
     return
   fi
-  info "Creating default .env at ${ENV_FILE}"
+  sosm_info "Creating default .env at ${ENV_FILE}"
   cat > "${ENV_FILE}" <<'EOF'
 APP_PORT=3000
 DB_DIALECT=mysql
@@ -123,27 +115,27 @@ EOF
 
 docker_db_up() {
   if [[ ! -f "${REPO_ROOT}/${COMPOSE_FILE}" ]]; then
-    die "docker-compose file not found: ${REPO_ROOT}/${COMPOSE_FILE}"
+    sosm_die "docker-compose file not found: ${REPO_ROOT}/${COMPOSE_FILE}"
   fi
-  info "Starting db service via docker compose"
+  sosm_info "Starting db service via docker compose"
   (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" up -d db)
 }
 
 docker_db_probe() {
-  info "Probing DB (docker)…"
+  sosm_info "Probing DB (docker)…"
   (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" exec -T db \
     mysql -u"${DB_USER}" --password="${DB_PASS}" -e "SELECT 1" "${DB_NAME}") >/dev/null
 }
 
 native_db_prepare() {
-  info "Ensuring database and user exist (native)…"
+  sosm_info "Ensuring database and user exist (native)…"
   sudo mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
   sudo mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';"
   sudo mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%'; FLUSH PRIVILEGES;"
 }
 
 native_db_probe() {
-  info "Probing DB (native)…"
+  sosm_info "Probing DB (native)…"
   mysql --protocol=TCP -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" --password="${DB_PASS}" -e "SELECT 1" "${DB_NAME}" >/dev/null
 }
 
@@ -161,14 +153,14 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 install_node_modules() {
   if [[ ! -d "${WWW_DIR}" ]]; then
-    die "www directory not found at ${WWW_DIR}"
+    sosm_die "www directory not found at ${WWW_DIR}"
   fi
-  info "Installing Node dependencies in www/"
+  sosm_info "Installing Node dependencies in www/"
   (cd "${WWW_DIR}" && npm install && npm install --save dotenv && npx --yes nodemon -v >/dev/null 2>&1 || npm install -D nodemon)
 }
 
 main() {
-  need_cmd grep
+  sosm_need_cmd grep
   ask_mode
   create_env_if_missing
   sosm_load_env "${ENV_FILE}"
@@ -191,7 +183,7 @@ main() {
   install_node_modules
   ensure_dotenv_in_app
 
-  info "Environment setup complete."
+  sosm_info "Environment setup complete."
   echo
   echo "Next steps:"
   echo "  - Start the API:   (cd www && npx nodemon app.js)"
