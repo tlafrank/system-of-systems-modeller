@@ -16,17 +16,20 @@ ENV_FILE="${REPO_ROOT}/.env"
 WWW_DIR="${REPO_ROOT}/www"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
 YES="${YES:-false}"
+COMMON_LIB="${SCRIPT_DIR}/lib/sosm-common.sh"
 
-info(){ echo ">> $*"; }
+[[ -f "${COMMON_LIB}" ]] || { echo "ERROR: Missing shared script library: ${COMMON_LIB}" >&2; exit 1; }
+# shellcheck source=lib/sosm-common.sh
+source "${COMMON_LIB}"
+
+info(){ sosm_info "$*"; }
 warn(){ echo "!! $*" >&2; }
-die(){ echo "ERROR: $*" >&2; exit 1; }
+die(){ sosm_die "$*"; }
 
-need_cmd() { command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"; }
+need_cmd() { sosm_need_cmd "$1"; }
 
 confirm() {
-  if [[ "${YES}" == "true" ]]; then return 0; fi
-  read -r -p "$1 [y/N] " ans
-  [[ "${ans}" == "y" || "${ans}" == "Y" ]]
+  sosm_confirm "${YES}" "$1"
 }
 
 ask_mode() {
@@ -118,40 +121,10 @@ DB_ROOT_PASS=rootpass
 EOF
 }
 
-load_env() {
-  # shellcheck disable=SC2046
-  export $(grep -v '^[[:space:]]*#' "${ENV_FILE}" | grep -E '^[A-Za-z0-9_]+=' | xargs) || true
-  : "${DB_NAME:?Missing DB_NAME in .env}"
-  : "${DB_USER:?Missing DB_USER in .env}"
-  : "${DB_PASS:?Missing DB_PASS in .env}"
-  export DB_HOST="${DB_HOST:-127.0.0.1}"
-  export DB_PORT="${DB_PORT:-3306}"
-}
-
-resolve_compose_file() {
-  if [[ -f "${REPO_ROOT}/${COMPOSE_FILE}" ]]; then
-    return
-  fi
-
-  local alt
-  if [[ "${COMPOSE_FILE}" == *.yaml ]]; then
-    alt="${COMPOSE_FILE%.yaml}.yml"
-  elif [[ "${COMPOSE_FILE}" == *.yml ]]; then
-    alt="${COMPOSE_FILE%.yml}.yaml"
-  else
-    alt=""
-  fi
-
-  if [[ -n "${alt}" && -f "${REPO_ROOT}/${alt}" ]]; then
-    info "Compose file '${COMPOSE_FILE}' not found, using '${alt}'"
-    COMPOSE_FILE="${alt}"
-  fi
-}
-
 docker_db_up() {
   if [[ ! -f "${REPO_ROOT}/${COMPOSE_FILE}" ]]; then
     die "docker-compose file not found: ${REPO_ROOT}/${COMPOSE_FILE}"
-  }
+  fi
   info "Starting db service via docker compose"
   (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" up -d db)
 }
@@ -198,8 +171,8 @@ main() {
   need_cmd grep
   ask_mode
   create_env_if_missing
-  load_env
-  resolve_compose_file
+  sosm_load_env "${ENV_FILE}"
+  sosm_resolve_compose_file "${REPO_ROOT}"
   ensure_node
 
   if [[ "${MODE}" == "hybrid" ]]; then

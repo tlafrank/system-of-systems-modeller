@@ -13,6 +13,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ENV_FILE="${REPO_ROOT}/.env"
+COMMON_LIB="${SCRIPT_DIR}/lib/sosm-common.sh"
 
 WWW_DIR="${REPO_ROOT}/public"
 IMG_SRC="${WWW_DIR}/images"
@@ -23,48 +24,19 @@ DEST_DIR="${DEST_DIR:-}"                       # env override
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
 YES="${YES:-false}"
 
+[[ -f "${COMMON_LIB}" ]] || { echo "ERROR: Missing shared script library: ${COMMON_LIB}" >&2; exit 1; }
+# shellcheck source=lib/sosm-common.sh
+source "${COMMON_LIB}"
+
 # ---------- helpers ----------
 
-die(){ echo "ERROR: $*" >&2; exit 1; }
-info(){ echo ">> $*"; }
+die(){ sosm_die "$*"; }
+info(){ sosm_info "$*"; }
 
-need_cmd() { command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"; }
+need_cmd() { sosm_need_cmd "$1"; }
 
 confirm() {
-  if [[ "${YES}" == "true" ]]; then return 0; fi
-  read -r -p "$1 [y/N] " ans
-  [[ "${ans}" == "y" || "${ans}" == "Y" ]]
-}
-
-load_env() {
-  [[ -f "${ENV_FILE}" ]] || die "Missing .env at ${ENV_FILE}"
-  # shellcheck disable=SC2046
-  export $(grep -v '^[[:space:]]*#' "${ENV_FILE}" | grep -E '^[A-Za-z0-9_]+=' | xargs) || true
-  : "${DB_NAME:?Missing DB_NAME in .env}"
-  : "${DB_USER:?Missing DB_USER in .env}"
-  : "${DB_PASS:?Missing DB_PASS in .env}"
-  export DB_HOST="${DB_HOST:-127.0.0.1}"
-  export DB_PORT="${DB_PORT:-3306}"
-}
-
-resolve_compose_file() {
-  if [[ -f "${REPO_ROOT}/${COMPOSE_FILE}" ]]; then
-    return
-  fi
-
-  local alt
-  if [[ "${COMPOSE_FILE}" == *.yaml ]]; then
-    alt="${COMPOSE_FILE%.yaml}.yml"
-  elif [[ "${COMPOSE_FILE}" == *.yml ]]; then
-    alt="${COMPOSE_FILE%.yml}.yaml"
-  else
-    alt=""
-  fi
-
-  if [[ -n "${alt}" && -f "${REPO_ROOT}/${alt}" ]]; then
-    info "Compose file '${COMPOSE_FILE}' not found, using '${alt}'"
-    COMPOSE_FILE="${alt}"
-  fi
+  sosm_confirm "${YES}" "$1"
 }
 
 docker_db_running() {
@@ -211,8 +183,8 @@ parse_args() {
 main() {
   need_cmd grep
   parse_args "$@"
-  load_env
-  resolve_compose_file
+  sosm_load_env "${ENV_FILE}"
+  sosm_resolve_compose_file "${REPO_ROOT}"
 
   info "Checking database connectivity…"
   if docker_db_running; then
