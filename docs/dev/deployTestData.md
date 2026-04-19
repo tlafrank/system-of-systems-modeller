@@ -6,4 +6,4 @@
 - Identifies the environment in which the script exists (database running natively or in a container)
 - Checks database connectivity
 - Asks the user if they want to continue
-  - If yes: Rebuilds the schema, loads test data into the database and copies images from `/testData/images/` to `/www/images`
+  - If yes: Rebuilds the schema, loads test data into the database and copies images from `/testData/images/` to `/public/images`

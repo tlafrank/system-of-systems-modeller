@@ -9,7 +9,7 @@ This guide collects the **day‑to‑day commands** you’ll use to run, monitor
 
 ## 0) One‑time setup
 
-- Create your `.env` from the example (optional, the compose file has sane defaults):
+- Create your `.env` from the example (optional, the compose file has the same defaults):
   ```bash
   cp .env.example .env
   # Edit values if desired: DB_NAME, DB_USER, DB_PASS, DB_ROOT_PASS, APP_PORT

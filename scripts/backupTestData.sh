@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ENV_FILE="${REPO_ROOT}/.env"
 
-WWW_DIR="${REPO_ROOT}/www"
+WWW_DIR="${REPO_ROOT}/public"
 IMG_SRC="${WWW_DIR}/images"
 
 # Defaults (can be overridden)
@@ -72,7 +72,7 @@ mysqldump_host() {
     --protocol=TCP -h"${DB_HOST}" -P"${DB_PORT}" \
     -u"${DB_USER}" --password="${DB_PASS}" \
     --single-transaction --quick --hex-blob --routines --triggers \
-    --no-tablespaces \
+    --no-tablespaces --no-create-info\
     "${DB_NAME}"
 }
 
@@ -81,49 +81,39 @@ mysqldump_docker() {
     mysqldump \
       -u"${DB_USER}" --password="${DB_PASS}" \
       --single-transaction --quick --hex-blob --routines --triggers \
-      --no-tablespaces \
+      --no-tablespaces --no-create-info\
       "${DB_NAME}")
 }
 
 choose_destination() {
-  # If provided via flag/env, use it
   if [[ -n "${DEST_DIR}" ]]; then
     return
   fi
 
-  echo "Choose backup destination:"
-  echo "  1) Overwrite default: ${DEFAULT_DEST}"
-  echo "  2) Choose a new folder"
-  read -r -p "Enter 1 or 2 [1]: " choice
-  case "${choice:-1}" in
-    2)
-      read -r -p "Enter destination folder path: " custom
-      [[ -n "${custom}" ]] || die "Destination path cannot be empty."
-      DEST_DIR="$(python3 - <<PY
-import os,sys
-p=os.path.abspath('${custom}'.strip())
-print(p)
-PY
-)"
-      ;;
-    *)
-      DEST_DIR="${DEFAULT_DEST}"
-      ;;
+  echo "Select backup base directory:"
+  echo "  1) /private"
+  echo "  2) /testData"
+  read -r -p "Enter 1 or 2 [2]: " base_choice
+  case "${base_choice:-2}" in
+    1) base="${REPO_ROOT}/private" ;;
+    2) base="${REPO_ROOT}/testData" ;;
+    *) base="${REPO_ROOT}/testData" ;;
   esac
+
+  read -r -p "Enter the name of the folder to use inside ${base}: " folder_name
+  [[ -n "${folder_name}" ]] || die "Folder name cannot be empty."
+
+  DEST_DIR="${base}/${folder_name}"
 }
 
 ensure_destination() {
-  mkdir -p "${DEST_DIR}"
-  # If destination exists and not empty, confirm overwrite behaviour
-  local nonempty="false"
-  [[ -d "${DEST_DIR}" && -n "$(ls -A "${DEST_DIR}" 2>/dev/null || true)" ]] && nonempty="true"
-
-  if [[ "${nonempty}" == "true" ]]; then
-    info "Destination '${DEST_DIR}' already exists and contains files."
-    if ! confirm "Proceed and overwrite its contents where applicable?"; then
+  if [[ -d "${DEST_DIR}" ]]; then
+    info "Destination '${DEST_DIR}' already exists."
+    if ! confirm "Do you want to overwrite its contents?"; then
       die "Aborted by user."
     fi
   fi
+  mkdir -p "${DEST_DIR}"
 }
 
 sync_images() {
@@ -140,7 +130,7 @@ sync_images() {
 }
 
 dump_db() {
-  local out="${DEST_DIR}/testData.sql"
+  local out="${DEST_DIR}/schema.sql"
   mkdir -p "${DEST_DIR}"
   local tmp="${out}.tmp"
   info "Dumping database '${DB_NAME}' to ${out}"
@@ -156,7 +146,7 @@ dump_db() {
 print_summary() {
   echo "Backup complete."
   echo "  Images => ${DEST_DIR}/images/"
-  echo "  SQL    => ${DEST_DIR}/testData.sql"
+  echo "  SQL    => ${DEST_DIR}/schema.sql"
 }
 
 usage() {

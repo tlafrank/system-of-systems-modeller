@@ -17,7 +17,7 @@ This workflow describes the steps necessary to deploy SOSM from github to the ta
 This workflow describes the steps required to populate the deployed SOSM instance with the test data residing in /testData/. Workflow is captured in the script /scripts/deployTestData.md
 
 ## [Run SOSM](./dev/runSOSM.md)
-This guide explains how to run SOSM.
+This guide explains how to run SOSM. Includes the list of common commands.
 
 ## [Update running instance](./dev/)
 - Back up DB.
@@ -30,6 +30,15 @@ This guide explains how to run SOSM.
 This guide explains how to backup the running config to either:
 1. /testData/
 2. Folder of the users choosing
+
+
+## [Destroy Database & Container]
+To shut down the running containers and destroy the database volume, from the repo root run:
+```bash
+docker compose down
+docker volume rm system-of-systems-modeller_dbdata
+```
+Use `docker volume ls` to confirm the name of the volume to remove.
 
 ## Database sanitisation (requirement TBC)
 - Dump prod: `mysqldump ... > prod.sql`

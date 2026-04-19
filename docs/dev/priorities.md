@@ -177,6 +177,9 @@ Work is ordered from **foundations** (must-haves) → **core features** (to enab
 
 ---
 
+
+
+
 ## Notes
 - Keep features behind feature flags where possible.  
 - Every new module should be added as a small repo folder: `modules/<name>/`.  

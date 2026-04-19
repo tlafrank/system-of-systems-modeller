@@ -2,6 +2,7 @@
 services:
   db:
     image: mysql:8.0
+    container_name: sosm_db
     environment:
       MYSQL_DATABASE: ${DB_NAME:-db_sosm}
       MYSQL_USER: ${DB_USER:-sosmUser}
@@ -10,26 +11,35 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
       # Auto-init: runs .sql files once on a NEW volume (first startup)
-      - ./sql:/docker-entrypoint-initdb.d:ro
+      - ./server/sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD","mysqladmin","ping","-h","127.0.0.1","-p${DB_ROOT_PASS:-rootpass}"]
       interval: 10s
       timeout: 5s
       retries: 10
-    ports: ["3306:3306"]
+    ports:
+      - "${DB_PORT:-3306}:3306"
 
-  app:
-    build:
-      context: ./www
-      dockerfile: Dockerfile
-    env_file: .env
+  server:
+    image: node:20-alpine
+    container_name: sosm_server
+    working_dir: /app
+    env_file: ./.env
     environment:
-      # harden defaults in case .env is missing
+      # Pass DB connection to the app (fallbacks are for local dev)
+      DB_CLIENT: ${DB_CLIENT:-mysql}
       DB_HOST: db
-      DB_NAME: ${DB_NAME:-db_sosm}
-      DB_USER: ${DB_USER:-sosmUser}
-      DB_PASS: ${DB_PASS:-sosm_pass}
-      DB_PORT: ${DB_PORT:-3306}
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-sosm}
+      DB_USER: ${DB_USER:-sosmuser}
+      DB_PASS: ${DB_PASS:-sosmpass}
+      PORT: ${APP_PORT:-3000}
+      NODE_ENV: development
+    volumes:
+      - ./:/app
+      # Anonymous volume so node_modules inside container isn’t clobbered by bind mount
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev"
     depends_on:
       db:
         condition: service_healthy
@@ -38,9 +48,12 @@ services:
 
   # Optional: web DB UI at http://localhost:8080
   adminer:
-    image: adminer
-    depends_on: [db]
-    ports: ["8080:8080"]
+    image: adminer:latest
+    container_name: sosm_adminer
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
 
 volumes:
   dbdata: {}
