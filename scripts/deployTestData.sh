@@ -50,14 +50,10 @@ load_env() {
 
 docker_db_running() {
   # Returns 0 if a Compose service named "db" is up
-  if ! command -v docker >/dev/null 2>&1; then
-    return 1
-  fi
-  if ! command -v docker compose >/dev/null 2>&1; then
-    return 1
-  fi
+  if ! command -v docker >/dev/null 2>&1; then return 1; fi
+  docker compose version >/dev/null 2>&1 || return 1
   # Run from repo root so compose can see the file
-  echo "Running: docker compose -f ${COMPOSE_FILE} ps -q db"
+  info "Running: docker compose -f ${COMPOSE_FILE} ps -q db"
   (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" ps -q db) >/dev/null 2>&1 || return 1
   local cid
   cid="$(cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" ps -q db || true)"
@@ -66,6 +62,18 @@ docker_db_running() {
   local st
   st="$(docker inspect -f '{{.State.Running}}' "${cid}" 2>/dev/null || echo false)"
   [[ "${st}" == "true" ]]
+}
+
+ensure_docker_db() {
+  command -v docker >/dev/null 2>&1 || return 1
+  docker compose version >/dev/null 2>&1 || return 1
+  if ! docker info >/dev/null 2>&1; then
+    die "Docker is installed but not accessible by this user. Try 'sudo ./scripts/deployTestData.sh' or add your user to the docker group."
+  fi
+  if docker_db_running; then return 0; fi
+  info "Docker Compose detected but 'db' is not running. Attempting to start it…"
+  (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" up -d db)
+  docker_db_running
 }
 
 mysql_exec_host() {
@@ -187,8 +195,12 @@ main() {
   load_env
 
   info "Hybrid check: detecting Docker 'db' service…"
-  if docker_db_running; then info "MySQL is running in Docker (service: db)."
-  else info "Docker DB not detected. Will use host MySQL at ${DB_HOST}:${DB_PORT}."; need_cmd mysql; fi
+  if ensure_docker_db; then
+    info "MySQL is running in Docker (service: db)."
+  else
+    info "Docker DB not detected. Will use host MySQL at ${DB_HOST}:${DB_PORT}."
+    need_cmd mysql
+  fi
 
   check_connectivity
 

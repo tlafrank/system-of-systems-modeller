@@ -5,7 +5,9 @@
   "main": "server/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server/index.js"
+    "dev": "nodemon server/index.js",
+    "data:export": "bash scripts/dataPackExport.sh",
+    "data:import": "bash scripts/dataPackImport.sh"
   },
   "author": "",
   "license": "ISC",

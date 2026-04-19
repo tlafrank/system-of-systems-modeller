@@ -41,3 +41,10 @@ For ease of use, run `eval "$(ssh-agent -s)"` and `ssh-add` each time the system
 
 
 ## Annoying Problems
+
+
+## Current status (Docker workflow)
+- `dev-up.sh`: primary local start command (`docker compose up --build -d`).
+- `dev-down.sh`: primary local stop command (`docker compose down`).
+- `restart.sh`: pull + restart helper.
+- `deploySOSM.sh` (deprecated wrapper): kept for compatibility; delegates to `dev-up.sh`.

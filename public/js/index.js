@@ -244,17 +244,36 @@ async function getGraphData(cy){
 		console.log('Passed to graph.json:', postData);
 		console.log('Response:', result)
 
-		
+		let graphElements = [];
+		let stats = {};
+
+		// Legacy expected shape: [elements[], statsObj]
+		if (Array.isArray(result)) {
+			graphElements = Array.isArray(result[0]) ? result[0] : [];
+			stats = result[1] || {};
+		}
+		// Graceful handling for object responses (e.g. { data: {} } when no graph data)
+		else if (result && typeof result === 'object') {
+			if (Array.isArray(result.data)) {
+				graphElements = result.data;
+			} else if (result.data && Array.isArray(result.data.elements)) {
+				graphElements = result.data.elements;
+			} else {
+				graphElements = [];
+			}
+			stats = result.stats || {};
+		}
 
 		//Handle the stats data as well
-		sosm = result[1];
+		sosm = stats;
 
-		if (cy) { 
-			cy.add(result[0]);
+		if (cy) {
+			cy.elements().remove();
+			if (graphElements.length > 0) {
+				cy.add(graphElements);
+			}
 			cy.layout(graphSettings.getLayout()).run();
-			
-			
-			//cy.stop(true, true); 
+			//cy.stop(true, true);
 		}
 		
 		return true;

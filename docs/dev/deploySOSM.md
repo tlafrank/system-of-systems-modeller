@@ -1,8 +1,22 @@
 # Deploy SOSM
 
-This guide explains how to **deploy an empty SOSM instance** to a prepared development environment. If the **development environment** is not yet configured, see [`setupEnvironment.md`](./setupEnvironment.md). Once SOSM is deployed, it can be populated with [test data](./deployTestData.md), if required.
+This guide explains how to deploy SOSM in a development environment.
 
-## Hybrid Dev Environment
+## Recommended (Docker)
+Use the helper script:
 
-Run `docker compose up db -d` to build the container, setup the database volume and run the container.
-Verify operation of the container with `docker ps`.
+```bash
+./scripts/dev-up.sh
+```
+
+Equivalent direct command:
+
+```bash
+docker compose up --build -d
+```
+
+## Legacy wrapper
+`./scripts/deploySOSM.sh` is kept as a compatibility wrapper and now delegates to `./scripts/dev-up.sh`.
+
+## Port configuration
+If your host already uses port 80, set `APP_PORT` in `.env` (for example `APP_PORT=3001`) before running Compose. The host port is configured in `docker-compose.yaml`; Dockerfile `EXPOSE` does not publish ports by itself.

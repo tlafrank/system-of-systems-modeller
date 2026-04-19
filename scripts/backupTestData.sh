@@ -49,7 +49,7 @@ load_env() {
 
 docker_db_running() {
   if ! command -v docker >/dev/null 2>&1; then return 1; fi
-  if ! command -v docker compose >/dev/null 2>&1; then return 1; fi
+  docker compose version >/dev/null 2>&1 || return 1
   local cid
   cid="$(cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" ps -q db || true)"
   [[ -n "${cid}" ]] || return 1
@@ -195,6 +195,9 @@ main() {
 
   info "Checking database connectivity…"
   if docker_db_running; then
+    if ! docker info >/dev/null 2>&1; then
+      die "Docker is installed but not accessible by this user. Try running with sudo or add your user to the docker group."
+    fi
     info "Docker DB detected (service: db)."
     mysql_probe_docker
   else
