@@ -5,6 +5,7 @@
 3. (Optional) [Deploy test data](./dev/deployTestData.md)
 4. [Run SOSM](./dev/runSOSM.md)
 5. (Optional) [Backup test data](./dev/backupTestData.md)
+6. (Optional) [Offline data packs](./dev/dataPacks.md)
 
 
 ## [Setup environment](./dev/setupEnvironment.md)

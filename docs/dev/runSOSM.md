@@ -66,7 +66,7 @@ docker compose logs -f adminer
 docker compose logs -f www   # if your app service is named "www" in compose
 ```
 
-> Adminer (optional DB UI) is at **http://localhost:8080** once up. The app listens on **http://localhost:${APP_PORT:-3000}** (default 3000).
+> Adminer (optional DB UI) is at **http://localhost:8080** once up. The app listens on **http://localhost:${APP_PORT:-3001}** (default 3001).
 
 ---
 
@@ -127,13 +127,31 @@ docker compose exec db sh -c 'mysqldump -u${DB_USER:-sosmUser} -p${DB_PASS:-sosm
 
 ---
 
+## 4) Configure app port (non-80)
+
+If port **80** is already in use on your host, keep SOSM on another host port (default now: **3001**).
+
+1. Set `APP_PORT` in `.env`:
+```bash
+APP_PORT=3001
+```
+2. Restart compose:
+```bash
+docker compose up -d
+```
+
+### Where to change it later
+- Change the host/container mapping in `docker-compose.yaml` via `ports: - "${APP_PORT:-3001}:3000"`.
+- Update `.env` `APP_PORT` for per-environment override.
+- You **normally do not change this in Dockerfile**. `EXPOSE` is documentation metadata; published host port is controlled by Compose/`docker run -p`.
+
 ## 5) Images & backups via the app
 
 - `GET /backup.txt` – generates SQL insert statements to replicate current DB contents.
 - `GET /images.json` – lists images available to the app.
 - `/www/assets`, `/www/images` – app‑served static assets.
 
-> With Docker: `curl http://localhost:3000/backup.txt`
+> With Docker: `curl http://localhost:${APP_PORT:-3001}/backup.txt`
 
 ---
 

@@ -6,3 +6,7 @@ This guide explains how to **deploy an empty SOSM instance** to a prepared devel
 
 Run `docker compose up db -d` to build the container, setup the database volume and run the container.
 Verify operation of the container with `docker ps`.
+
+
+## Port configuration
+If your host already uses port 80, set `APP_PORT` in `.env` (for example `APP_PORT=3001`) before running Compose. The host port is configured in `docker-compose.yaml`; Dockerfile `EXPOSE` does not publish ports by itself.
