@@ -12,86 +12,33 @@ set -euo pipefail
 # Paths (resolve relative to this script)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SQL_DIR="${REPO_ROOT}/server/sql"
 TEST_DIR="${REPO_ROOT}/testData"
 WWW_DIR="${REPO_ROOT}/public"
 ENV_FILE="${REPO_ROOT}/.env"
+COMMON_LIB="${SCRIPT_DIR}/lib/sosm-common.sh"
 
 # Options / env overrides
 YES="${YES:-false}"                               # non-interactive confirm: YES=true
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}" # docker compose file name
 TEST_NAME="${TEST_NAME:-}"                        # choose test folder non-interactively
 
+[[ -f "${COMMON_LIB}" ]] || { echo "ERROR: Missing shared script library: ${COMMON_LIB}" >&2; exit 1; }
+# shellcheck source=lib/sosm-common.sh
+source "${COMMON_LIB}"
+
 # ---------------- helpers ----------------------
-
-die() { echo "ERROR: $*" >&2; exit 1; }
-info(){ echo ">> $*"; }
-
-need_cmd() {
-  command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
-}
-
-confirm() {
-  if [[ "${YES}" == "true" ]]; then return 0; fi
-  read -r -p "$1 [y/N] " ans
-  [[ "${ans}" == "y" || "${ans}" == "Y" ]]
-}
-
-load_env() {
-  [[ -f "${ENV_FILE}" ]] || die "Missing .env at ${ENV_FILE}"
-  # shellcheck disable=SC2046
-  export $(grep -v '^[[:space:]]*#' "${ENV_FILE}" | grep -E '^[A-Za-z0-9_]+=' | xargs) || true
-  : "${DB_NAME:?Missing DB_NAME in .env}"
-  : "${DB_USER:?Missing DB_USER in .env}"
-  : "${DB_PASS:?Missing DB_PASS in .env}"
-  export DB_HOST="${DB_HOST:-127.0.0.1}"
-  export DB_PORT="${DB_PORT:-3306}"
-}
-
-resolve_compose_file() {
-  if [[ -f "${REPO_ROOT}/${COMPOSE_FILE}" ]]; then
-    return
-  fi
-
-  local alt
-  if [[ "${COMPOSE_FILE}" == *.yaml ]]; then
-    alt="${COMPOSE_FILE%.yaml}.yml"
-  elif [[ "${COMPOSE_FILE}" == *.yml ]]; then
-    alt="${COMPOSE_FILE%.yml}.yaml"
-  else
-    alt=""
-  fi
-
-  if [[ -n "${alt}" && -f "${REPO_ROOT}/${alt}" ]]; then
-    info "Compose file '${COMPOSE_FILE}' not found, using '${alt}'"
-    COMPOSE_FILE="${alt}"
-  fi
-}
 
 docker_db_running() {
   # Returns 0 if a Compose service named "db" is up
-  if ! command -v docker >/dev/null 2>&1; then return 1; fi
-  docker compose version >/dev/null 2>&1 || return 1
-  # Run from repo root so compose can see the file
-  info "Running: docker compose -f ${COMPOSE_FILE} ps -q db"
-  (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" ps -q db) >/dev/null 2>&1 || return 1
-  local cid
-  cid="$(cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" ps -q db || true)"
-  [[ -n "${cid}" ]] || return 1
-  # Check running status
-  local st
-  st="$(docker inspect -f '{{.State.Running}}' "${cid}" 2>/dev/null || echo false)"
-  [[ "${st}" == "true" ]]
+  sosm_info "Running: docker compose -f ${COMPOSE_FILE} ps -q db"
+  sosm_docker_service_running "${REPO_ROOT}" "${COMPOSE_FILE}" "db"
 }
 
 ensure_docker_db() {
   command -v docker >/dev/null 2>&1 || return 1
-  docker compose version >/dev/null 2>&1 || return 1
-  if ! docker info >/dev/null 2>&1; then
-    die "Docker is installed but not accessible by this user. Try 'sudo ./scripts/deployTestData.sh' or add your user to the docker group."
-  fi
+  sosm_require_docker_access || return 1
   if docker_db_running; then return 0; fi
-  info "Docker Compose detected but 'db' is not running. Attempting to start it…"
+  sosm_info "Docker Compose detected but 'db' is not running. Attempting to start it…"
   (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" up -d db)
   docker_db_running
 }
@@ -113,21 +60,21 @@ mysql_exec_docker() {
 }
 
 check_connectivity() {
-  info "Checking DB connectivity as ${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+  sosm_info "Checking DB connectivity as ${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
   local probe="SELECT 1 as ok;"
   if docker_db_running; then
     echo "${probe}" | mysql_exec_docker "-"
   else
-    need_cmd mysql
+    sosm_need_cmd mysql
     echo "${probe}" | mysql_exec_host "-"
   fi
-  info "Database connectivity OK."
+  sosm_info "Database connectivity OK."
 }
 
 run_sql_file() {
   local file="${1}"
-  [[ -f "${file}" ]] || die "SQL file not found: ${file}"
-  info "Applying $(basename "${file}")"
+  [[ -f "${file}" ]] || sosm_die "SQL file not found: ${file}"
+  sosm_info "Applying $(basename "${file}")"
   if docker_db_running; then mysql_exec_docker "${file}"; else mysql_exec_host "${file}"; fi
 }
 
@@ -135,11 +82,11 @@ copy_images_from() {
   local src_images="${1}/images"
   local dest_images="${WWW_DIR}/images"
   if [[ -d "${src_images}" ]]; then
-    info "Copying images from ${src_images} -> ${dest_images}"
+    sosm_info "Copying images from ${src_images} -> ${dest_images}"
     mkdir -p "${dest_images}"
     cp -R "${src_images}/." "${dest_images}/"
   else
-    info "No images folder in ${1}; skipping image copy."
+    sosm_info "No images folder in ${1}; skipping image copy."
   fi
 }
 
@@ -201,26 +148,26 @@ run_all_sql_in_folder() {
   local case_dir="${1}"
   mapfile -t files < <(find "${case_dir}" -maxdepth 1 -type f -name "*.sql" | sort)
   if [[ ${#files[@]} -eq 0 ]]; then
-    info "No .sql files found in ${case_dir}"
+    sosm_info "No .sql files found in ${case_dir}"
     return 0
   fi
-  info "Executing ${#files[@]} SQL file(s) from $(basename "${case_dir}")"
+  sosm_info "Executing ${#files[@]} SQL file(s) from $(basename "${case_dir}")"
   for f in "${files[@]}"; do run_sql_file "${f}"; done
 }
 
 # ---------------- main -------------------------
 
 main() {
-  need_cmd grep
-  load_env
-  resolve_compose_file
+  sosm_need_cmd grep
+  sosm_load_env "${ENV_FILE}"
+  sosm_resolve_compose_file "${REPO_ROOT}"
 
-  info "Hybrid check: detecting Docker 'db' service…"
+  sosm_info "Hybrid check: detecting Docker 'db' service…"
   if ensure_docker_db; then
-    info "MySQL is running in Docker (service: db)."
+    sosm_info "MySQL is running in Docker (service: db)."
   else
-    info "Docker DB not detected. Will use host MySQL at ${DB_HOST}:${DB_PORT}."
-    need_cmd mysql
+    sosm_info "Docker DB not detected. Will use host MySQL at ${DB_HOST}:${DB_PORT}."
+    sosm_need_cmd mysql
   fi
 
   check_connectivity
@@ -237,15 +184,15 @@ main() {
   echo "Target  : DB=${DB_NAME}  public/images/"
   echo "----------------------------------------"
 
-  if ! confirm "Proceed with loading '${case_name}' into '${DB_NAME}'?"; then
-    info "Aborted."
+  if ! sosm_confirm "${YES}" "Proceed with loading '${case_name}' into '${DB_NAME}'?"; then
+    sosm_info "Aborted."
     exit 0
   fi
 
   run_all_sql_in_folder "${case_dir}"
   copy_images_from "${case_dir}"
 
-  info "Done."
+  sosm_info "Done."
 }
 
 main "$@"

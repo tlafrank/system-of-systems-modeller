@@ -34,11 +34,10 @@ docker compose up -d
 docker compose ps
 ```
 
-Network note: Compose now creates a dedicated bridge network named `sosm_net` for container-to-container communication (`server` ↔ `db` ↔ `adminer`).
+Network note: Compose creates a dedicated bridge network named `sosm_net` for container-to-container communication between `server` and `db`.
 
 ### 4) Open the app
 - App: `http://localhost:${APP_PORT:-3001}`
-- Adminer (optional): `http://localhost:8080`
 
 ### 5) (Optional) Load sample data
 ```bash
