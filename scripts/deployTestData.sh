@@ -67,9 +67,12 @@ docker_db_running() {
 ensure_docker_db() {
   command -v docker >/dev/null 2>&1 || return 1
   docker compose version >/dev/null 2>&1 || return 1
+  if ! docker info >/dev/null 2>&1; then
+    die "Docker is installed but not accessible by this user. Try 'sudo ./scripts/deployTestData.sh' or add your user to the docker group."
+  fi
   if docker_db_running; then return 0; fi
   info "Docker Compose detected but 'db' is not running. Attempting to start it…"
-  (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" up -d db) >/dev/null
+  (cd "${REPO_ROOT}" && docker compose -f "${COMPOSE_FILE}" up -d db)
   docker_db_running
 }
 

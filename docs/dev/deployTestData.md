@@ -20,3 +20,18 @@ Install the MySQL client first:
 ```bash
 sudo apt-get update && sudo apt-get install -y mysql-client
 ```
+
+
+## Troubleshooting
+### Docker permission denied
+If you see `permission denied while trying to connect to the docker API`, your user cannot access Docker daemon.
+
+Use one of:
+```bash
+sudo ./scripts/deployTestData.sh
+```
+Or add your user to docker group and re-login:
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```

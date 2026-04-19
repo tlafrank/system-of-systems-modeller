@@ -195,6 +195,9 @@ main() {
 
   info "Checking database connectivity…"
   if docker_db_running; then
+    if ! docker info >/dev/null 2>&1; then
+      die "Docker is installed but not accessible by this user. Try running with sudo or add your user to the docker group."
+    fi
     info "Docker DB detected (service: db)."
     mysql_probe_docker
   else
